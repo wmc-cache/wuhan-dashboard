@@ -1,14 +1,19 @@
 <template>
   <div class="member-new-biz">
     <!-- 左：环形图（自适应） -->
-    <div class="chart-wrap">
-      <EChart :option="option" />
-      <!-- 中心数字/标签：跟随饼图 center 百分比定位，避免偏移 -->
-      <div class="center" :style="centerStyle">
+    <RingPie
+      :data="items"
+      :center="seriesCenter"
+      :radius="['48%', '72%']"
+      gap-color="rgba(242,247,255,0.95)"
+      :border-width="6"
+      :emphasis-scale="20"
+    >
+      <template #center>
         <div class="num">{{ active.value }}</div>
         <div class="name">{{ active.name }}</div>
-      </div>
-    </div>
+      </template>
+    </RingPie>
 
     <!-- 右：图例 + 分页箭头 -->
     <div class="legend-wrap">
@@ -50,7 +55,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
-import EChart from '../EChart.vue';
+import RingPie from '../RingPie.vue';
 
 interface BizItem {
   name: string;
@@ -112,38 +117,8 @@ function formatNumber(n: number): string {
   return n.toLocaleString('zh-CN');
 }
 
-// 图表配置：左侧厚边环形，扇区之间留白
+// 图表中心位置（与 RingPie 同步）
 const seriesCenter = ref<[string, string]>(['38%', '52%']);
-const centerStyle = computed(() => ({ left: seriesCenter.value[0], top: seriesCenter.value[1] }));
-
-const option = computed(() => {
-  const gapColor = 'rgba(242,247,255,0.95)'; // 与整体背景接近，用作扇区间隙
-  return {
-    animation: true,
-    tooltip: { trigger: 'item', formatter: '{b}<br/>{c}' },
-    series: [
-      {
-        type: 'pie',
-        center: seriesCenter.value,
-        radius: ['48%', '72%'],
-        startAngle: 90,
-        avoidLabelOverlap: true,
-        label: { show: false },
-        labelLine: { show: false },
-        clockwise: true,
-        itemStyle: {
-          borderWidth: 6,
-          borderColor: gapColor,
-        },
-        data: items.map((it) => ({
-          name: it.name,
-          value: it.value,
-          itemStyle: { color: it.color }
-        }))
-      }
-    ]
-  } as any;
-});
 </script>
 
 <style scoped lang="scss">
@@ -156,28 +131,12 @@ const option = computed(() => {
   column-gap: 8px;
 }
 
-.chart-wrap {
-  position: relative;
-  height: 100%;
-}
-
-.center {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  display: grid;
-  place-items: center;
-  gap: 4px;
-  pointer-events: none;
-  text-align: center;
-}
-
-.center .num {
+.num {
   font-size: 42px;
   font-weight: 800;
   color: #3e74ff;
 }
-
-.center .name {
+.name {
   font-size: 16px;
   color: #2a6ff0;
   font-weight: 700;
