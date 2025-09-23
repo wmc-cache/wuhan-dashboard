@@ -1,0 +1,3 @@
+/* 基础重置 + 抗锯齿 */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
