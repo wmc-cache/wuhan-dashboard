@@ -1,40 +1,27 @@
 <template>
-  <div class="dash">
-    <HeaderBar />
+  <main class="dash__main">
+    <section class="col col--left">
+      <div class="panel h180">工会组织总数</div>
+      <div class="panel h360">工会行业分布</div>
+      <div class="panel h300">新增工会</div>
+    </section>
 
-    <main class="dash__main">
-      <section class="col col--left">
-        <div class="panel h180">工会组织总数</div>
-        <div class="panel h360">工会行业分布</div>
-        <div class="panel h300">新增工会</div>
-      </section>
+    <section class="col col--center">
+      <div class="panel panel--map h860">武汉地图</div>
+    </section>
 
-      <section class="col col--center">
-        <div class="panel panel--map h860">武汉地图</div>
-      </section>
-
-      <section class="col col--right">
-        <div class="panel h180">工会会员总数</div>
-        <div class="panel h360">工会会员新增</div>
-        <div class="panel h300">新增会员</div>
-      </section>
-    </main>
-  </div>
+    <section class="col col--right">
+      <div class="panel h180">工会会员总数</div>
+      <div class="panel h360">工会会员新增</div>
+      <div class="panel h300">新增会员</div>
+    </section>
+  </main>
 </template>
 
 <script setup lang="ts">
-import HeaderBar from '../components/HeaderBar.vue';
 </script>
 
 <style scoped lang="scss">
-/* 设计稿参考尺寸：1920x1080 */
-.dash {
-  width: 1920px;
-  height: 1080px;
-  color: #0b4aa2;
-  font-family: "DIN", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
-  position: relative;
-}
 .dash__main {
   display: grid;
   grid-template-columns: 540px 1fr 540px; /* 左右固定，中间地图自适应 */
