@@ -1,16 +1,221 @@
 <template>
   <div class="org-total">
-    <!-- 占位：总数/指标卡片区域 -->
-    <div class="org-total__main">待接入：工会组织总数模块</div>
+    <!-- 左侧：3D 圆锥 + 总数 -->
+    <div class="org-total__left">
+      <div class="cone">
+        <i class="cone__img" aria-hidden="true"></i>
+        <div class="cone__num">{{ formatNumber(total) }}</div>
+      </div>
+      <div class="cone__label">工会总数(个)</div>
+    </div>
+
+    <!-- 右侧：三项类别卡片 -->
+    <ul class="org-total__list" role="list">
+      <li class="list-item list-item--green">
+        <i class="list-item__bg" aria-hidden="true"></i>
+        <span class="dot dot--green" aria-hidden="true"></span>
+        <span class="label">市工会</span>
+        <span class="value value--green">{{ city }}个</span>
+      </li>
+      <li class="list-item list-item--orange">
+        <i class="list-item__bg" aria-hidden="true"></i>
+        <span class="dot dot--orange" aria-hidden="true"></span>
+        <span class="label">街道工会</span>
+        <span class="value value--orange">{{ street }}个</span>
+      </li>
+      <li class="list-item list-item--blue">
+        <i class="list-item__bg" aria-hidden="true"></i>
+        <span class="dot dot--blue" aria-hidden="true"></span>
+        <span class="label">区县工会</span>
+        <span class="value value--blue">{{ district }}个</span>
+      </li>
+    </ul>
   </div>
 </template>
 
 <script setup lang="ts">
-// TODO: 接入实际数据或图表
+interface Props {
+  total?: number;
+  city?: number; // 市工会数量
+  street?: number; // 街道工会数量
+  district?: number; // 区县工会数量
+}
+const props = withDefaults(defineProps<Props>(), {
+  total: 18897,
+  city: 12,
+  street: 62,
+  district: 90,
+});
+
+const { total, city, street, district } = props;
+
+function formatNumber(n: number): string {
+  return n.toLocaleString('zh-CN');
+}
 </script>
 
 <style scoped lang="scss">
-.org-total { position: relative; height: 100%; }
-.org-total__main { height: 100%; display: grid; place-items: center; color: #3a6ee8; font-size: 18px; opacity: 0.7; }
-</style>
+.org-total {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  /* 左侧圆锥 + 右侧列表 */
+  gap: 24px;
+  align-items: center;
+}
 
+/* 左侧圆锥与数字 */
+.org-total__left {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  row-gap: 6px;
+}
+
+.cone {
+  position: relative;
+  width: 160px;
+  height: 150px;
+  display: grid;
+  place-items: center;
+}
+
+.cone__img {
+  display: block;
+  width: 123px;
+  height: 147px;
+  /* 1x 尺寸 */
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-image: -webkit-image-set(url('../../images/org-total/3D圆锥/编组 11.png') 1x,
+      url('../../images/org-total/3D圆锥/编组 11@2x.png') 2x);
+  background-image: image-set(url('../../images/org-total/3D圆锥/编组 11.png') 1x,
+      url('../../images/org-total/3D圆锥/编组 11@2x.png') 2x);
+}
+
+.cone__num {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 42px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  background: linear-gradient(180deg, #4a93ff 0%, #2a6ff0 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 2px 8px rgba(38, 112, 255, 0.35);
+}
+
+.cone__label {
+  font-size: 18px;
+  color: #2a6ff0;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+/* 右侧三项卡片 */
+.org-total__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  row-gap: 16px;
+}
+
+.list-item {
+  position: relative;
+  height: 47px;
+  display: grid;
+  grid-template-columns: 28px auto 1fr;
+  align-items: center;
+  padding: 0 16px 0 52px;
+}
+
+.list-item__bg {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  display: block;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  opacity: 0.95;
+  background-image: -webkit-image-set(url('../../images/org-total/矩形背景/矩形.png') 1x,
+      url('../../images/org-total/矩形背景/矩形@2x.png') 2x);
+  background-image: image-set(url('../../images/org-total/矩形背景/矩形.png') 1x,
+      url('../../images/org-total/矩形背景/矩形@2x.png') 2x);
+}
+
+.dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-right: 12px;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25) inset;
+}
+
+.dot--green {
+  background-color: #2ecc71;
+}
+
+.dot--orange {
+  background-color: #ffaf2e;
+}
+
+.dot--blue {
+  background-color: #2e7bff;
+}
+
+.label {
+  font-size: 20px;
+  color: rgba(19, 115, 255, 0.85);
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.list-item--green .label { color: #25c56b; }
+.list-item--orange .label { color: #ff9a1a; }
+.list-item--blue .label { color: #2c6eff; }
+
+.value {
+  margin-left: auto;
+  font-size: 22px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.value small {
+  font-size: 60%;
+  opacity: 0.9;
+  margin-left: 2px;
+}
+
+.value--green {
+  color: #25c56b;
+}
+
+.value--orange {
+  color: #ff9a1a;
+}
+
+.value--blue {
+  color: #2c6eff;
+}
+
+.arrow {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-right: 3px solid currentColor;
+  border-top: 3px solid currentColor;
+  transform: rotate(-45deg);
+  margin-left: 2px;
+}
+
+/* 留白由父布局控制：见 Dashboard.vue 中 .panel > .title-img { margin-bottom: 8px; } */
+</style>

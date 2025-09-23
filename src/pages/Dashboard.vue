@@ -58,18 +58,31 @@ import MemberNew from '../components/dashboard/MemberNew.vue';
 }
 .col {
   display: grid;
-  grid-template-rows: 180px 360px 1fr;
   gap: 20px;
+}
+
+.col--left {
+  /* 左列：第一行再减少25px (239px->214px)，最后一行再增加50px (414px->464px) */
+  grid-template-rows: 214px 1fr 464px;
+}
+
+.col--right {
+  /* 右列：第一行再减少25px (239px->214px)，最后一行再增加50px (414px->464px) */
+  grid-template-rows: 214px 1fr 464px;
 }
 .col--center { grid-template-rows: 860px; }
 .panel {
-  background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(236,245,255,0.85));
-  border: 1px solid rgba(67,127,255,0.25);
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(45,110,255,0.12), inset 0 1px 0 rgba(255,255,255,0.7);
-  padding: 16px;
-}
-.panel--map { background: radial-gradient(70% 70% at 50% 40%, #f2f7ff 0%, #e8f0ff 100%); }
+  /* 去掉模块背景面板，仅保留内边距与布局 */
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 16px;
+  }
+  
+  .panel--map {
+    background: none;
+  }
 .panel > .title-img { display: inline-block; margin-bottom: 8px; }
 .h180 { height: 180px; }
 .h300 { height: 300px; }
