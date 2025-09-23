@@ -46,29 +46,48 @@ $glow: rgba(61,127,255,0.35);
   align-items: center;
   padding: 0 24px;
   position: relative;
-}
-
-.hd__baseline{
-  position:absolute; left: 20px; right: 20px; top: 72px; height: 16px;
-  border-radius: 8px;
-  z-index: 0;
-}
-
-/* 中间标题 */
-.title { position: relative; height: 88px; display: grid; place-items: center; z-index: 1; }
+  /* 顶部标题使用整幅图片 */
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    background-image: url('../images/top/top.png');
+    background-image: -webkit-image-set(url('../images/top/top.png') 1x,
+        url('../images/top/top@2x.png') 2x);
+    background-image: image-set(url('../images/top/top.png') 1x,
+        url('../images/top/top@2x.png') 2x);
+  }
+  
+  .hd__baseline {
+    position: absolute;
+    left: 20px;
+    right: 20px;
+    top: 72px;
+    height: 16px;
+    border-radius: 8px;
+    z-index: 0;
+  }
+  
+  /* 中间标题 */
+  .title {
+    position: relative;
+    height: 88px;
+    display: grid;
+    place-items: center;
+    z-index: 1;
+  }
+  
+  /* 隐藏文字标题，改用背景图片展示 */
+  .title__text {
+    display: none;
+  }
 
 /* 左右导航 */
 .nav { display: flex; gap: 26px; align-items: center; z-index: 1; padding-top: 4px; }
+/* 右侧菜单靠右对齐，保证与左侧对称 */
+.nav--right { justify-content: flex-end; }
 
 
-.tab--active {
-  background: linear-gradient(180deg, $orange-s, $orange-e);
-  color: #fff; border-color: rgba(255,173,80,0.9);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 6px 16px rgba(255,151,51,0.3);
-  padding: 0 26px; min-width: 120px;
-  border-radius: 0; /* 用 clip-path 画六边形 */
-  clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 14px 100%, 0 50%);
-}
+
 
 
 

@@ -45,8 +45,21 @@ onUnmounted(() => {
 .sb-wrap {
   position: fixed;
   inset: 0;
-  /* 使用绝对居中，不依赖 grid 居中，避免不同浏览器对 transform 尺寸计算差异 */
-  background: radial-gradient(80% 80% at 50% 30%, #f6fbff 0%, #e7f0ff 60%, #e4ecff 100%);
+  /* 仅保留全屏大背景，顶部横幅放回 Header 随舞台缩放，保证左右菜单对齐 */
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  /* 1x 回退 */
+  background-image: url('../images/bg/bg.png');
+  /* 视网膜屏/高分屏 */
+  background-image: -webkit-image-set(
+    url('../images/bg/bg.png') 1x,
+    url('../images/bg/bg@2x.png') 2x
+  );
+  background-image: image-set(
+    url('../images/bg/bg.png') 1x,
+    url('../images/bg/bg@2x.png') 2x
+  );
 }
 .sb-stage {
   transform-origin: 50% 50%;

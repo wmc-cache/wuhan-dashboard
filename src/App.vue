@@ -12,5 +12,6 @@ import Dashboard from './pages/Dashboard.vue';
 
 <style>
 html, body, #app { height: 100%; }
-body { background: #eaf2ff; }
+/* 去除浏览器默认 8px 外边距，避免左右留白 */
+body { margin: 0; background: #eaf2ff; }
 </style>
