@@ -1,5 +1,5 @@
 <template>
-  <div ref="wrap" class="sb-wrap">
+  <div ref="wrap" class="sb-wrap" :style="wrapStyle">
     <div class="sb-stage" :style="stageStyle">
       <slot />
     </div>
@@ -12,6 +12,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue';
 const props = defineProps<{ baseWidth: number; baseHeight: number }>();
 const wrap = ref<HTMLDivElement | null>(null);
 const scale = ref(1);
+const stageTop = ref(0); // 顶部与视口的间距，便于让顶部横幅与舞台对齐
 
 const calc = () => {
   const w = window.innerWidth;
@@ -19,6 +20,9 @@ const calc = () => {
   const sx = w / props.baseWidth;
   const sy = h / props.baseHeight;
   scale.value = Math.min(sx, sy);
+  // 由于舞台是 translate(-50%, -50%) 居中，这里计算实际可见的顶部偏移，
+  // 让 .sb-wrap 的顶部装饰条能够与舞台顶部完全对齐。
+  stageTop.value = Math.max(0, (h - props.baseHeight * scale.value) / 2);
 };
 
 const stageStyle = computed(() => ({
@@ -29,6 +33,13 @@ const stageStyle = computed(() => ({
   top: '50%',
   // 绝对居中 + 等比缩放，任何情况下都几何中心对齐
   transform: `translate(-50%, -50%) scale(${scale.value})`,
+}));
+
+// 把缩放比例与舞台顶部偏移暴露给 CSS，用于绘制“贯穿全屏”的顶部横幅
+const wrapStyle = computed(() => ({
+  // 注意：CSS 变量需要字符串
+  ['--sb-scale' as any]: String(scale.value),
+  ['--sb-stage-top' as any]: stageTop.value + 'px',
 }));
 
 onMounted(() => {
@@ -61,10 +72,41 @@ onUnmounted(() => {
     url('../images/bg/bg@2x.png') 2x
   );
 }
+
+/* 顶部“标题横幅”需要横向撑满整个视口，否则宽屏下两侧会露底。
+   这里在全屏容器上增加一个伪元素来绘制横幅，将其高度按缩放比例计算，
+   与舞台顶部对齐。 */
+.sb-wrap::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* 与舞台顶部对齐（当宽度成为限制维度时，舞台会在垂直方向留边） */
+  top: var(--sb-stage-top, 0px);
+  height: calc(110px * var(--sb-scale, 1));
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: 100% 100%;
+  /* 1x 回退 */
+  background-image: url('../images/top/top.png');
+  /* 视网膜屏/高分屏 */
+  background-image: -webkit-image-set(
+    url('../images/top/top.png') 1x,
+    url('../images/top/top@2x.png') 2x
+  );
+  background-image: image-set(
+    url('../images/top/top.png') 1x,
+    url('../images/top/top@2x.png') 2x
+  );
+  pointer-events: none;
+  z-index: 0; /* 背景层，低于内容 */
+}
 .sb-stage {
   transform-origin: 50% 50%;
   box-sizing: border-box;
   overflow: hidden;
+  position: absolute;
+  z-index: 1; /* 高于 ::before 的横幅背景 */
   will-change: transform;
 }
 </style>
