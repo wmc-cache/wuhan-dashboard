@@ -10,7 +10,6 @@
         <OrgIndustry />
       </div>
       <div class="panel h300">
-        <span class="title-img title-img--org-new" aria-hidden="true"></span>
         <OrgNew />
       </div>
     </section>
