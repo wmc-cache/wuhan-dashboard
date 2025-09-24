@@ -41,4 +41,4 @@ npm run preview   # Preview the built app locally
 - Do not commit secrets; use Vite env files (`.env.local`, `.env.development`) for non‑secret configs.
 - Large images: optimize before committing; keep under `src/images/` and reference with relative URLs.
 
-不需要 自己 测试 运行 打包
+There is no need to test and run the packaging by yourself

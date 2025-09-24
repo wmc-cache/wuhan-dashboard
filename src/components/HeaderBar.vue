@@ -61,18 +61,10 @@ $glow: rgba(61,127,255,0.35);
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  padding: 0 24px;
+  /* 顶部横幅已移至 ScaleBox 全屏容器绘制，这里去掉背景与左右留白 */
+  padding: 0;
   position: relative;
-  /* 顶部标题使用整幅图片 */
-    background-position: center top;
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    background-image: url('../images/top/top.png');
-    background-image: -webkit-image-set(url('../images/top/top.png') 1x,
-        url('../images/top/top@2x.png') 2x);
-    background-image: image-set(url('../images/top/top.png') 1x,
-        url('../images/top/top@2x.png') 2x);
-  }
+}
   
   .hd__baseline {
     position: absolute;
@@ -99,7 +91,14 @@ $glow: rgba(61,127,255,0.35);
   }
 
 /* 左右导航 */
-.nav { display: flex; gap: 26px; align-items: center; z-index: 1; padding-top: 4px; }
+.nav {
+  display: flex;
+  /* 根据整体缩放自动缩小间距，但不小于 12px，避免极小缩放时拥挤 */
+  gap: max(12px, calc(26px * var(--sb-scale, 1)));
+  align-items: center;
+  z-index: 1;
+  padding-top: 4px;
+}
 /* 顶部菜单字体：统一白色 + 深色描边与阴影，保证在浅色底纹上可读 */
 .nav .tab,
 .nav .tab:link,
@@ -119,6 +118,8 @@ $glow: rgba(61,127,255,0.35);
   align-items: center;
   justify-content: center;
   height: 40px; /* 与左右菜单底纹高度一致，便于居中 */
+  /* 给每个按钮一个不小于高亮底纹的最小宽度，防止极小缩放下视觉重叠 */
+  min-width: 150px;
   cursor: pointer;
 }
 .nav .tab:hover { color: #fff; opacity: 0.96; }
@@ -171,7 +172,8 @@ $glow: rgba(61,127,255,0.35);
 .nav--left,
 .nav--right {
   position: relative;
-  padding-inline: 16px;
+  /* 贴边显示装饰背景，去掉默认内边距 */
+  padding-inline: 0;
   z-index: 1;
   /* create stacking context so text sits above the bg pseudo-element */
 }
@@ -219,6 +221,7 @@ $glow: rgba(61,127,255,0.35);
 
 @media (max-width: 1680px) {
   .title__text { font-size: 36px; letter-spacing: 4px; }
-  .tab { min-width: 112px; height: 40px; line-height: 40px; }
+  /* 更窄视口时，适当缩小最小宽度，保证三项也能排下 */
+  .tab { min-width: 120px; height: 40px; line-height: 40px; }
 }
 </style>
