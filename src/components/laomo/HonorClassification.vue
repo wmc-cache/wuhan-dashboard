@@ -1,9 +1,6 @@
 <template>
   <div class="honor-classification">
-    <div class="header">
-      <span class="title-img"></span>
-      <span class="title">荣誉分类统计</span>
-    </div>
+
     <div class="content">
       <div class="chart-container">
         <EChart :option="chartOption" />
@@ -222,10 +219,7 @@ const chartOption = computed(() => {
 .honor-classification {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #f7faff 0%, #eef2f7 100%);
-  border-radius: 12px;
-  padding: 16px 20px;
-  box-shadow: 0 2px 12px rgba(52, 114, 255, 0.06);
+  
 
   .header {
     display: flex;

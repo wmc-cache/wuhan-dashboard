@@ -8,14 +8,18 @@
       </div>
     </section>
 
-    <section class="mod" style="grid-area: tc;">
-      <h3 class="mod__title">四项总数指标</h3>
-      <div class="mod__body">占位：劳模总数/退休劳模总数/特困劳模数/低收入人群总数</div>
+    <section style="grid-area: tc;">
+
+      <div class="mod__body" style="place-items: stretch;">
+        <LaomoFourStats />
+      </div>
     </section>
 
     <section class="mod" style="grid-area: tr;">
       <h3 class="mod__title">劳模人员性别分布统计</h3>
-      <div class="mod__body">占位：男女占比图卡</div>
+      <div class="mod__body" style="place-items: stretch;">
+        <LaomoGenderDistribution />
+      </div>
     </section>
 
     <!-- 中部三块 -->
@@ -28,7 +32,9 @@
 
     <section class="mod" style="grid-area: mc;">
       <h3 class="mod__title">劳模收入情况统计</h3>
-      <div class="mod__body">占位：面积/折线图（收入区间）</div>
+      <div class="mod__body" style="place-items: stretch;">
+        <LaomoIncomeDistribution />
+      </div>
     </section>
 
     <section class="mod" style="grid-area: mr;">
@@ -60,6 +66,9 @@ import LaomoEthnicDistribution from '../components/laomo/EthnicDistribution.vue'
 import LaomoAgeDistribution from '../components/laomo/AgeDistribution.vue';
 import LaomoRegionDistribution from '../components/laomo/RegionDistribution.vue';
 import LaomoHonorDistribution from '../components/laomo/HonorClassification.vue';
+import LaomoIncomeDistribution from '../components/laomo/IncomeDistribution.vue';
+import LaomoFourStats from '../components/laomo/FourStats.vue';
+import LaomoGenderDistribution from '../components/laomo/GenderDistribution.vue';
 </script>
 
 <style scoped lang="scss">
