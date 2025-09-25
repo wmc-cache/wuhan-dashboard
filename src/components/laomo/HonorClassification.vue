@@ -198,19 +198,9 @@ const chartOption = computed(() => {
     max: 100,
     splitNumber: 12,
     axisLine: { lineStyle: { width: 1, color: [[1, 'rgba(0,0,0,0)']] } },
-    axisTick: {
-      show: true,
-      distance: 0,
-      splitNumber: 5,
-      length: 3,
-      lineStyle: { color: 'rgba(80,120,255,0.35)', width: 1 }
-    },
-    splitLine: {
-      show: true,
-      distance: 0,
-      length: 6,
-      lineStyle: { color: 'rgba(80,120,255,0.25)', width: 1 }
-    },
+    // 需求：饼图中心只显示“荣誉分类”四个字，其余中心装饰隐藏
+    axisTick: { show: false },
+    splitLine: { show: false },
     axisLabel: { show: false },
     pointer: { show: false },
     detail: { show: false }

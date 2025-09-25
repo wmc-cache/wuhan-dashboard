@@ -13,7 +13,9 @@
 
     <section class="mod" style="grid-area: tr;">
       <h3 class="mod__title">会员民族分布统计</h3>
-      <div class="mod__body">占位：环形图 + 图例</div>
+      <div class="mod__body">
+        <EthnicDistribution />
+      </div>
     </section>
 
     <!-- 中部三块 -->
@@ -41,12 +43,15 @@
     <!-- 底部：左通栏 + 右表格 -->
     <section class="mod" style="grid-area: bl;">
       <h3 class="mod__title">会员区域分布</h3>
-      <div class="mod__body">占位：分区柱状</div>
+      <div class="mod__body">
+        <RegionDistribution />
+      </div>
     </section>
 
     <section class="mod" style="grid-area: br;">
-      <h3 class="mod__title">新增会员</h3>
-      <div class="mod__body">占位：列表/表格</div>
+      <div class="mod__body">
+        <MemberNew />
+      </div>
     </section>
   </main>
 </template>
@@ -55,6 +60,9 @@
 import YearJoin from '../components/member/YearJoin.vue';
 import MemberType from '../components/member/MemberType.vue';
 import AgeDistribution from '../components/member/AgeDistribution.vue';
+import EthnicDistribution from '../components/member/EthnicDistribution.vue';
+import RegionDistribution from '../components/member/RegionDistribution.vue';
+import MemberNew from '../components/member/MemberNew.vue';
 
 </script>
 

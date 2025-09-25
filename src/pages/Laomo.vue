@@ -3,7 +3,9 @@
     <!-- 顶部三块 -->
     <section class="mod" style="grid-area: tl;">
       <h3 class="mod__title">劳模民族分布统计</h3>
-      <div class="mod__body">占位：民族环图 + 图例</div>
+      <div class="mod__body" style="place-items: stretch;">
+        <LaomoEthnicDistribution />
+      </div>
     </section>
 
     <section class="mod" style="grid-area: tc;">
@@ -19,7 +21,9 @@
     <!-- 中部三块 -->
     <section class="mod" style="grid-area: ml;">
       <h3 class="mod__title">荣誉分类统计</h3>
-      <div class="mod__body">占位：环形分段图 + 图例</div>
+      <div class="mod__body" style="place-items: stretch;">
+        <LaomoHonorDistribution />
+      </div>
     </section>
 
     <section class="mod" style="grid-area: mc;">
@@ -29,24 +33,33 @@
 
     <section class="mod" style="grid-area: mr;">
       <h3 class="mod__title">劳模年龄分布统计</h3>
-      <div class="mod__body">占位：横向条形图</div>
+      <div class="mod__body" style="place-items: stretch;">
+        <LaomoAgeDistribution />
+      </div>
     </section>
 
     <!-- 底部：左表格 + 右通栏图 -->
     <section class="mod" style="grid-area: bl;">
-      <h3 class="mod__title">荣誉获选</h3>
-      <div class="mod__body">占位：表格（姓名/等级/单位/入选时间）</div>
+      <div class="mod__body" style="place-items: stretch;">
+        <LaomoMemberNew />
+      </div>
     </section>
 
     <section class="mod" style="grid-area: br;">
       <h3 class="mod__title">劳模区域分布</h3>
-      <div class="mod__body">占位：分区柱状</div>
+      <div class="mod__body" style="place-items: stretch;">
+        <LaomoRegionDistribution />
+      </div>
     </section>
   </main>
 </template>
 
 <script setup lang="ts">
-// 仅布局与占位，无具体数据逻辑
+import LaomoMemberNew from '../components/laomo/MemberNew.vue';
+import LaomoEthnicDistribution from '../components/laomo/EthnicDistribution.vue';
+import LaomoAgeDistribution from '../components/laomo/AgeDistribution.vue';
+import LaomoRegionDistribution from '../components/laomo/RegionDistribution.vue';
+import LaomoHonorDistribution from '../components/laomo/HonorClassification.vue';
 </script>
 
 <style scoped lang="scss">

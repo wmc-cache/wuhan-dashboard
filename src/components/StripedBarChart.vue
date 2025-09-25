@@ -28,6 +28,9 @@ interface Props {
   axisColor?: string;          // 坐标轴颜色
   textColor?: string;          // 文本颜色
   gridLineColor?: string;      // 网格线颜色
+  xLabelInterval?: number | 'auto'; // x 轴标签间隔（0 显示全部）
+  xLabelRotate?: number;       // x 轴标签旋转角度
+  ySplitNumber?: number;       // y 轴分隔数
 
   // 布局配置
   gridLeft?: number;
@@ -73,7 +76,10 @@ const props = withDefaults(defineProps<Props>(), {
   enableTooltip: true,
 
   labelPadding: 24,
-  alphaStrength: 0.9
+  alphaStrength: 0.9,
+  xLabelInterval: 'auto',
+  xLabelRotate: 0,
+  ySplitNumber: 4
 });
 
 const option = computed(() => {
@@ -89,13 +95,18 @@ const option = computed(() => {
       data: props.categories,
       axisTick: { show: false },
       axisLine: { lineStyle: { color: props.axisColor } },
-      axisLabel: { color: props.textColor, fontWeight: 600 }
+      axisLabel: {
+        color: props.textColor,
+        fontWeight: 600,
+        interval: props.xLabelInterval as any,
+        rotate: props.xLabelRotate
+      }
     },
     yAxis: {
       type: 'value',
       min: 0,
       max: props.yMax,
-      splitNumber: 4,
+      splitNumber: props.ySplitNumber,
       axisTick: { show: false },
       axisLine: { lineStyle: { color: props.axisColor } },
       axisLabel: { color: props.textColor },
