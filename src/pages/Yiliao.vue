@@ -1,18 +1,96 @@
 <template>
-  <main class="dash__main">
-    <section class="col col--center">
-      <div class="panel panel--blank h860">医疗互助（空白页）</div>
+  <main class="yiliao__grid">
+    <!-- 顶部三块：参助性别 / 总指标概览 / 给付性别 -->
+    <section class="mod" style="grid-area: tl;">
+      <h3 class="mod__title">参助性别统计</h3>
+      <div class="mod__body">占位：参助男女统计卡</div>
+    </section>
+
+    <section class="mod" style="grid-area: tc;">
+      <h3 class="mod__title">总指标概览</h3>
+      <div class="mod__body">占位：参与/给付金额、重大/住院、补助/结余 等指标</div>
+    </section>
+
+    <section class="mod" style="grid-area: tr;">
+      <h3 class="mod__title">给付性别统计</h3>
+      <div class="mod__body">占位：给付男女统计卡</div>
+    </section>
+
+    <!-- 中部三块：参助年龄 / 中部预留 / 给付年龄 -->
+    <section class="mod" style="grid-area: ml;">
+      <h3 class="mod__title">参助年龄分布统计</h3>
+      <div class="mod__body">占位：横向条形图（男女分组）</div>
+    </section>
+
+    <section class="mod" style="grid-area: mc;">
+      <h3 class="mod__title">（预留）</h3>
+      <div class="mod__body">占位：可放趋势/占比图</div>
+    </section>
+
+    <section class="mod" style="grid-area: mr;">
+      <h3 class="mod__title">给付年龄分布统计</h3>
+      <div class="mod__body">占位：横向条形图（男女分组）</div>
+    </section>
+
+    <!-- 底部三块：参助类型 / 给付疾病前类 / 给付类型 -->
+    <section class="mod" style="grid-area: bl;">
+      <h3 class="mod__title">参助类型统计</h3>
+      <div class="mod__body">占位：住院/综合/重大 参与类型</div>
+    </section>
+
+    <section class="mod" style="grid-area: bc;">
+      <h3 class="mod__title">给付疾病前类分布</h3>
+      <div class="mod__body">占位：按疾病分类的柱状图</div>
+    </section>
+
+    <section class="mod" style="grid-area: br;">
+      <h3 class="mod__title">给付类型统计</h3>
+      <div class="mod__body">占位：住院/综合/重大 给付类型</div>
     </section>
   </main>
 </template>
 
 <script setup lang="ts">
+// 仅布局分区与占位，无具体数据逻辑
 </script>
 
 <style scoped lang="scss">
-.dash__main { display: grid; grid-template-columns: 1fr; gap: 20px; padding: 0 20px 20px; height: 980px; }
-.col { display: grid; grid-template-rows: 860px; }
-.panel { background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(236,245,255,0.85)); border: 1px solid rgba(67,127,255,0.25); border-radius: 12px; box-shadow: 0 10px 30px rgba(45,110,255,0.12), inset 0 1px 0 rgba(255,255,255,0.7); padding: 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #366ad8; letter-spacing: 2px; }
-.panel--blank { background: radial-gradient(70% 70% at 50% 40%, #f6f9ff 0%, #edf3ff 100%); }
-.h860 { height: 860px; }
+.yiliao__grid {
+  height: 980px;
+  padding: 0 20px 20px;
+  display: grid;
+  grid-template-columns: 540px 1fr 540px;
+  grid-template-rows: 220px 360px 1fr;
+  grid-template-areas:
+    'tl tc tr'
+    'ml mc mr'
+    'bl bc br';
+  gap: 20px;
+}
+
+.mod {
+  position: relative;
+  border: 2px dashed rgba(88, 151, 255, 0.8);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.45);
+  box-shadow: inset 0 0 40px rgba(120, 170, 255, 0.08);
+  padding: 14px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.mod__title {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #2a6ff0;
+}
+
+.mod__body {
+  display: grid;
+  place-items: center;
+  color: rgba(34, 110, 230, 0.8);
+  font-size: 18px;
+}
 </style>

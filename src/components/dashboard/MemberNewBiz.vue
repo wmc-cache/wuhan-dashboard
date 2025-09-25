@@ -1,6 +1,6 @@
 <template>
   <div class="member-new-biz">
-    <!-- 左：环形图（自适应） -->
+    <!-- 环形图 + 图例 + 翻页箭头 -->
     <RingPie
       :data="items"
       :center="seriesCenter"
@@ -8,48 +8,17 @@
       gap-color="rgba(242,247,255,0.95)"
       :border-width="6"
       :emphasis-scale="20"
+      enable-pagination
+      :page-size="6"
+      :initial-active-index="startIndex"
+      v-model:activeIndex="activeIndex"
+      @active-change="onActiveChange"
     >
       <template #center>
         <div class="num">{{ active.value }}</div>
         <div class="name">{{ active.name }}</div>
       </template>
     </RingPie>
-
-    <!-- 右：图例 + 分页箭头 -->
-    <div class="legend-wrap">
-      <ul class="legend" role="list">
-        <li
-          v-for="(it, idx) in visibleItems"
-          :key="it.name + idx"
-          class="legend-item"
-          :class="{ active: (pageStart + idx) === activeIndex }"
-          @mouseenter="setActive(pageStart + idx)"
-        >
-          <span class="dot" :style="{ backgroundColor: it.color }" aria-hidden="true"></span>
-          <span class="label">{{ it.name }}</span>
-          <span class="count">({{ formatNumber(it.value) }})</span>
-        </li>
-      </ul>
-      <!-- 右下：上下箭头（分页控制） -->
-      <div class="legend-arrows">
-        <i
-          class="tri tri--up"
-          :class="{ disabled: pageIndex === 0 }"
-          role="button"
-          aria-label="上一页"
-          :aria-disabled="pageIndex === 0"
-          @click="pageUp"
-        ></i>
-        <i
-          class="tri tri--down"
-          :class="{ disabled: pageIndex >= totalPages - 1 }"
-          role="button"
-          aria-label="下一页"
-          :aria-disabled="pageIndex >= totalPages - 1"
-          @click="pageDown"
-        ></i>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -93,28 +62,10 @@ const props = withDefaults(defineProps<Props>(), {
 const activeIndex = ref(props.startIndex);
 const items = reactive(props.items);
 
-function setActive(idx: number) {
-  activeIndex.value = idx;
-}
-
 const active = computed(() => items[activeIndex.value] ?? items[0]);
 
-// 图例分页
-const pageSize = computed(() => props.pageSize);
-const pageIndex = ref(Math.floor(activeIndex.value / pageSize.value));
-const totalPages = computed(() => Math.max(1, Math.ceil(items.length / pageSize.value)));
-const pageStart = computed(() => pageIndex.value * pageSize.value);
-const visibleItems = computed(() => items.slice(pageStart.value, pageStart.value + pageSize.value));
-
-function pageUp() {
-  if (pageIndex.value > 0) pageIndex.value -= 1;
-}
-function pageDown() {
-  if (pageIndex.value < totalPages.value - 1) pageIndex.value += 1;
-}
-
-function formatNumber(n: number): string {
-  return n.toLocaleString('zh-CN');
+function onActiveChange(_item: BizItem, _index: number) {
+  // 可以在这里添加额外的激活变化处理逻辑
 }
 
 // 图表中心位置（与 RingPie 同步）
@@ -125,10 +76,6 @@ const seriesCenter = ref<[string, string]>(['38%', '52%']);
 .member-new-biz {
   position: relative;
   height: 100%;
-  display: grid;
-  grid-template-columns: 1.05fr 1fr; // 左图略宽
-  align-items: center;
-  column-gap: 8px;
 }
 
 .num {
@@ -140,67 +87,5 @@ const seriesCenter = ref<[string, string]>(['38%', '52%']);
   font-size: 16px;
   color: #2a6ff0;
   font-weight: 700;
-}
-
-.legend-wrap {
-  height: 100%;
-  display: grid;
-  grid-template-rows: 1fr auto; /* 列表占满，箭头置底 */
-}
-
-.legend {
-  list-style: none;
-  padding: 0 6px 0 0;
-  margin: 0;
-  display: grid;
-  row-gap: 12px;
-}
-
-.legend-item {
-  display: grid;
-  grid-template-columns: 20px auto 1fr;
-  align-items: center;
-  column-gap: 8px;
-  color: rgba(19, 115, 255, 0.9);
-  font-weight: 700;
-}
-
-.legend-item .label { font-size: 16px; }
-.legend-item .count { font-size: 14px; opacity: 0.9; margin-left: 6px; justify-self: end; }
-
-.legend-item.active .label { color: #2a6ff0; text-shadow: 0 0 10px rgba(88,151,255,0.2); }
-
-.dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  display: inline-block;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.6) inset;
-}
-
-.legend-arrows {
-  justify-self: start;
-  display: inline-grid;
-  grid-auto-flow: column;
-  column-gap: 14px; /* 两个箭头水平排列 */
-  padding: 6px 0 2px;
-}
-
-.tri {
-  width: 0; height: 0;
-  border-left: 9px solid transparent;
-  border-right: 9px solid transparent;
-  opacity: 0.9;
-  cursor: pointer;
-  filter: drop-shadow(0 2px 3px rgba(90,160,255,0.25));
-}
-
-.tri--up { border-bottom: 10px solid rgba(130, 170, 255, 0.95); }
-.tri--down { border-top: 10px solid rgba(130, 170, 255, 0.95); }
-
-.tri.disabled {
-  opacity: 0.35;
-  cursor: default;
-  pointer-events: none;
 }
 </style>
