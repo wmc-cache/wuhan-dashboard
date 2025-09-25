@@ -100,7 +100,8 @@ const props = withDefaults(defineProps<Props>(), {
   radius: () => ['48%', '72%'],
   gapColor: 'rgba(242,247,255,0.95)',
   borderWidth: 6,
-  emphasisScale: 18,
+  // 触摸/悬停放大幅度：使用更接近 ECharts 默认的值，避免过于明显
+  emphasisScale: 10,
   startAngle: 90,
   showLabel: false,
   enablePagination: false,
@@ -177,15 +178,11 @@ const option = computed(() => ({
         borderWidth: props.borderWidth,
         borderColor: props.gapColor,
       },
+      // 触摸/悬停的强调效果：恢复到较为克制的默认表现
+      // - 不再自定义加粗边框与阴影
+      // - 不强制指定 scaleSize，交给 ECharts 默认处理（整体更自然）
       emphasis: {
-        scale: true,
-        scaleSize: props.emphasisScale,
-        itemStyle: {
-          borderWidth: Math.max(1, props.borderWidth + 1),
-          borderColor: props.gapColor,
-          shadowBlur: 12,
-          shadowColor: 'rgba(80,140,255,0.35)'
-        }
+        scale: true
       },
       data: props.data.map((d) => ({ name: d.name, value: d.value, itemStyle: { color: d.color } }))
     }
