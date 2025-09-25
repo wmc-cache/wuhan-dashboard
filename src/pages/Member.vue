@@ -3,12 +3,15 @@
     <!-- 顶部三块 -->
     <section class="mod" style="grid-area: tl;">
       <h3 class="mod__title">会员性别分布统计</h3>
-      <div class="mod__body">占位：男女总数与图卡</div>
+      <div class="mod__body">
+        <GenderDistribution />
+      </div>
     </section>
 
     <section class="mod" style="grid-area: tc;">
-      <h3 class="mod__title">搜索 + 今日会员总数</h3>
-      <div class="mod__body">占位：搜索框 + 当日会员总数</div>
+      <div class="mod__body">
+        <SearchTodayTotal />
+      </div>
     </section>
 
     <section class="mod" style="grid-area: tr;">
@@ -63,6 +66,8 @@ import AgeDistribution from '../components/member/AgeDistribution.vue';
 import EthnicDistribution from '../components/member/EthnicDistribution.vue';
 import RegionDistribution from '../components/member/RegionDistribution.vue';
 import MemberNew from '../components/member/MemberNew.vue';
+import GenderDistribution from '../components/member/GenderDistribution.vue';
+import SearchTodayTotal from '../components/member/SearchTodayTotal.vue';
 
 </script>
 
