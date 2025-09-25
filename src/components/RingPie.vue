@@ -198,12 +198,16 @@ const option = computed(() => ({
   position: relative;
   height: 100%;
   display: grid;
-  grid-template-columns: 1.05fr 1fr; // 左图略宽
+  /* 默认只有环图（无翻页/图例）时，使用单列布局，
+     避免右侧出现一个空列从而造成环图视觉“偏左”，
+     这会让父级下面的文字看起来没对齐居中 */
+  grid-template-columns: 1fr; // 默认单列
   align-items: center;
   column-gap: 8px;
 
-  &:has(.legend-wrap:empty) {
-    grid-template-columns: 1fr; // 无翻页时单列布局
+  /* 当存在翻页/图例容器时，再切换为两列布局 */
+  &:has(.legend-wrap) {
+    grid-template-columns: 1.05fr 1fr; // 左图略宽
   }
 }
 

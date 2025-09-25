@@ -53,7 +53,7 @@ const props = withDefaults(defineProps<Props>(), {
   rightColorStart: '#FFB45E',
   rightColorEnd: 'rgba(255,136,0,0.65)',
   rightBorderColor: 'rgba(255,158,31,1)'
-  ,centerWidth: '12%', sideWidth: '34%', barWidth: 14, centerNudgePx: -6
+  ,centerWidth: '12%', sideWidth: '34%', barWidth: 12, centerNudgePx: -6
 });
 
 const root = ref<HTMLDivElement | null>(null);
@@ -92,9 +92,9 @@ const option = computed(() => {
     // 三 grid：左/中(0宽)/右，完全参考给定配置
     grid: [
       // 可配置的三列布局
-      { show: false, left: '5%',  top: '10%', bottom: '8%', containLabel: true, width: props.sideWidth },
-      { show: false, left: `${centerLeftPct}%`, top: '10%', bottom: '8%', containLabel: true, width: props.centerWidth },
-      { show: false, right: '2%', top: '10%', bottom: '8%', containLabel: true, width: props.sideWidth }
+      { show: false, left: '2%',  top: '10%', bottom: '12%', containLabel: true, width: props.sideWidth },
+      { show: false, left: `${centerLeftPct}%`, top: '15%', bottom: '12%', containLabel: true, width: props.centerWidth },
+      { show: false, right: '-3%', top: '10%', bottom: '12%', containLabel: true, width: props.sideWidth }
     ],
     legend: {
       top: '2%', right: '5%', itemWidth: 20, itemHeight: 5,

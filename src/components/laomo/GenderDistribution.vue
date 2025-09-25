@@ -85,9 +85,10 @@ function formatPeople(n: number) { return `${n.toLocaleString('zh-CN')}人`; }
   position: relative;
   height: 100%;
   display: grid;
-  grid-template-columns: 120px 1fr;
+  /* 左列加宽，让左侧图标可以更大，同时整体更贴设计 */
+  grid-template-columns: 130px 1fr;
     /* 左列更窄，给环图更多空间 */
-    column-gap: 10px;
+    column-gap: 5px;
     align-items: center;
   }
   
@@ -98,9 +99,10 @@ function formatPeople(n: number) { return `${n.toLocaleString('zh-CN')}人`; }
   }
   
   .left .icon {
-    width: 88px;
-    max-width: 72%;
+    width: 110px;   /* 放大图标 */
+    max-width: 100%;
     height: auto;
+    transform: translateX(30px);
   }
   
   .left-title {
@@ -111,11 +113,13 @@ function formatPeople(n: number) { return `${n.toLocaleString('zh-CN')}人`; }
   }
   
   .rings {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: 8px;
-      /* 减少两个环之间的间距 */
-      align-items: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    margin: 0 -15px;  /* 使用负边距让两个饼图重叠 */
+    /* 让两个饼图整体向右偏移一点，贴近原型的视觉位置 */
+    transform: translateX(50px);
     }
     
     .ring-card {
@@ -125,6 +129,8 @@ function formatPeople(n: number) { return `${n.toLocaleString('zh-CN')}人`; }
       grid-template-rows: 1fr auto;
       align-items: center;
       justify-items: center;
+      width: 120px;
+      flex-shrink: 0;
         /* 使底部文字与环图水平居中对齐 */
       }
       
@@ -145,5 +151,12 @@ function formatPeople(n: number) { return `${n.toLocaleString('zh-CN')}人`; }
   color: rgba(0, 0, 0, 0.55);
   font-weight: 700;
 }
-.legend { text-align: center; font-size: 16px; font-weight: 800; margin-top: 4px; }
+.legend {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 800;
+  margin-top: 4px;
+  width: 100%;
+  display: block;
+}
 </style>
