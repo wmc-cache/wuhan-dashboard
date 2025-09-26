@@ -3,7 +3,9 @@
     <!-- 顶部三块 -->
     <section class="mod" style="grid-area: tl;">
       <h3 class="mod__title">工会总数</h3>
-      <div class="mod__body">占位：工会总数/今日统计</div>
+      <div class="mod__body">
+        <OrgTotal :tile-width="60" :tile-height="54" :font-size="44" />
+      </div>
     </section>
 
     <section class="mod" style="grid-area: tc;">
@@ -18,8 +20,9 @@
 
     <!-- 中部三块 -->
     <section class="mod" style="grid-area: ml;">
-      <h3 class="mod__title">新增工会</h3>
-      <div class="mod__body">占位：表格</div>
+      <div class="mod__body">
+        <OrgNew />
+      </div>
     </section>
 
     <section class="mod" style="grid-area: mc;">
@@ -39,7 +42,9 @@
     <!-- 底部通栏 -->
     <section class="mod" style="grid-area: bl;">
       <h3 class="mod__title">工会区域分布</h3>
-      <div class="mod__body">占位：分区柱状图</div>
+      <div class="mod__body">
+        <OrgRegionDistribution />
+      </div>
     </section>
   </main>
 </template>
@@ -48,6 +53,9 @@
 // 引入年度工会创建数图表与工会会员数
 import YearCreate from '../components/org/YearCreate.vue';
 import MemberCount from '../components/org/MemberCount.vue';
+import OrgTotal from '../components/org/OrgTotal.vue';
+import OrgNew from '../components/org/OrgNew.vue';
+import OrgRegionDistribution from '../components/org/RegionDistribution.vue';
 </script>
 
 <style scoped lang="scss">

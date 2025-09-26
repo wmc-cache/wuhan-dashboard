@@ -7,7 +7,7 @@
 
     <GridTable
       :columns="columns"
-      :rows="visible"
+      :rows="items"
       :grid-template="gridTemplate"
       :show-header="false"
       row-key="id"
@@ -49,7 +49,7 @@ const emit = defineEmits<{
   (e: 'cell-click', payload: { row: Item; column: ColumnDef; rowIndex: number }): void;
 }>();
 
-const visible = computed(() => props.items.slice(0, props.pageSize));
+// 滚动由 GridTable 控制，不再切分
 
 const gridTemplate = '1.4fr 1.2fr 1.2fr';
 const columns: ColumnDef[] = [
@@ -100,4 +100,3 @@ function onMore() {
   background-image: image-set(url('../../images/show-all/查看更多.png') 1x, url('../../images/show-all/查看更多@2x.png') 2x);
 }
 </style>
-

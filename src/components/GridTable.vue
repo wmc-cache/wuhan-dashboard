@@ -14,7 +14,7 @@
     </div>
 
     <!-- 数据行 -->
-    <ul class="tbody" role="rowgroup">
+    <ul class="tbody" role="rowgroup" :style="tbodyStyle">
       <li v-for="(row, rIdx) in rows" :key="rowKey ? (row as any)[rowKey] ?? rIdx : rIdx" class="tr"
         :style="rowGridStyle" role="row" :aria-rowindex="rIdx + 1">
         <div v-for="col in columns" :key="col.key" class="td" :class="col.clickable ? 'td--link' : 'td--text'"
@@ -46,6 +46,9 @@ interface Props {
   gridTemplate?: string; // CSS grid-template-columns
   rowKey?: string; // 行唯一 key 字段
   showHeader?: boolean;
+  // 可视行数与行高：超过后在表体内滚动
+  visibleRows?: number; // 默认 6 行
+  rowHeight?: number;   // 单行高度，默认 38px
   // 标题尺寸（使用“新增公会”切图）
   titleWidth?: string;
   titleHeight?: string;
@@ -55,7 +58,9 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  gridTemplate: '1.2fr 1fr 1fr 1.2fr'
+  gridTemplate: '1.2fr 1fr 1fr 1.2fr',
+  visibleRows: 6,
+  rowHeight: 35
 });
 
 const emit = defineEmits<{
@@ -76,6 +81,19 @@ const moreStyle = computed(() => ({
   width: props.moreWidth || '40px',
   height: props.moreHeight || '15px'
 }));
+
+// 表体滚动高度（仅限制表体，表头固定）。
+// 若未传 visibleRows，则占满可用高度（1fr），超出时滚动；
+// 若传了 visibleRows，则按行数上限计算最大高度。
+const tbodyStyle = computed(() => {
+  const base: Record<string, string> = { overflowY: 'auto' };
+  if (props.visibleRows && props.visibleRows > 0) {
+    base.maxHeight = `${props.visibleRows * props.rowHeight}px`;
+  } else {
+    base.height = '100%';
+  }
+  return base;
+});
 
 function emitCell(row: Record<string, any>, column: ColumnDef, rowIndex: number) {
   emit('cell-click', { row, column, rowIndex });
@@ -144,10 +162,11 @@ function formatCell(val: any, col: ColumnDef): string {
   list-style: none;
   margin: 0;
   padding: 0;
+  /* 让外部可通过内联样式控制滚动区域高度 */
 }
 
 .tr {
-  min-height: 38px;
+  min-height: v-bind('rowHeight + "px"');
   font-weight: 600;
 }
 
@@ -183,4 +202,3 @@ function formatCell(val: any, col: ColumnDef): string {
   text-decoration: underline;
 }
 </style>
-

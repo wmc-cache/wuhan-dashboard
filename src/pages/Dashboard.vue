@@ -16,7 +16,7 @@
 
     <section class="col col--center">
       <div class="panel panel--map h860">
-        <WuhanMap />
+        <WuhanMap :show-network="false" />
       </div>
     </section>
 

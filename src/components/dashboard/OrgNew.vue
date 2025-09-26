@@ -1,6 +1,6 @@
 <template>
   <div class="org-new">
-    <GridTable :columns="columns" :rows="visible" :grid-template="gridTemplate" row-key="name" @cell-click="onCellClick"
+    <GridTable :columns="columns" :rows="items" :grid-template="gridTemplate" row-key="name" @cell-click="onCellClick"
       @more="onMore" show-header />
   </div>
 
@@ -39,7 +39,7 @@ const emit = defineEmits<{
   (e: 'cell-click', payload: { row: OrgNewItem; column: ColumnDef; rowIndex: number }): void;
 }>();
 
-const visible = computed(() => props.items.slice(0, props.pageSize));
+// 滚动由 GridTable 控制
 
 const gridTemplate = '1.2fr 1fr 1fr 1.2fr';
 const columns: ColumnDef[] = [
