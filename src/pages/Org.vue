@@ -8,14 +8,18 @@
       </div>
     </section>
 
-    <section class="mod" style="grid-area: tc;">
-      <h3 class="mod__title">搜索 + 指标卡</h3>
-      <div class="mod__body">占位：搜索框与三张指标卡</div>
+    <section style="grid-area: tc;">
+
+      <div class="mod__body">
+        <OrgSearchKpis />
+      </div>
     </section>
 
     <section class="mod" style="grid-area: tr;">
       <h3 class="mod__title">工会会员总数</h3>
-      <div class="mod__body">占位：会员总数图卡</div>
+      <div class="mod__body">
+        <OrgMemberTotal />
+      </div>
     </section>
 
     <!-- 中部三块 -->
@@ -53,6 +57,8 @@
 // 引入年度工会创建数图表与工会会员数
 import YearCreate from '../components/org/YearCreate.vue';
 import MemberCount from '../components/org/MemberCount.vue';
+import OrgMemberTotal from '../components/org/MemberTotal.vue';
+import OrgSearchKpis from '../components/org/SearchKpis.vue';
 import OrgTotal from '../components/org/OrgTotal.vue';
 import OrgNew from '../components/org/OrgNew.vue';
 import OrgRegionDistribution from '../components/org/RegionDistribution.vue';

@@ -224,19 +224,5 @@ function onInput(e: Event) {
                 border-radius: 8px;
                 background: linear-gradient(90deg, #FFA36B 0%, rgba(255, 163, 107, 0.55) 100%);
               }
-              
-              @media (max-width: 1180px) {
-                .digit {
-                  width: 74px;
-                  height: 92px;
-                }
-              
-                .digit .text {
-                  font-size: 48px;
-                }
-              
-                .search-bar {
-                  grid-template-columns: 1fr 120px;
-                }
-              }
+          
 </style>
