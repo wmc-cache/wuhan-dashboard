@@ -4,8 +4,10 @@
       :columns="columns"
       :rows="items"
       :grid-template="gridTemplate"
-      :show-header="false"
+      :show-header="true"
       row-key="id"
+      :title-img1x="url"
+      :title-img2x="url2x"
       @cell-click="onCellClick"
     />
   </div>
@@ -14,6 +16,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import GridTable, { type ColumnDef } from '../GridTable.vue';
+import url from '../../images/home-title/新增会员/编组 25.png';
+import url2x from '../../images/home-title/新增会员/编组 25@2x.png';
 
 interface MemberNewItem {
   id: string | number;

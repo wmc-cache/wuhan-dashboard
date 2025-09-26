@@ -15,22 +15,44 @@
 
     <!-- 数据行 -->
     <ul class="tbody" role="rowgroup" :style="tbodyStyle">
-      <li v-for="(row, rIdx) in rows" :key="rowKey ? (row as any)[rowKey] ?? rIdx : rIdx" class="tr"
-        :style="rowGridStyle" role="row" :aria-rowindex="rIdx + 1">
-        <div v-for="col in columns" :key="col.key" class="td" :class="col.clickable ? 'td--link' : 'td--text'"
-          :style="{ textAlign: col.align || 'center' }" role="cell"
-          @click="col.clickable ? emitCell(row, col, rIdx) : void 0">
+      <li
+        v-for="(row, rIdx) in displayRows"
+        :key="isPlaceholderRow(row) ? '__ph_' + rIdx : (rowKey ? (row as any)[rowKey] ?? rIdx : rIdx)"
+        class="tr"
+        :class="{ 'tr--ph': isPlaceholderRow(row) }"
+        :style="rowGridStyle"
+        role="row"
+        :aria-rowindex="rIdx + 1"
+      >
+        <div
+          v-for="col in columns"
+          :key="col.key"
+          class="td"
+          :class="col.clickable && !isPlaceholderRow(row) ? 'td--link' : 'td--text'"
+          :style="{ textAlign: col.align || 'center' }"
+          role="cell"
+          @click="col.clickable && !isPlaceholderRow(row) ? emitCell(row, col, rIdx) : void 0"
+        >
           <span class="cell" :class="{ clickable: !!col.clickable }">
-            {{ formatCell((row as any)[col.key], col) }}
+            <template v-if="!isPlaceholderRow(row)">
+              {{ formatCell((row as any)[col.key], col) }}
+            </template>
+            <template v-else>
+              
+            </template>
           </span>
         </div>
       </li>
+      <div v-if="isEmpty" class="empty">{{ props.emptyText }}</div>
     </ul>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
+// 默认标题切图：新增公会
+import titleOrg1x from '../images/home-title/新增公会/编组 18.png';
+import titleOrg2x from '../images/home-title/新增公会/编组 18@2x.png';
 
 export interface ColumnDef {
   key: string; // 对应行字段
@@ -46,21 +68,31 @@ interface Props {
   gridTemplate?: string; // CSS grid-template-columns
   rowKey?: string; // 行唯一 key 字段
   showHeader?: boolean;
-  // 可视行数与行高：超过后在表体内滚动
+  // 可视行数与行高：超过后在表体内滚动（滚动区域高度=可见行数×行高，避免出现半截行）
   visibleRows?: number; // 默认 6 行
   rowHeight?: number;   // 单行高度，默认 38px
   // 标题尺寸（使用“新增公会”切图）
   titleWidth?: string;
   titleHeight?: string;
+  // 标题图片自定义（1x/2x）
+  titleImg1x?: string;
+  titleImg2x?: string;
   // 查看更多尺寸
   moreWidth?: string;
   moreHeight?: string;
+  // 空数据占位
+  emptyText?: string;   // 空数据时显示的文字
+  fillPlaceholder?: boolean; // 是否以空行填充至 visibleRows 行
 }
 
 const props = withDefaults(defineProps<Props>(), {
   gridTemplate: '1.2fr 1fr 1fr 1.2fr',
   visibleRows: 6,
-  rowHeight: 35
+  rowHeight: 36,
+  emptyText: '暂无数据',
+  fillPlaceholder: true,
+  titleImg1x: titleOrg1x,
+  titleImg2x: titleOrg2x
 });
 
 const emit = defineEmits<{
@@ -72,28 +104,55 @@ const rowGridStyle = computed(() => ({ gridTemplateColumns: props.gridTemplate }
 
 // Header defaults（使用项目内切图）
 const showHeader = computed(() => props.showHeader !== false);
-const titleStyle = computed(() => ({
-  width: props.titleWidth || '110px',
-  height: props.titleHeight || '35px'
-}));
+// 为了兼容性，这里返回 style 字符串，包含多次 background-image 声明：
+// 1) url(1x) 作为兜底；2) -webkit-image-set；3) image-set
+const titleStyle = computed(() => {
+  const width = props.titleWidth || '110px';
+  const height = props.titleHeight || '35px';
+  const img1x = props.titleImg1x || titleOrg1x;
+  const img2x = props.titleImg2x || titleOrg2x;
+  const styleStr = [
+    `width:${width}`,
+    `height:${height}`,
+    `background-image:url('${img1x}')`,
+    `background-image:-webkit-image-set(url('${img1x}') 1x, url('${img2x}') 2x)`,
+    `background-image:image-set(url('${img1x}') 1x, url('${img2x}') 2x)`
+  ].join(';');
+  return styleStr;
+});
 
 const moreStyle = computed(() => ({
   width: props.moreWidth || '40px',
   height: props.moreHeight || '15px'
 }));
 
-// 表体滚动高度（仅限制表体，表头固定）。
-// 若未传 visibleRows，则占满可用高度（1fr），超出时滚动；
-// 若传了 visibleRows，则按行数上限计算最大高度。
+// 计算表体固定高度：可见行数 × 行高；
+// 超出部分滚动；不足部分用空行填充（可配置）。
 const tbodyStyle = computed(() => {
-  const base: Record<string, string> = { overflowY: 'auto' };
-  if (props.visibleRows && props.visibleRows > 0) {
-    base.maxHeight = `${props.visibleRows * props.rowHeight}px`;
-  } else {
-    base.height = '100%';
-  }
-  return base;
+  const total = Array.isArray(props.rows) ? props.rows.length : 0;
+  const vis = Math.max(1, props.visibleRows || 6);
+  const needScroll = total > vis;
+  return {
+    height: `${vis * props.rowHeight}px`,
+    overflowY: needScroll ? 'auto' : 'hidden'
+  } as Record<string, string>;
 });
+
+const isEmpty = computed(() => (props.rows?.length ?? 0) === 0);
+
+const displayRows = computed(() => {
+  const rows = Array.isArray(props.rows) ? props.rows : [];
+  if (!props.fillPlaceholder) return rows;
+  const vis = Math.max(1, props.visibleRows || 6);
+  const fillerCount = Math.max(0, vis - rows.length);
+  if (fillerCount === 0) return rows;
+  const fillers = Array.from({ length: fillerCount }, (_, i) => ({ __placeholder__: true, __ph__: i }));
+  return rows.concat(fillers);
+});
+
+function isPlaceholderRow(row: Record<string, any>): boolean {
+  return !!(row && (row as any).__placeholder__);
+}
 
 function emitCell(row: Record<string, any>, column: ColumnDef, rowIndex: number) {
   emit('cell-click', { row, column, rowIndex });
@@ -142,13 +201,9 @@ function formatCell(val: any, col: ColumnDef): string {
   cursor: pointer;
 }
 
-.thead,
-.tr {
-  display: grid;
-  align-items: center;
-  column-gap: 12px;
-  padding: 8px 16px;
-}
+.thead, .tr { display: grid; align-items: center; column-gap: 12px; }
+.thead { padding: 8px 16px; }
+.tr { padding: 0 16px; box-sizing: border-box; height: v-bind('rowHeight + "px"'); }
 
 .thead {
   background: rgba(50, 135, 254, 0.18);
@@ -162,13 +217,11 @@ function formatCell(val: any, col: ColumnDef): string {
   list-style: none;
   margin: 0;
   padding: 0;
+  position: relative;
   /* 让外部可通过内联样式控制滚动区域高度 */
 }
 
-.tr {
-  min-height: v-bind('rowHeight + "px"');
-  font-weight: 600;
-}
+.tr { font-weight: 600; }
 
 .tr:nth-child(odd) {
   background: rgba(50, 135, 254, 0.05);
@@ -186,6 +239,21 @@ function formatCell(val: any, col: ColumnDef): string {
 .td {
   font-size: 16px;
   text-align: center;
+}
+
+/* 占位行：仅用于撑开高度，采用更淡的背景 */
+.tr--ph { opacity: 0.5; }
+.tr--ph .td { color: transparent; }
+
+.empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: rgba(42,111,240,0.65);
+  font-weight: 800;
+  letter-spacing: 1px;
+  pointer-events: none;
 }
 
 /* 点击与非点击颜色规范 */

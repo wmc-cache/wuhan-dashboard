@@ -3,6 +3,7 @@
     <!-- 搜索条 -->
     <div class="search-bar">
       <div class="input-wrap">
+        <img class="icon-search" :src="search1x" :srcset="search2x + ' 2x'" alt="搜索" draggable="false" />
         <input class="input" type="text" :placeholder="placeholder" :value="modelValue" @input="onInput"
           @keyup.enter="onSearch" />
       </div>
@@ -26,6 +27,8 @@
 <script setup lang="ts">
 import bg1x from '../../images/org/bg/编组 8.png';
 import bg2x from '../../images/org/bg/编组 8@2x.png';
+import search1x from '../../images/search/搜索.png';
+import search2x from '../../images/search/搜索@2x.png';
 import icon31x from '../../images/org/title3/位图.png';
 import icon32x from '../../images/org/title3/位图@2x.png';
 import icon41x from '../../images/org/title4/位图.png';
@@ -66,9 +69,11 @@ function fmt(v: number | string) { const n = Number(v); return Number.isFinite(n
 
 /* 搜索条 */
 .search-bar { display: grid; grid-template-columns: 1fr 140px; column-gap: 16px; align-items: center; }
-.input { height: 44px; padding: 0 14px; border-radius: 12px; border: 2px solid rgba(90,160,255,0.8); background: rgba(255,255,255,0.8); color: #2a6ff0; font-size: 16px; outline: none; }
+.input-wrap { position: relative; display: grid; }
+.icon-search { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; object-fit: contain; pointer-events: none; user-select: none; }
+.input { height: 44px; padding: 0 14px 0 44px; border-radius: 12px; border: 2px solid rgba(90,160,255,0.8); background: rgba(255,255,255,0.75); color: #2a6ff0; font-size: 16px; outline: none; }
 .input::placeholder { color: rgba(42,111,240,0.6); }
-.btn { height: 44px; border-radius: 12px; border: 2px solid rgba(90,160,255,0.9); background: rgba(255,255,255,0.95); color: #2a6ff0; font-weight: 800; font-size: 18px; cursor: pointer; }
+.btn { height: 44px; border-radius: 12px; border: 2px solid rgba(90,160,255,0.9); background: rgba(255,255,255,0.9); color: #2a6ff0; font-weight: 800; font-size: 18px; cursor: pointer; }
 
 /* KPI 卡片 */
 .kpi-row {
@@ -109,4 +114,3 @@ function fmt(v: number | string) { const n = Number(v); return Number.isFinite(n
 
 
 </style>
-

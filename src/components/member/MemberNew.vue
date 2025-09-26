@@ -10,7 +10,9 @@
       :columns="columns"
       :rows="items"
       :grid-template="gridTemplate"
-      :show-header="false"
+      :show-header="true"
+      :title-img1x="title1x"
+      :title-img2x="title2x"
       row-key="id"
       @cell-click="onCellClick"
     />
@@ -20,6 +22,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import GridTable, { type ColumnDef } from '../GridTable.vue';
+import title1x from '../../images/home-title/新增会员/编组 25.png';
+import title2x from '../../images/home-title/新增会员/编组 25@2x.png';
 
 interface MemberNewItem {
   id: string | number;

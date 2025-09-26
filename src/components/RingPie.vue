@@ -2,7 +2,7 @@
   <div class="ring-pie-wrapper">
     <!-- 左：环形图 -->
     <div class="ring-pie">
-      <EChart :option="option" />
+      <EChart :option="option" :events="chartEvents" />
       <!-- 中心插槽：根据 center 百分比精准定位 -->
       <div v-if="$slots.center" class="center" :style="centerStyle">
         <slot name="center" />
@@ -11,7 +11,7 @@
 
     <!-- 右：图例和翻页控制（当启用翻页时显示） -->
     <div v-if="enablePagination" class="legend-wrap">
-      <div class="legend-content">
+      <div class="legend-content" @mouseenter="pauseAuto()" @mouseleave="resumeAuto()">
         <!-- 图例插槽，允许父组件自定义图例样式 -->
         <slot
           name="legend"
@@ -27,8 +27,8 @@
               v-for="(item, idx) in visibleItems"
               :key="item.name + idx"
               class="legend-item"
-              :class="{ active: (pageStart + idx) === localActiveIndex }"
-              @mouseenter="setActive(pageStart + idx)"
+              :class="{ active: (scrollStart + idx) === localActiveIndex }"
+              @mouseenter="setActive(scrollStart + idx)"
             >
               <span class="dot" :style="{ backgroundColor: item.color }" aria-hidden="true"></span>
               <span class="label">{{ item.name }}</span>
@@ -39,30 +39,30 @@
       </div>
 
       <!-- 翻页箭头 -->
-      <div class="pagination-arrows">
+      <div v-if="canPaginate" class="pagination-arrows">
         <slot
           name="arrows"
           :pageUp="pageUp"
           :pageDown="pageDown"
-          :canPageUp="pageIndex > 0"
-          :canPageDown="pageIndex < totalPages - 1"
+          :canPageUp="canPageUp"
+          :canPageDown="canPageDown"
         >
           <!-- 默认箭头实现 -->
           <div class="legend-arrows">
             <i
               class="tri tri--up"
-              :class="{ disabled: pageIndex === 0 }"
+              :class="{ disabled: !canPageUp }"
               role="button"
               aria-label="上一页"
-              :aria-disabled="pageIndex === 0"
+              :aria-disabled="!canPageUp"
               @click="pageUp"
             ></i>
             <i
               class="tri tri--down"
-              :class="{ disabled: pageIndex >= totalPages - 1 }"
+              :class="{ disabled: !canPageDown }"
               role="button"
               aria-label="下一页"
-              :aria-disabled="pageIndex >= totalPages - 1"
+              :aria-disabled="!canPageDown"
               @click="pageDown"
             ></i>
           </div>
@@ -135,25 +135,40 @@ function setActive(index: number) {
   if (activeItem) {
     emit('active-change', activeItem, index);
   }
+  // 若激活项不在可视窗口内，自动滚动使其可见
+  const end = scrollStart.value + props.pageSize - 1;
+  if (index < scrollStart.value) {
+    scrollStart.value = index;
+  } else if (index > end) {
+    scrollStart.value = index - props.pageSize + 1;
+  }
+  clampScroll();
 }
 
-// 分页逻辑
-const pageIndex = ref(Math.floor(localActiveIndex.value / props.pageSize));
-const totalPages = computed(() => Math.max(1, Math.ceil(props.data.length / props.pageSize)));
-const pageStart = computed(() => pageIndex.value * props.pageSize);
-const visibleItems = computed(() => props.data.slice(pageStart.value, pageStart.value + props.pageSize));
+// 滚动逻辑：窗口一次移动 1 条
+const scrollStart = ref(0);
+const canPaginate = computed(() => props.data.length > props.pageSize);
+const canPageUp = computed(() => scrollStart.value > 0);
+const canPageDown = computed(() => scrollStart.value < Math.max(0, props.data.length - props.pageSize));
+const visibleItems = computed(() => props.data.slice(scrollStart.value, scrollStart.value + props.pageSize));
+
+function clampScroll() {
+  const maxStart = Math.max(0, props.data.length - props.pageSize);
+  if (scrollStart.value > maxStart) scrollStart.value = maxStart;
+  if (scrollStart.value < 0) scrollStart.value = 0;
+}
 
 function pageUp() {
-  if (pageIndex.value > 0) {
-    pageIndex.value -= 1;
-    emit('page-change', pageIndex.value);
+  if (canPageUp.value) {
+    scrollStart.value -= 1;
+    emit('page-change', scrollStart.value);
   }
 }
 
 function pageDown() {
-  if (pageIndex.value < totalPages.value - 1) {
-    pageIndex.value += 1;
-    emit('page-change', pageIndex.value);
+  if (canPageDown.value) {
+    scrollStart.value += 1;
+    emit('page-change', scrollStart.value);
   }
 }
 
@@ -188,6 +203,57 @@ const option = computed(() => ({
     }
   ]
 }) as any);
+
+// 交互：当触摸/鼠标悬停/点击扇区时，更新中心展示
+function onSliceEvent(p: any) {
+  if (!p) return;
+  // 仅处理饼图扇区
+  if (p.componentType === 'series' && p.seriesType === 'pie' && typeof p.dataIndex === 'number') {
+    setActive(p.dataIndex);
+  }
+}
+
+const chartEvents = {
+  mouseover: onSliceEvent,
+  click: onSliceEvent,
+  highlight: onSliceEvent
+} as Record<string, (p: any) => void>;
+
+// 自动滚动（可配置）
+import { onMounted, onBeforeUnmount } from 'vue';
+const autoTimer = ref<number | null>(null);
+const AUTO_INTERVAL = 2500; // ms
+
+function startAuto() {
+  stopAuto();
+  if (!canPaginate.value) return;
+  autoTimer.value = window.setInterval(() => {
+    if (canPageDown.value) {
+      scrollStart.value += 1;
+    } else {
+      // 到底后回到顶部，形成循环
+      scrollStart.value = 0;
+    }
+  }, AUTO_INTERVAL);
+}
+
+function stopAuto() {
+  if (autoTimer.value) {
+    clearInterval(autoTimer.value);
+    autoTimer.value = null;
+  }
+}
+
+function pauseAuto() { stopAuto(); }
+function resumeAuto() { startAuto(); }
+
+watch(() => [props.data.length, props.pageSize], () => {
+  clampScroll();
+  startAuto();
+});
+
+onMounted(() => startAuto());
+onBeforeUnmount(() => stopAuto());
 </script>
 
 <style scoped lang="scss">
@@ -226,8 +292,12 @@ const option = computed(() => ({
   grid-template-rows: 1fr auto; // 列表占满，箭头置底
 }
 
+/* 让图例在可用高度内垂直居中 */
 .legend-content {
   overflow: hidden;
+  display: grid;
+  align-content: center;  /* 垂直居中图例列表 */
+  justify-items: start;    /* 水平仍靠左对齐 */
 }
 
 .legend {

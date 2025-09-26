@@ -30,7 +30,7 @@
         <MemberNewBiz />
       </div>
       <div class="panel h300">
-        <span class="title-img title-img--member-new" aria-hidden="true"></span>
+        <!-- <span class="title-img title-img--member-new" aria-hidden="true"></span> -->
         <MemberNew />
       </div>
     </section>
