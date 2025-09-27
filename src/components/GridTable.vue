@@ -122,8 +122,8 @@ const titleStyle = computed(() => {
 });
 
 const moreStyle = computed(() => ({
-  width: props.moreWidth || '40px',
-  height: props.moreHeight || '15px'
+  width: props.moreWidth || '45px',
+  height: props.moreHeight || '20px'
 }));
 
 // 计算表体固定高度：可见行数 × 行高；
@@ -184,6 +184,7 @@ function formatCell(val: any, col: ColumnDef): string {
   display: inline-block;
   background-repeat: no-repeat;
   background-size: 100% 100%;
+  margin-right: 8px;
 }
 
 .title-img {
