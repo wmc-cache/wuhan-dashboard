@@ -88,7 +88,8 @@ const infoPos = ref({ x: 16, y: 16 });
 function placeInfoAtPixel(px: [number, number]) {
   const el = root.value; if (!el) return;
   const w = el.clientWidth || 0; const h = el.clientHeight || 0;
-  const CARD_W = 280; const CARD_H = 150; const GAP = 12; const PAD = 8;
+  // 弹框背景切图尺寸（map-tip/编组 14备份 7.png 1x: 279x161）
+  const CARD_W = 279; const CARD_H = 161; const GAP = 12; const PAD = 8;
   let x = (px?.[0] ?? 0) + GAP; let y = (px?.[1] ?? 0) + GAP;
   x = Math.min(Math.max(PAD, x), Math.max(PAD, w - CARD_W - PAD));
   y = Math.min(Math.max(PAD, y), Math.max(PAD, h - CARD_H - PAD));
@@ -326,19 +327,20 @@ watch(() => props.initialActive, (n) => { if (n) { active.value = n; chart.value
 /* 信息卡样式（右下角） */
 .info-card {
   position: absolute; z-index: 10;
-  width: 280px; padding: 12px 14px; border-radius: 10px;
-  background: linear-gradient(180deg, rgba(120,170,255,0.25), rgba(120,170,255,0.10));
-  box-shadow: 0 10px 30px rgba(45,110,255,0.12), inset 0 0 40px rgba(120,170,255,0.12);
-  border: 1px solid rgba(90,160,255,0.45);
-  backdrop-filter: blur(2px);
+  width: 279px; height: 161px; /* 与 1x 切图匹配 */
+  padding: 46px 14px 12px; /* 预留上部标题带区域 */
+  background-image: -webkit-image-set(url('../../images/map-tip/编组 14备份 7.png') 1x, url('../../images/map-tip/编组 14备份 7@2x.png') 2x);
+  background-image: image-set(url('../../images/map-tip/编组 14备份 7.png') 1x, url('../../images/map-tip/编组 14备份 7@2x.png') 2x);
+  background-repeat: no-repeat; background-size: 100% 100%;
+  border: none; box-shadow: none; backdrop-filter: none; border-radius: 0;
 }
 .info-card .title { display: flex; align-items: center; gap: 8px; color: #ffffff; font-weight: 900; font-size: 18px;
-  background: linear-gradient(90deg, #1672FF 0%, rgba(22,114,255,0.65) 100%);
-  border-radius: 8px; padding: 8px 10px; margin-bottom: 10px;
+  
+  background: transparent; border-radius: 0; padding: 0 6px; margin: -32px 0 0 80px; line-height: 32px;
 }
-.info-card .title .dot { width: 10px; height: 10px; border-radius: 50%; background: #3DE0FF; display: inline-block; box-shadow: 0 0 8px rgba(61,224,255,0.9); }
+
 .info-card .stats { list-style: none; margin: 0; padding: 0; }
-.info-card .stats li { display: grid; grid-template-columns: 1fr auto auto; align-items: baseline; color: #2a6ff0; padding: 6px 4px; }
+.info-card .stats li { display: grid; grid-template-columns: 1fr auto auto; align-items: baseline; color: #ffffff;margin-left: 70px;padding: 6px 10px; }
 .info-card .stats span { font-weight: 700; }
 .info-card .stats b { color: #ffffff; font-weight: 900; font-size: 18px; margin: 0 6px; text-shadow: 0 1px 2px rgba(0,0,0,0.15); }
 .info-card .stats i { color: rgba(255,255,255,0.85); font-style: normal; }
