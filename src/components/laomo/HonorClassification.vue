@@ -44,7 +44,8 @@ function angleByValue(v: number) {
   return (v / total) * sweepAngle;
 }
 
-const center = ['38%', '55%']; // 稍偏左，右侧放图例
+// 将环图整体向右移动一些，给左侧标签留出空间
+const center = ['46%', '55%'];
 
 const chartOption = computed(() => {
   // 三个环，使用 pie(两段) 实现有断口的进度环
@@ -161,12 +162,30 @@ const chartOption = computed(() => {
     const a = ang[idx];
     underData.push({ value: data[idx].value, name: data[idx].name, itemStyle: { color: hexToRgba(data[idx].color, 0.3) } });
     underData.push({ value: gapValue, name: `gap-u-${i}`, itemStyle: { color: 'rgba(0,0,0,0)' }, tooltip: { show: false }, label: { show: false }, labelLine: { show: false } });
+    // 所有标签均贴边对齐，避免左右两侧被容器裁切；formatter 使用函数，避免出现“\n22”字符
     solidData.push({
       value: data[idx].value,
       name: data[idx].name,
       itemStyle: { color: data[idx].color, borderColor: '#eef2f7', borderWidth: 2 },
-      label: { show: true, position: 'outside', formatter: '{b}\n{c}' },
-      labelLine: { show: true, length: idx === 2 ? 22 : 16, length2: idx === 2 ? 36 : 24, lineStyle: { color: data[idx].color, width: 1.5 } }
+      label: {
+        show: true,
+        position: 'outside',
+        formatter: (p: any) => `${p.name}\n${p.value}`,
+        alignTo: 'edge',
+        edgeDistance: 10,
+        color: '#2a6ff0',
+        fontSize: 12,
+        width: 72,
+        lineHeight: 16,
+        overflow: 'break'
+      },
+      labelLine: {
+        show: true,
+        length: 16,
+        // 第二段短一些，让文字更靠近容器边缘即可
+        length2: 10,
+        lineStyle: { color: data[idx].color, width: 1.5 }
+      }
     });
     solidData.push({ value: gapValue, name: `gap-s-${i}`, itemStyle: { color: 'rgba(0,0,0,0)' }, tooltip: { show: false }, label: { show: false }, labelLine: { show: false } });
   });
@@ -260,7 +279,7 @@ const chartOption = computed(() => {
       .center-label {
         position: absolute;
         top: 55%;
-        left: 38%;
+        left: 46%;
         transform: translate(-50%, -50%);
         font-size: 16px;
         font-weight: 600;

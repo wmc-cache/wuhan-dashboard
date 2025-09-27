@@ -1,11 +1,5 @@
 <template>
   <div class="member-new">
-    <!-- 自定义头部：新增会员 + 查看更多（使用切图） -->
-    <div class="table-header">
-      <span class="title-img" aria-hidden="true"></span>
-      <i class="more-img" role="button" aria-label="查看更多" @click="onMore"></i>
-    </div>
-
     <GridTable
       :columns="columns"
       :rows="items"

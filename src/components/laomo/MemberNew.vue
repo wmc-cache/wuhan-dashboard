@@ -1,15 +1,12 @@
 <template>
   <div class="member-new">
-    <div class="table-header">
-      <span class="title-img" aria-hidden="true"></span>
-      <i class="more-img" role="button" aria-label="查看更多" @click="onMore"></i>
-    </div>
+ 
 
     <GridTable
       :columns="columns"
       :rows="items"
       :grid-template="gridTemplate"
-      :show-header="false"
+      :show-header="true"
       row-key="id"
       @cell-click="onCellClick"
     />

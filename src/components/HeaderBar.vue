@@ -1,6 +1,5 @@
 <template>
   <header class="hd">
-
     <!-- 左侧分组（文字替换为图片） -->
     <nav class="nav nav--left">
       <RouterLink class="tab" :class="{ 'tab--active': activeTab === 'home' }" aria-label="首页" :aria-current="activeTab === 'home' ? 'page' : undefined" :to="{ name: 'home' }">
@@ -30,138 +29,97 @@
       <RouterLink class="tab" :class="{ 'tab--active': activeTab === 'yiliao' }" aria-label="医疗互助" :aria-current="activeTab === 'yiliao' ? 'page' : undefined" :to="{ name: 'yiliao' }">
         <span class="tab__img tab__img--yiliao" aria-hidden="true"></span>
       </RouterLink>
-      <a class="tab tab--more" aria-label="更多">
-        <span class="tab__img tab__img--more" aria-hidden="true"></span>
+      <a class="tab tab--more" aria-label="更多" :class="{ 'tab--active': isMoreActive }" :aria-expanded="moreOpen ? 'true' : 'false'" @click.prevent="toggleMore">
+        <span v-if="moreDisplayLabel === '更多'" class="tab__img tab__img--more" aria-hidden="true"></span>
+        <span v-else class="tab__label">{{ moreDisplayLabel }}</span>
         <i class="caret" />
       </a>
+      <!-- 下拉菜单：模拟数据，点击切换不同页面 -->
+      <div v-if="moreOpen" class="more-menu" role="menu">
+        <RouterLink v-for="m in moreMenus" :key="m.name" class="more-item" role="menuitem"
+          :to="{ name: m.name }" @click="closeMore">{{ m.label }}</RouterLink>
+      </div>
     </nav>
   </header>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
-// 当前激活的 tab id（与路由 name 对应）
 type TabId = 'home' | 'org' | 'member' | 'laomo' | 'yiliao';
 const route = useRoute();
 const activeTab = computed<TabId>(() => (route.name as TabId) || 'home');
+
+// 模拟“更多”下拉的条目（假数据）
+const moreMenus = [
+  { label: '政策法规', name: 'policy' },
+  { label: '学习培训', name: 'training' },
+  { label: '数据报表', name: 'reports' },
+  { label: '服务大厅', name: 'service' }
+] as const;
+
+const moreOpen = ref(false);
+function toggleMore() { moreOpen.value = !moreOpen.value; }
+function closeMore() { moreOpen.value = false; }
+
+function onDocClick(e: MouseEvent) {
+  const t = e.target as HTMLElement | null;
+  if (!t) return;
+  if (!t.closest('.tab--more') && !t.closest('.more-menu')) closeMore();
+}
+// “更多”tab 的高亮与显示文本：当路由命中下拉列表时，高亮并把文案替换为所选菜单名
+const isMoreActive = computed(() => moreMenus.some(m => m.name === (route.name as string)));
+const moreDisplayLabel = computed(() => {
+  const cur = moreMenus.find(m => m.name === (route.name as string));
+  return cur ? cur.label : '更多';
+});
+onMounted(() => document.addEventListener('click', onDocClick));
+onBeforeUnmount(() => document.removeEventListener('click', onDocClick));
 </script>
 
 <style scoped lang="scss">
-$blue-s: #2a6ff0;
-$blue-e: #4298ff;
-$blue-deep: #1662e8;
-$orange-s: #ff9e3c;
-$orange-e: #ff7a33;
-$glow: rgba(61,127,255,0.35);
-
 .hd {
   height: 110px;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  /* 顶部横幅已移至 ScaleBox 全屏容器绘制，这里去掉背景与左右留白 */
   padding: 0;
   position: relative;
 }
-  
-  .hd__baseline {
-    position: absolute;
-    left: 20px;
-    right: 20px;
-    top: 72px;
-    height: 16px;
-    border-radius: 8px;
-    z-index: 0;
-  }
-  
-  /* 中间标题 */
-  .title {
-    position: relative;
-    height: 88px;
-    display: grid;
-    place-items: center;
-    z-index: 1;
-  }
-  
-  /* 隐藏文字标题，改用背景图片展示 */
-  .title__text {
-    display: none;
-  }
 
-/* 左右导航 */
-.nav {
-  display: flex;
-  /* 根据整体缩放自动缩小间距，但不小于 12px，避免极小缩放时拥挤 */
-  gap: max(12px, calc(26px * var(--sb-scale, 1)));
-  align-items: center;
-  z-index: 1;
-  padding-top: 4px;
-}
-/* 顶部菜单字体：统一白色 + 深色描边与阴影，保证在浅色底纹上可读 */
-.nav .tab,
-.nav .tab:link,
-.nav .tab:visited {
-  color: #fff;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  font-size: 20px;
-  text-decoration: none;
-  -webkit-text-stroke: 0.35px rgba(10, 60, 140, 0.6);
-  text-shadow: 0 1px 2px rgba(0,0,0,0.35), 0 0 6px rgba(30, 100, 220, 0.25);
-}
-.nav .tab {
-  position: relative; /* needed for active bg */
-  z-index: 0; /* create stacking context for ::before */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 40px; /* 与左右菜单底纹高度一致，便于居中 */
-  /* 给每个按钮一个不小于高亮底纹的最小宽度，防止极小缩放下视觉重叠 */
-  min-width: 150px;
-  cursor: pointer;
-}
-.nav .tab:hover { color: #fff; opacity: 0.96; }
+.title { position: relative; height: 88px; display: grid; place-items: center; z-index: 1; }
+.title__text { display: none; }
+
+.nav { display: flex; gap: max(12px, calc(26px * var(--sb-scale, 1))); align-items: center; z-index: 1; padding-top: 4px; }
+.nav .tab, .nav .tab:link, .nav .tab:visited { color: #fff; font-weight: 600; letter-spacing: 0.5px; font-size: 20px; text-decoration: none; -webkit-text-stroke: 0.35px rgba(10,60,140,.6); text-shadow: 0 1px 2px rgba(0,0,0,.35), 0 0 6px rgba(30,100,220,.25); }
+.nav .tab { position: relative; z-index: 0; display: inline-flex; align-items: center; justify-content: center; height: 40px; min-width: 150px; cursor: pointer; }
+.nav .tab:hover { opacity: .96; }
 .tab--active { color: #fff; }
-/* 激活态：使用 active-tab 图做底纹背景 */
-.tab--active::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 150px; /* 1x 尺寸 */
-  height: 60px; /* 1x 尺寸 */
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-image: -webkit-image-set(
-    url('../images/active-tab/1x.png') 1x,
-    url('../images/active-tab/2x.png') 2x
-  );
-  background-image: image-set(
-    url('../images/active-tab/1x.png') 1x,
-    url('../images/active-tab/2x.png') 2x
-  );
-  pointer-events: none;
-  z-index: -1; /* stay behind text/icon */
+.tab--active::before { content: ""; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 150px; height: 60px; background-repeat: no-repeat; background-size: contain; background-image: -webkit-image-set(url('../images/active-tab/1x.png') 1x, url('../images/active-tab/2x.png') 2x); background-image: image-set(url('../images/active-tab/1x.png') 1x, url('../images/active-tab/2x.png') 2x); pointer-events: none; z-index: -1; }
+.nav--right { justify-content: flex-end; position: relative; }
+
+/* 左右菜单底纹背景（随缩放） */
+.nav--left,
+.nav--right { position: relative; padding-inline: 0; z-index: 1; }
+.nav--left::before,
+.nav--right::before { content: ""; position: absolute; top: 50%; transform: translateY(-50%); width: 482px; height: 40px; background-repeat: no-repeat; background-size: contain; pointer-events: none; z-index: -1; }
+.nav--left::before {
+  left: 0;
+  background-image: -webkit-image-set(url('../images/left-menu-bg/1x.png') 1x, url('../images/left-menu-bg/2x.png') 2x);
+  background-image: image-set(url('../images/left-menu-bg/1x.png') 1x, url('../images/left-menu-bg/2x.png') 2x);
 }
-/* 右侧菜单靠右对齐，保证与左侧对称 */
-.nav--right { justify-content: flex-end; }
-
-
-
-
-
-
-.tab--more .caret {
-  display: inline-block; margin-left: 6px; width: 0; height: 0;
-  border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 7px solid #fff;
-  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.35));
+.nav--right::before {
+  right: 0;
+  background-image: -webkit-image-set(url('../images/right-menu-bg/1x.png') 1x, url('../images/right-menu-bg/2x.png') 2x);
+  background-image: image-set(url('../images/right-menu-bg/1x.png') 1x, url('../images/right-menu-bg/2x.png') 2x);
 }
+
+.tab--more .caret { display: inline-block; margin-left: 6px; width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 7px solid #fff; filter: drop-shadow(0 1px 1px rgba(0,0,0,.35)); }
 
 .tab__img { display: inline-block; background-repeat: no-repeat; background-size: 100% 100%; vertical-align: middle; }
-/* 图片文字：根据 1x 实际尺寸定义，自动适配 2x */
+/* 文本态（当下拉选择后，用文字替换“更多”贴合选中项） */
+.tab__label { display: inline-block; line-height: 16px; font-weight: 600; }
 .tab__img--home { width: 42px; height: 22px; background-image: -webkit-image-set(url('../images/font/首页/首页.png') 1x, url('../images/font/首页/首页@2x.png') 2x); background-image: image-set(url('../images/font/首页/首页.png') 1x, url('../images/font/首页/首页@2x.png') 2x); }
 .tab__img--org { width: 74px; height: 16px; background-image: -webkit-image-set(url('../images/font/工会组织/工会组织.png') 1x, url('../images/font/工会组织/工会组织@2x.png') 2x); background-image: image-set(url('../images/font/工会组织/工会组织.png') 1x, url('../images/font/工会组织/工会组织@2x.png') 2x); }
 .tab__img--member { width: 73px; height: 16px; background-image: -webkit-image-set(url('../images/font/工会会员/工会会员.png') 1x, url('../images/font/工会会员/工会会员@2x.png') 2x); background-image: image-set(url('../images/font/工会会员/工会会员.png') 1x, url('../images/font/工会会员/工会会员@2x.png') 2x); }
@@ -169,59 +127,12 @@ $glow: rgba(61,127,255,0.35);
 .tab__img--yiliao { width: 74px; height: 16px; background-image: -webkit-image-set(url('../images/font/医疗互助/医疗互助.png') 1x, url('../images/font/医疗互助/医疗互助@2x.png') 2x); background-image: image-set(url('../images/font/医疗互助/医疗互助.png') 1x, url('../images/font/医疗互助/医疗互助@2x.png') 2x); }
 .tab__img--more { width: 37px; height: 16px; background-image: -webkit-image-set(url('../images/font/更多/更多.png') 1x, url('../images/font/更多/更多@2x.png') 2x); background-image: image-set(url('../images/font/更多/更多.png') 1x, url('../images/font/更多/更多@2x.png') 2x); }
 
-.nav--left,
-.nav--right {
-  position: relative;
-  /* 贴边显示装饰背景，去掉默认内边距 */
-  padding-inline: 0;
-  z-index: 1;
-  /* create stacking context so text sits above the bg pseudo-element */
-}
-
-/* 左/右菜单底纹背景（跟随舞台等比缩放） */
-.nav--left::before,
-.nav--right::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 482px;
-  height: 40px;
-  /* 设计尺寸，随 ScaleBox 一起等比缩放 */
-  background-repeat: no-repeat;
-  background-size: contain;
-  pointer-events: none;
-  z-index: -1;
-    /* keep decorative bg behind the nav text */
-}
-.nav--left::before {
-  left: 0;
-  background-image: -webkit-image-set(
-    url('../images/left-menu-bg/1x.png') 1x,
-    url('../images/left-menu-bg/2x.png') 2x
-  );
-  background-image: image-set(
-    url('../images/left-menu-bg/1x.png') 1x,
-    url('../images/left-menu-bg/2x.png') 2x
-  );
-}
-.nav--right::before {
-  right: 0;
-  background-image: -webkit-image-set(
-    url('../images/right-menu-bg/1x.png') 1x,
-    url('../images/right-menu-bg/2x.png') 2x
-  );
-  background-image: image-set(
-    url('../images/right-menu-bg/1x.png') 1x,
-    url('../images/right-menu-bg/2x.png') 2x
-  );
-}
-
-
+/* 下拉菜单 */
+.more-menu { position: absolute; right: 0; top: 100%; margin-top: 8px; min-width: 160px; background: rgba(255,255,255,.96); box-shadow: 0 6px 20px rgba(20,80,200,.18); border: 1px solid rgba(120,170,255,.35); border-radius: 8px; padding: 6px; backdrop-filter: blur(6px); z-index: 10; }
+.more-item { display: block; padding: 10px 12px; border-radius: 6px; color: #2a6ff0; font-weight: 700; text-decoration: none; }
+.more-item:hover { background: rgba(88,151,255,.1); }
 
 @media (max-width: 1680px) {
-  .title__text { font-size: 36px; letter-spacing: 4px; }
-  /* 更窄视口时，适当缩小最小宽度，保证三项也能排下 */
   .tab { min-width: 120px; height: 40px; line-height: 40px; }
 }
 </style>
