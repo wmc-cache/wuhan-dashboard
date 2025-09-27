@@ -2,7 +2,8 @@
   <main class="laomo__grid">
     <!-- 顶部三块 -->
     <section class="mod" style="grid-area: tl;">
-      <h3 class="mod__title">劳模民族分布统计</h3>
+      <!-- 图片标题：劳模民族分布统计（1/7） -->
+      <span class="title-img title-img--laomo-1" aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
         <LaomoEthnicDistribution />
       </div>
@@ -16,7 +17,8 @@
     </section>
 
     <section class="mod" style="grid-area: tr;">
-      <h3 class="mod__title">劳模人员性别分布统计</h3>
+      <!-- 图片标题：劳模人员性别分布统计（2/7） -->
+      <span class="title-img title-img--laomo-2" aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
         <LaomoGenderDistribution />
       </div>
@@ -24,21 +26,24 @@
 
     <!-- 中部三块 -->
     <section class="mod" style="grid-area: ml;">
-      <h3 class="mod__title">荣誉分类统计</h3>
+      <!-- 图片标题：荣誉分类统计（3/7） -->
+      <span class="title-img title-img--laomo-3" aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
         <LaomoHonorDistribution />
       </div>
     </section>
 
     <section class="mod" style="grid-area: mc;">
-      <h3 class="mod__title">劳模收入情况统计</h3>
+      <!-- 图片标题：劳模收入情况统计（4/7） -->
+      <span class="title-img title-img--laomo-4" aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
         <LaomoIncomeDistribution />
       </div>
     </section>
 
     <section class="mod" style="grid-area: mr;">
-      <h3 class="mod__title">劳模年龄分布统计</h3>
+      <!-- 图片标题：劳模年龄分布统计（5/7） -->
+      <span class="title-img title-img--laomo-5" aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
         <LaomoAgeDistribution />
       </div>
@@ -52,7 +57,8 @@
     </section>
 
     <section class="mod" style="grid-area: br;">
-      <h3 class="mod__title">劳模区域分布</h3>
+      <!-- 图片标题：劳模区域分布（6/7） -->
+      <span class="title-img title-img--laomo-7" aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
         <LaomoRegionDistribution />
       </div>
@@ -110,4 +116,23 @@ import LaomoGenderDistribution from '../components/laomo/GenderDistribution.vue'
   color: rgba(34, 110, 230, 0.8);
   font-size: 18px;
 }
+
+
+.mod > .title-img { display: inline-block; margin-bottom: 8px; }
+.title-img { display: inline-block; background-repeat: no-repeat; background-size: 100% 100%; }
+
+
+.title-img--laomo-1 { width: 192px; height: 35px; background-image: -webkit-image-set(url('../images/laomo/font-title/1/编组 21.png') 1x, url('../images/laomo/font-title/1/编组 21@2x.png') 2x); background-image: image-set(url('../images/laomo/font-title/1/编组 21.png') 1x, url('../images/laomo/font-title/1/编组 21@2x.png') 2x); }
+
+.title-img--laomo-2 { width: 233px; height: 35px; background-image: -webkit-image-set(url('../images/laomo/font-title/2/编组 21.png') 1x, url('../images/laomo/font-title/2/编组 21@2x.png') 2x); background-image: image-set(url('../images/laomo/font-title/2/编组 21.png') 1x, url('../images/laomo/font-title/2/编组 21@2x.png') 2x); }
+
+.title-img--laomo-3 { width: 152px; height: 35px; background-image: -webkit-image-set(url('../images/laomo/font-title/3/编组 21.png') 1x, url('../images/laomo/font-title/3/编组 21@2x.png') 2x); background-image: image-set(url('../images/laomo/font-title/3/编组 21.png') 1x, url('../images/laomo/font-title/3/编组 21@2x.png') 2x); }
+
+.title-img--laomo-4 { width: 192px; height: 35px; background-image: -webkit-image-set(url('../images/laomo/font-title/4/编组 21.png') 1x, url('../images/laomo/font-title/4/编组 21@2x.png') 2x); background-image: image-set(url('../images/laomo/font-title/4/编组 21.png') 1x, url('../images/laomo/font-title/4/编组 21@2x.png') 2x); }
+
+.title-img--laomo-5 { width: 192px; height: 35px; background-image: -webkit-image-set(url('../images/laomo/font-title/5/编组 21.png') 1x, url('../images/laomo/font-title/5/编组 21@2x.png') 2x); background-image: image-set(url('../images/laomo/font-title/5/编组 21.png') 1x, url('../images/laomo/font-title/5/编组 21@2x.png') 2x); }
+
+.title-img--laomo-6 { width: 111px; height: 35px; background-image: -webkit-image-set(url('../images/laomo/font-title/6/编组 21.png') 1x, url('../images/laomo/font-title/6/编组 21@2x.png') 2x); background-image: image-set(url('../images/laomo/font-title/6/编组 21.png') 1x, url('../images/laomo/font-title/6/编组 21@2x.png') 2x); }
+
+.title-img--laomo-7 { width: 152px; height: 35px; background-image: -webkit-image-set(url('../images/laomo/font-title/7/编组 21.png') 1x, url('../images/laomo/font-title/7/编组 21@2x.png') 2x); background-image: image-set(url('../images/laomo/font-title/7/编组 21.png') 1x, url('../images/laomo/font-title/7/编组 21@2x.png') 2x); }
 </style>

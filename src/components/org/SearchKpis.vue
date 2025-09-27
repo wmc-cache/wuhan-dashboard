@@ -85,7 +85,7 @@ function fmt(v: number | string) { const n = Number(v); return Number.isFinite(n
 }
 .kpi-card { display: grid; grid-template-rows: auto 1fr auto; justify-items: center; row-gap: 8px; }
 .num {
-  font-size: 36px;
+  font-size: 30px;
   font-weight: 900;
   line-height: 1;
   background: linear-gradient(180deg, #6FA7FF 0%, #1A65FF 90%);

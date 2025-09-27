@@ -7,6 +7,10 @@
       :rows="items"
       :grid-template="gridTemplate"
       :show-header="true"
+      :title-img1x="titleImg1x"
+      :title-img2x="titleImg2x"
+      title-width="111px"
+      title-height="35px"
       row-key="id"
       @cell-click="onCellClick"
     />
@@ -16,6 +20,9 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import GridTable, { type ColumnDef } from '../GridTable.vue';
+// 表格左上标题：使用 laomo/font-title/6 作为小标题切图（111x35）
+import titleImg1x from '../../images/laomo/font-title/6/编组 21.png';
+import titleImg2x from '../../images/laomo/font-title/6/编组 21@2x.png';
 
 interface Item {
   id: string | number;
@@ -62,6 +69,7 @@ function onCellClick(payload: { row: Item; column: ColumnDef; rowIndex: number }
 function onMore() {
   emit('more');
 }
+
 </script>
 
 <style scoped lang="scss">

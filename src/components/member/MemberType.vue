@@ -8,6 +8,8 @@
       gap-color="rgba(242,247,255,0.95)"
       :border-width="6"
       :emphasis-scale="20"
+      v-align="start"
+      legend-v-align="start"
       enable-pagination
       :page-size="6"
       :initial-active-index="startIndex"
@@ -52,7 +54,8 @@ function onActiveChange(_item: Item, _index: number) {
   // 可以在这里添加额外的激活变化处理逻辑
 }
 
-const seriesCenter = ref<[string, string]>(['38%', '52%']);
+// 轻微上移整体视觉重心
+const seriesCenter = ref<[string, string]>(['38%', '48%']);
 </script>
 
 <style scoped lang="scss">
@@ -64,4 +67,3 @@ const seriesCenter = ref<[string, string]>(['38%', '52%']);
 .num { font-size: 42px; font-weight: 800; color: #3e74ff; }
 .name { font-size: 16px; color: #2a6ff0; font-weight: 700; }
 </style>
-

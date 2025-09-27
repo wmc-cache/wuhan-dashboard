@@ -2,7 +2,8 @@
   <main class="member__grid">
     <!-- 顶部三块 -->
     <section class="mod" style="grid-area: tl;">
-      <h3 class="mod__title">会员性别分布统计</h3>
+      <!-- 图片标题：会员性别分布统计（1/7） -->
+      <span class="title-img title-img--member-1" aria-hidden="true"></span>
       <div class="mod__body">
         <GenderDistribution />
       </div>
@@ -15,7 +16,8 @@
     </section>
 
     <section class="mod" style="grid-area: tr;">
-      <h3 class="mod__title">会员民族分布统计</h3>
+      <!-- 图片标题：会员民族分布统计（3/7） -->
+      <span class="title-img title-img--member-2" aria-hidden="true"></span>
       <div class="mod__body">
         <EthnicDistribution />
       </div>
@@ -23,21 +25,24 @@
 
     <!-- 中部三块 -->
     <section class="mod" style="grid-area: ml;">
-      <h3 class="mod__title">会员年龄分布统计</h3>
+      <!-- 图片标题：会员年龄分布统计（4/7） -->
+      <span class="title-img title-img--member-3" aria-hidden="true"></span>
       <div class="mod__body">
         <AgeDistribution />
       </div>
     </section>
 
     <section class="mod" style="grid-area: mc;">
-      <h3 class="mod__title">年入会数统计</h3>
+      <!-- 图片标题：年入会数统计（5/7） -->
+      <span class="title-img title-img--member-7" aria-hidden="true"></span>
       <div class="mod__body">
         <YearJoin :initial-year="2023" />
       </div>
     </section>
 
     <section class="mod" style="grid-area: mr;">
-      <h3 class="mod__title">会员类型统计</h3>
+      <!-- 图片标题：会员类型统计（6/7） -->
+      <span class="title-img title-img--member-4" aria-hidden="true"></span>
       <div class="mod__body">
         <MemberType />
       </div>
@@ -45,7 +50,8 @@
 
     <!-- 底部：左通栏 + 右表格 -->
     <section class="mod" style="grid-area: bl;">
-      <h3 class="mod__title">会员区域分布</h3>
+      <!-- 图片标题：会员区域分布（7/7） -->
+      <span class="title-img title-img--member-5" aria-hidden="true"></span>
       <div class="mod__body">
         <RegionDistribution />
       </div>
@@ -114,4 +120,24 @@ import SearchTodayTotal from '../components/member/SearchTodayTotal.vue';
   font-size: 18px;
 }
 .mod__body > * { min-width: 0; min-height: 0; }
+
+/* 图片标题（替换文字标题） */
+.mod > .title-img { display: inline-block; margin-bottom: 8px; }
+.title-img { display: inline-block; background-repeat: no-repeat; background-size: 100% 100%; }
+
+/* 会员页标题切图（按版块顺序 1~7） */
+/* 1 顶左：会员性别分布统计 191x35 */
+.title-img--member-1 { width: 191px; height: 35px; background-image: -webkit-image-set(url('../images/member/font-title/1/编组 21.png') 1x, url('../images/member/font-title/1/编组 21@2x.png') 2x); background-image: image-set(url('../images/member/font-title/1/编组 21.png') 1x, url('../images/member/font-title/1/编组 21@2x.png') 2x); }
+
+.title-img--member-2 { width: 191px; height: 35px; background-image: -webkit-image-set(url('../images/member/font-title/2/编组 21.png') 1x, url('../images/member/font-title/2/编组 21@2x.png') 2x); background-image: image-set(url('../images/member/font-title/2/编组 21.png') 1x, url('../images/member/font-title/2/编组 21@2x.png') 2x); }
+/* 3 顶右：会员民族分布统计 191x35 */
+.title-img--member-3 { width: 191px; height: 35px; background-image: -webkit-image-set(url('../images/member/font-title/3/编组 21.png') 1x, url('../images/member/font-title/3/编组 21@2x.png') 2x); background-image: image-set(url('../images/member/font-title/3/编组 21.png') 1x, url('../images/member/font-title/3/编组 21@2x.png') 2x); }
+/* 4 中左：会员年龄分布统计 151x35 */
+.title-img--member-4 { width: 151px; height: 35px; background-image: -webkit-image-set(url('../images/member/font-title/4/编组 21.png') 1x, url('../images/member/font-title/4/编组 21@2x.png') 2x); background-image: image-set(url('../images/member/font-title/4/编组 21.png') 1x, url('../images/member/font-title/4/编组 21@2x.png') 2x); }
+/* 5 中中：年入会数统计 151x35 */
+.title-img--member-5 { width: 151px; height: 35px; background-image: -webkit-image-set(url('../images/member/font-title/5/编组 21.png') 1x, url('../images/member/font-title/5/编组 21@2x.png') 2x); background-image: image-set(url('../images/member/font-title/5/编组 21.png') 1x, url('../images/member/font-title/5/编组 21@2x.png') 2x); }
+/* 6 中右：会员类型统计 110x35 */
+.title-img--member-6 { width: 110px; height: 35px; background-image: -webkit-image-set(url('../images/member/font-title/6/编组 21.png') 1x, url('../images/member/font-title/6/编组 21@2x.png') 2x); background-image: image-set(url('../images/member/font-title/6/编组 21.png') 1x, url('../images/member/font-title/6/编组 21@2x.png') 2x); }
+/* 7 底左：会员区域分布 151x35 */
+.title-img--member-7 { width: 151px; height: 35px; background-image: -webkit-image-set(url('../images/member/font-title/7/编组 21.png') 1x, url('../images/member/font-title/7/编组 21@2x.png') 2x); background-image: image-set(url('../images/member/font-title/7/编组 21.png') 1x, url('../images/member/font-title/7/编组 21@2x.png') 2x); }
 </style>

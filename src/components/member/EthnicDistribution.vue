@@ -7,6 +7,8 @@
       gap-color="rgba(242,247,255,0.95)"
       :border-width="6"
       :emphasis-scale="18"
+      v-align="start"
+      legend-v-align="start"
       enable-pagination
       :page-size="6"
       :initial-active-index="0"
@@ -49,7 +51,8 @@ const props = withDefaults(defineProps<Props>(), {
 const items = props.items; // 仅读取，不在本地修改
 
 // 调整环形图中心位置，让右侧有足够空间显示图例
-const seriesCenter = ref<[string, string]>(['38%', '52%']);
+// 上移整体视觉重心（y 从 52% 调整到 48%）
+const seriesCenter = ref<[string, string]>(['38%', '48%']);
 </script>
 
 <style scoped lang="scss">
@@ -66,4 +69,3 @@ const seriesCenter = ref<[string, string]>(['38%', '52%']);
   user-select: none;
 }
 </style>
-
