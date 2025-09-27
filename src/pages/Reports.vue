@@ -26,11 +26,10 @@ const kpis = [
 
 <style scoped lang="scss">
 .more__grid { height: 980px; padding: 0 20px 20px; display: grid; }
-.mod { border: 2px dashed rgba(88,151,255,.8); border-radius: 10px; background: rgba(255,255,255,.45); box-shadow: inset 0 0 40px rgba(120,170,255,.08); padding: 14px; display: grid; grid-template-rows: auto 1fr; }
+.mod { border: none; border-radius: 10px; background: rgba(235,241,247,.74); box-shadow: inset 0 0 40px rgba(120,170,255,.08); padding: 14px; display: grid; grid-template-rows: auto 1fr; }
 .mod__title { margin: 0 0 10px; font-size: 16px; font-weight: 800; letter-spacing: 1px; color: #2a6ff0; }
 .cards { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; }
 .card { background: rgba(255,255,255,.78); border: 1px solid rgba(120,170,255,.25); border-radius: 10px; padding: 16px; text-align: center; }
 .num { font-size: 28px; font-weight: 800; color: #2a6ff0; }
 .name { margin-top: 6px; color: rgba(0,0,0,.55); font-weight: 700; }
 </style>
-

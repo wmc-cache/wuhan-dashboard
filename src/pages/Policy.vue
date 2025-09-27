@@ -30,7 +30,7 @@ const articles = [
 
 <style scoped lang="scss">
 .more__grid { height: 980px; padding: 0 20px 20px; display: grid; }
-.mod { border: 2px dashed rgba(88,151,255,.8); border-radius: 10px; background: rgba(255,255,255,.45); box-shadow: inset 0 0 40px rgba(120,170,255,.08); padding: 14px; display: grid; grid-template-rows: auto 1fr; }
+.mod { border: none; border-radius: 10px; background: rgba(235,241,247,.74); box-shadow: inset 0 0 40px rgba(120,170,255,.08); padding: 14px; display: grid; grid-template-rows: auto 1fr; }
 .mod__title { margin: 0 0 10px; font-size: 16px; font-weight: 800; letter-spacing: 1px; color: #2a6ff0; }
 .mod__body { overflow: auto; }
 .list { list-style: none; margin: 0; padding: 0; display: grid; row-gap: 12px; }
@@ -38,4 +38,3 @@ const articles = [
 .name { color: #2a6ff0; font-weight: 700; }
 .meta { color: rgba(0,0,0,.45); font-size: 12px; }
 </style>
-

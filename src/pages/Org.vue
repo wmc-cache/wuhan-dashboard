@@ -2,7 +2,12 @@
   <main class="org__grid">
     <!-- 顶部三块 -->
     <section class="mod" style="grid-area: tl;">
-      <h3 class="mod__title">工会总数</h3>
+      <img
+        class="mod__title-img"
+        src="../images/org/font-title/1/编组 21.png"
+        srcset="../images/org/font-title/1/编组 21.png 1x, ../images/org/font-title/1/编组 21@2x.png 2x"
+        alt="工会总数"
+      />
       <div class="mod__body">
         <OrgTotal :tile-width="60" :tile-height="54" :font-size="44" />
       </div>
@@ -16,7 +21,12 @@
     </section>
 
     <section class="mod" style="grid-area: tr;">
-      <h3 class="mod__title">工会会员总数</h3>
+      <img
+        class="mod__title-img"
+        src="../images/org/font-title/4/编组 21.png"
+        srcset="../images/org/font-title/4/编组 21.png 1x, ../images/org/font-title/4/编组 21@2x.png 2x"
+        alt="工会会员总数"
+      />
       <div class="mod__body">
         <OrgMemberTotal />
       </div>
@@ -30,14 +40,24 @@
     </section>
 
     <section class="mod" style="grid-area: mc;">
-      <h3 class="mod__title">年度工会创建数</h3>
+      <img
+        class="mod__title-img"
+        src="../images/org/font-title/5/编组 21.png"
+        srcset="../images/org/font-title/5/编组 21.png 1x, ../images/org/font-title/5/编组 21@2x.png 2x"
+        alt="年度工会创建数"
+      />
       <div class="mod__body">
         <YearCreate :initial-year="2023" />
       </div>
     </section>
 
     <section class="mod" style="grid-area: mr;">
-      <h3 class="mod__title">工会会员数</h3>
+      <img
+        class="mod__title-img"
+        src="../images/org/font-title/2/编组 21.png"
+        srcset="../images/org/font-title/2/编组 21.png 1x, ../images/org/font-title/2/编组 21@2x.png 2x"
+        alt="工会会员数"
+      />
       <div class="mod__body">
         <MemberCount :centerNudgePx="-100" />
       </div>
@@ -45,7 +65,12 @@
 
     <!-- 底部通栏 -->
     <section class="mod" style="grid-area: bl;">
-      <h3 class="mod__title">工会区域分布</h3>
+      <img
+        class="mod__title-img"
+        src="../images/org/font-title/3/编组 21.png"
+        srcset="../images/org/font-title/3/编组 21.png 1x, ../images/org/font-title/3/编组 21@2x.png 2x"
+        alt="工会区域分布"
+      />
       <div class="mod__body">
         <OrgRegionDistribution />
       </div>
@@ -78,14 +103,17 @@ import OrgRegionDistribution from '../components/org/RegionDistribution.vue';
     'ml mc mr'
     'bl bl mr';
   gap: 20px;
+  /* 标题图片统一大小，便于快速整体调节 */
+  --title-img-h: 32px; /* 字体（标题）稍大一点 */
 }
 
-/* 模块通用卡片，用虚线边框划分区域 */
+/* 模块通用卡片：去掉虚线边框，保留圆角与浅背景 */
 .mod {
   position: relative;
-  border: 2px dashed rgba(88, 151, 255, 0.8);
+  /* 去掉虚线框 */
+  border: none;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.45);
+  background: rgba(235, 241, 247, 0.74); /* 设计标注：#EBF1F7 74% */
   box-shadow: inset 0 0 40px rgba(120, 170, 255, 0.08);
   padding: 14px;
   display: grid;
@@ -98,6 +126,15 @@ import OrgRegionDistribution from '../components/org/RegionDistribution.vue';
   font-weight: 800;
   letter-spacing: 1px;
   color: #2a6ff0;
+}
+
+.mod__title-img {
+  /* Title image to replace text headings; keeps same spacing as .mod__title */
+  display: block;
+  height: var(--title-img-h);
+  margin: 0 0 10px;
+  object-fit: contain;
+  /* Prevent blurriness on HiDPI; srcset provides 1x/2x */
 }
 
 .mod__body {

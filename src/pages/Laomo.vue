@@ -87,9 +87,9 @@ import LaomoGenderDistribution from '../components/laomo/GenderDistribution.vue'
 
 .mod {
   position: relative;
-  border: 2px dashed rgba(88, 151, 255, 0.8);
+  border: none; /* 去掉虚线框 */
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.45);
+  background: rgba(235, 241, 247, 0.74); /* 设计标注：#EBF1F7 74% */
   box-shadow: inset 0 0 40px rgba(120, 170, 255, 0.08);
   padding: 14px;
   display: grid;
