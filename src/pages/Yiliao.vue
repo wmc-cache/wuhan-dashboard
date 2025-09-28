@@ -2,18 +2,23 @@
   <main class="yiliao__grid">
     <!-- 顶部三块：参助性别 / 总指标概览 / 给付性别 -->
     <section class="mod" style="grid-area: tl;">
-      <h3 class="mod__title">参助性别统计</h3>
-      <div class="mod__body">占位：参助男女统计卡</div>
+      <div class="mod__body mod__body--full">
+        <GenderStat />
+      </div>
     </section>
 
-    <section class="mod" style="grid-area: tc;">
+    <!-- 中央大卡：合并原“总指标概览 + （预留）”两块，纵向跨两行 -->
+    <section class="mod metrics" style="grid-column: 2; grid-row: 1 / span 2;">
       <h3 class="mod__title">总指标概览</h3>
-      <div class="mod__body">占位：参与/给付金额、重大/住院、补助/结余 等指标</div>
+      <div class="mod__body">
+        占位：参与/给付金额、重大/住院、补助/结余 等指标 + 可放趋势/占比图
+      </div>
     </section>
 
     <section class="mod" style="grid-area: tr;">
-      <h3 class="mod__title">给付性别统计</h3>
-      <div class="mod__body">占位：给付男女统计卡</div>
+      <div class="mod__body mod__body--full">
+        <PayoutGenderStat />
+      </div>
     </section>
 
     <!-- 中部三块：参助年龄 / 中部预留 / 给付年龄 -->
@@ -22,10 +27,7 @@
       <div class="mod__body">占位：横向条形图（男女分组）</div>
     </section>
 
-    <section class="mod" style="grid-area: mc;">
-      <h3 class="mod__title">（预留）</h3>
-      <div class="mod__body">占位：可放趋势/占比图</div>
-    </section>
+    
 
     <section class="mod" style="grid-area: mr;">
       <h3 class="mod__title">给付年龄分布统计</h3>
@@ -52,6 +54,8 @@
 
 <script setup lang="ts">
 // 仅布局分区与占位，无具体数据逻辑
+import GenderStat from '../components/yiliao/GenderStat.vue';
+import PayoutGenderStat from '../components/yiliao/PayoutGenderStat.vue';
 </script>
 
 <style scoped lang="scss">
@@ -93,4 +97,7 @@
   color: rgba(34, 110, 230, 0.8);
   font-size: 18px;
 }
+
+/* 去除左上模块默认居中与文案颜色影响，让子组件占满 */
+.mod__body--full { place-items: stretch; color: inherit; }
 </style>
