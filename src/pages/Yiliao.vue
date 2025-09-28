@@ -9,9 +9,9 @@
 
     <!-- 中央大卡：合并原“总指标概览 + （预留）”两块，纵向跨两行 -->
     <section class="mod metrics" style="grid-column: 2; grid-row: 1 / span 2;">
-      <h3 class="mod__title">总指标概览</h3>
-      <div class="mod__body">
-        占位：参与/给付金额、重大/住院、补助/结余 等指标 + 可放趋势/占比图
+      <div></div>
+      <div class="mod__body mod__body--full">
+        <OverallOverview />
       </div>
     </section>
 
@@ -32,8 +32,10 @@
 
 
     <section class="mod" style="grid-area: mr;">
-      <h3 class="mod__title">给付年龄分布统计</h3>
-      <div class="mod__body">占位：横向条形图（男女分组）</div>
+      <div></div>
+      <div class="mod__body mod__body--full">
+        <PayoutAgeDist />
+      </div>
     </section>
 
     <!-- 底部三块：参助类型 / 给付疾病前类 / 给付类型 -->
@@ -65,7 +67,9 @@ import PayoutGenderStat from '../components/yiliao/PayoutGenderStat.vue';
 import JoinTypeStat from '../components/yiliao/JoinTypeStat.vue';
 import JoinAgeStat from '../components/yiliao/JoinAgeStat.vue';
 import PayoutTypeStat from '../components/yiliao/PayoutTypeStat.vue';
+import PayoutAgeDist from '../components/yiliao/PayoutAgeDist.vue';
 import DiseaseCategoryDist from '../components/yiliao/DiseaseCategoryDist.vue';
+import OverallOverview from '../components/yiliao/OverallOverview.vue';
 </script>
 
 <style scoped lang="scss">
