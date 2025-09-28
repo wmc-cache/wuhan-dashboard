@@ -1,8 +1,10 @@
 <template>
   <div class="join-age">
     <!-- 标题图片 -->
-    <div class="title-img">
-      <img :src="title1x" :srcset="title2x + ' 2x'" alt="参加年龄分布统计" draggable="false" />
+
+
+    <div class="title-img" aria-hidden="true">
+      <img :src="title1x" :srcset="title2x + ' 2x'" alt="给付类型统计" draggable="false" />
     </div>
 
     <!-- 自定义图例（男女） -->
@@ -99,8 +101,7 @@ const option = computed(() => {
 
 <style scoped lang="scss">
 .join-age { position: relative; width: 100%; height: 100%; padding: 18px 16px 12px; box-sizing: border-box; }
-.title-img { position: absolute; left: 12px; top: 8px; }
-.title-img img { display: block; width: 151px; height: 35px; object-fit: contain; }
+
 .legend { position: absolute; right: 18px; top: 12px; display: flex; gap: 24px; align-items: center; }
 .legend__item { display: inline-grid; grid-auto-flow: column; align-items: center; gap: 8px; font-size: 14px; color: #4c5566; font-weight: 600; }
 .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }

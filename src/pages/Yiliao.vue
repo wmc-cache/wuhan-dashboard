@@ -23,6 +23,7 @@
 
     <!-- 中部三块 -->
     <section class="mod" style="grid-area: ml;">
+      <div></div>
       <div class="mod__body mod__body--full">
         <JoinAgeStat />
       </div>
@@ -43,13 +44,16 @@
     </section>
 
     <section class="mod" style="grid-area: bc;">
-      <h3 class="mod__title">给付疾病种类分布</h3>
-      <div class="mod__body">占位：按疾病分类的柱状图</div>
+      <div></div>
+      <div class="mod__body mod__body--full">
+        <DiseaseCategoryDist />
+      </div>
     </section>
 
     <section class="mod" style="grid-area: br;">
-      <h3 class="mod__title">给付类型统计</h3>
-      <div class="mod__body">占位：住院/综合/重大 给付类型</div>
+      <div class="mod__body mod__body--full">
+        <PayoutTypeStat />
+      </div>
     </section>
   </main>
 </template>
@@ -60,6 +64,8 @@ import GenderStat from '../components/yiliao/GenderStat.vue';
 import PayoutGenderStat from '../components/yiliao/PayoutGenderStat.vue';
 import JoinTypeStat from '../components/yiliao/JoinTypeStat.vue';
 import JoinAgeStat from '../components/yiliao/JoinAgeStat.vue';
+import PayoutTypeStat from '../components/yiliao/PayoutTypeStat.vue';
+import DiseaseCategoryDist from '../components/yiliao/DiseaseCategoryDist.vue';
 </script>
 
 <style scoped lang="scss">

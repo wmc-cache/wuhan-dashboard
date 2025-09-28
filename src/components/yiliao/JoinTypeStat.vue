@@ -33,14 +33,12 @@
 
           <!-- 男性条 -->
           <div class="row__bar">
-            <div class="seg-bar seg-bar--male">
-              <span
-                v-for="i in segTotal"
-                :key="'m'+i"
-                class="seg"
-                :class="{ 'seg--on': i <= filled(item.male.percent) }"
-              />
-            </div>
+            <SegmentedBar
+              :percent="item.male.percent"
+              :seg-total="segTotal"
+              color="#2a6ff0"
+              :label="item.name + ' 男性'"
+            />
             <div class="row__value">
               {{ pretty(item.male.count) }}
               <span class="pct">({{ toPct(item.male.percent) }})</span>
@@ -48,15 +46,13 @@
           </div>
 
           <!-- 女性条 -->
-          <div class="row__bar">
-            <div class="seg-bar seg-bar--female">
-              <span
-                v-for="i in segTotal"
-                :key="'f'+i"
-                class="seg"
-                :class="{ 'seg--on': i <= filled(item.female.percent) }"
-              />
-            </div>
+        <div class="row__bar">
+            <SegmentedBar
+              :percent="item.female.percent"
+              :seg-total="segTotal"
+              color="#ff6b97"
+              :label="item.name + ' 女性'"
+            />
             <div class="row__value">
               {{ pretty(item.female.count) }}
               <span class="pct">({{ toPct(item.female.percent) }})</span>
@@ -74,6 +70,7 @@ import title1x from '../../images/yiliao/part4/title/编组 21.png';
 import title2x from '../../images/yiliao/part4/title/编组 21@2x.png';
 import icon1x from '../../images/yiliao/part4/icon1/编组 10.png';
 import icon2x from '../../images/yiliao/part4/icon1/编组 10@2x.png';
+import SegmentedBar from '../SegmentedBar.vue';
 
 interface SexStat { count: number; percent: number } // percent: 0~1
 interface Row { name: string; male: SexStat; female: SexStat }
@@ -89,8 +86,6 @@ const props = withDefaults(defineProps<Props>(), {
 
 const data = props.data;
 const segTotal = 10; // 每条 10 段
-
-function filled(p: number) { return Math.round(Math.max(0, Math.min(1, p)) * segTotal); }
 function pretty(n: number) { return n.toLocaleString('zh-CN'); }
 function toPct(p: number) { return Math.round(p * 100) + '%'; }
 </script>
@@ -166,24 +161,7 @@ function toPct(p: number) { return Math.round(p * 100) + '%'; }
 /* 两行条形（男/女） */
 .row__bar { display: flex; align-items: center; padding: 6px 0; gap: 10px; }
 
-.seg-bar {
-  display: grid;
-  grid-auto-flow: column;
-  column-gap: 2px;
-  align-items: center;
-}
-
-.seg { width: 14px; height: 10px; border-radius: 3px; background: transparent; }
-
-.seg--on {
-  background: #2a6ff0;
-}
-
-.seg-bar--female .seg { background: transparent; }
-
-.seg-bar--female .seg--on {
-  background: #ff6b97;
-}
+/* 单条条形由 SegmentedBar 组件渲染 */
 
 .row__value {
   font-size: 14px;
