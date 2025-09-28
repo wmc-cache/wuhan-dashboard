@@ -74,7 +74,16 @@ function toPct(p: number) { return Math.round(Math.max(0, Math.min(1, p)) * 100)
 .dot--female { background: #ff6b97; }
 
 /* 主体两列，与 JoinTypeStat 一致，仅把左列宽调整为 225px */
-.body { position: absolute; inset: 46px 12px 12px 12px; display: grid; grid-template-columns: 225px 1fr; column-gap: 20px; align-items: center; }
+.body {
+  /* 主体相对卡片顶部下移一点，避免贴得过紧（与左侧“参加类型统计”观感更一致） */
+  position: absolute;
+  inset: 46px 12px 12px 12px;
+  display: grid;
+  grid-template-columns: 225px 1fr;
+  column-gap: 20px;
+  align-items: center;
+  margin-top: 10px; /* 下移一点 */
+}
 
 .left-visual { height: 100%; display: grid; place-items: center; }
 .left-visual img { width: 100%; max-width: 240px; height: auto; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .08)); }

@@ -57,9 +57,10 @@ const option = computed(() => {
     },
     series: [
       { name: '男性', type: 'bar', stack: 'total', barWidth: props.barWidth, data: props.male,
-        itemStyle: { color: props.maleColor, borderRadius: [0, 6, 6, 0] } },
+        // 去掉圆角，按需可改为 [0, 0, 0, 0]
+        itemStyle: { color: props.maleColor, borderRadius: 0 } },
       { name: '女性', type: 'bar', stack: 'total', barWidth: props.barWidth, data: props.female,
-        itemStyle: { color: props.femaleColor, borderRadius: [0, 6, 6, 0] } }
+        itemStyle: { color: props.femaleColor, borderRadius: 0 } }
     ]
   } as any;
 });
@@ -68,4 +69,3 @@ const option = computed(() => {
 <style scoped lang="scss">
 .h-gender-stack { position: relative; height: 100%; }
 </style>
-
