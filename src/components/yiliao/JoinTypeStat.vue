@@ -37,6 +37,8 @@
               :percent="item.male.percent"
               :seg-total="segTotal"
               color="#2a6ff0"
+              mode="segment"
+              :width="barWidth"
               :label="item.name + ' 男性'"
             />
             <div class="row__value">
@@ -51,6 +53,8 @@
               :percent="item.female.percent"
               :seg-total="segTotal"
               color="#ff6b97"
+              mode="segment"
+              :width="barWidth"
               :label="item.name + ' 女性'"
             />
             <div class="row__value">
@@ -85,7 +89,8 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const data = props.data;
-const segTotal = 10; // 每条 10 段
+const segTotal = 10; // 默认 10 段（如需 10 小格的视觉）
+const barWidth = 96; // 固定条宽，避免不同行出现长度差异
 function pretty(n: number) { return n.toLocaleString('zh-CN'); }
 function toPct(p: number) { return Math.round(p * 100) + '%'; }
 </script>

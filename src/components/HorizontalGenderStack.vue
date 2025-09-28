@@ -57,13 +57,34 @@ const option = computed(() => {
     },
     series: [
       { name: '男性', type: 'bar', stack: 'total', barWidth: props.barWidth, data: props.male,
-        // 去掉圆角，按需可改为 [0, 0, 0, 0]
-        itemStyle: { color: props.maleColor, borderRadius: 0 } },
+        // 左->右 0..1 渐变
+        itemStyle: { color: makeGrad(props.maleColor, 0.25), borderRadius: 0 } },
       { name: '女性', type: 'bar', stack: 'total', barWidth: props.barWidth, data: props.female,
-        itemStyle: { color: props.femaleColor, borderRadius: 0 } }
+        itemStyle: { color: makeGrad(props.femaleColor, 0.25), borderRadius: 0 } }
     ]
   } as any;
 });
+
+// Helpers: build a left->right linear gradient for a given base color
+function hexToRgb(hex: string) {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!m) return null;
+  return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) };
+}
+function toRgba(c: string, a: number) {
+  const rgb = hexToRgb(c);
+  if (!rgb) return c; // fallback: keep original color
+  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${a})`;
+}
+function makeGrad(color: string, startAlpha = 0.3) {
+  return {
+    type: 'linear', x: 0, y: 0, x2: 1, y2: 0,
+    colorStops: [
+      { offset: 0, color: toRgba(color, startAlpha) },
+      { offset: 1, color }
+    ]
+  } as any;
+}
 </script>
 
 <style scoped lang="scss">

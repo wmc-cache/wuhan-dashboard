@@ -21,12 +21,12 @@
           <!-- <div class="row__name">{{ item.name }}</div> -->
           <!-- 男性条 -->
           <div class="row__bar">
-            <SegmentedBar :percent="item.male.percent" :seg-total="segTotal" color="#2a6ff0" :label="item.name + ' 男性'" />
+            <SegmentedBar :percent="item.male.percent" :seg-total="segTotal" color="#2a6ff0" mode="segment" :width="barWidth" :label="item.name + ' 男性'" />
             <div class="row__value">{{ pretty(item.male.count) }} <span class="pct">({{ toPct(item.male.percent) }})</span></div>
           </div>
           <!-- 女性条 -->
           <div class="row__bar">
-            <SegmentedBar :percent="item.female.percent" :seg-total="segTotal" color="#ff6b97" :label="item.name + ' 女性'" />
+            <SegmentedBar :percent="item.female.percent" :seg-total="segTotal" color="#ff6b97" mode="segment" :width="barWidth" :label="item.name + ' 女性'" />
             <div class="row__value">{{ pretty(item.female.count) }} <span class="pct">({{ toPct(item.female.percent) }})</span></div>
           </div>
         </div>
@@ -56,6 +56,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const data = props.data;
 const segTotal = 10;
+const barWidth = 96; // 与“参加类型统计”保持一致，固定条宽消除不同行长度误差
 
 function pretty(n: number) { return n.toLocaleString('zh-CN'); }
 function toPct(p: number) { return Math.round(Math.max(0, Math.min(1, p)) * 100) + '%'; }
