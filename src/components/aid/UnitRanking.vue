@@ -1,0 +1,51 @@
+<template>
+  <section class="mod">
+    <h3 class="mod__title">{{ title }}</h3>
+    <div class="mod__body">
+      <GridTable
+        :columns="cols"
+        :rows="rows"
+        :grid-template="'1.6fr .8fr 1.1fr 1fr'"
+        :visible-rows="6"
+        :row-height="38"
+        :show-header="false"
+        empty-text="暂无数据"
+      />
+    </div>
+  </section>
+</template>
+
+<script setup lang="ts">
+import GridTable, { type ColumnDef } from '../GridTable.vue';
+
+interface Row { name: string; count: number; amount: number; union: string }
+interface Props { title?: string; rows?: Row[] }
+
+const props = withDefaults(defineProps<Props>(), {
+  title: '年度工作单位排名',
+  rows: () => ([
+    { name: '武汉快运运营有限公司', count: 20, amount: 2220, union: '武汉快运' },
+    { name: '宜昌船舶', count: 12, amount: 11342, union: '市直属机关工会' },
+    { name: '江夏区第一人民医院', count: 12, amount: 11242, union: '江夏区工会' },
+    { name: '武汉科技股份', count: 20, amount: 2430, union: '武汉钢铁' },
+    { name: '武汉明良材料', count: 12, amount: 2430, union: '洪山区' },
+    { name: '长江公司', count: 12, amount: 1542, union: '长江工会' }
+  ])
+});
+
+const cols: ColumnDef[] = [
+  { key: 'name', title: '单位名称', align: 'left' },
+  { key: 'count', title: '申请人次' },
+  { key: 'amount', title: '申请金额(元)', formatter: (v) => Number(v).toLocaleString('zh-CN') },
+  { key: 'union', title: '工会' }
+];
+
+const rows = props.rows;
+</script>
+
+<style scoped lang="scss">
+.mod { border: none; border-radius: 10px; background: rgba(235,241,247,.74); box-shadow: inset 0 0 40px rgba(120,170,255,.08); padding: 14px; display: grid; grid-template-rows: auto 1fr; }
+.mod__title { margin: 0 0 10px; font-size: 16px; font-weight: 800; letter-spacing: 1px; color: #2a6ff0; }
+.mod__body { overflow: auto; }
+</style>
+

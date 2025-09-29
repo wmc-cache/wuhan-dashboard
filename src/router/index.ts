@@ -6,11 +6,9 @@ const routes: RouteRecordRaw[] = [
   { path: '/member', name: 'member', component: () => import('../pages/Member.vue') },
   { path: '/laomo', name: 'laomo', component: () => import('../pages/Laomo.vue') },
   { path: '/yiliao', name: 'yiliao', component: () => import('../pages/Yiliao.vue') },
-  // 更多 下拉模拟页面
-  { path: '/policy', name: 'policy', component: () => import('../pages/Policy.vue') },
-  { path: '/training', name: 'training', component: () => import('../pages/Training.vue') },
-  { path: '/reports', name: 'reports', component: () => import('../pages/Reports.vue') },
-  { path: '/service', name: 'service', component: () => import('../pages/Service.vue') },
+  // 更多 下拉真实页面
+  { path: '/aid', name: 'aid', component: () => import('../pages/Aid.vue') },
+  { path: '/refund', name: 'refund', component: () => import('../pages/Refund.vue') },
 ];
 
 const router = createRouter({

@@ -31,7 +31,8 @@
       </RouterLink>
       <a class="tab tab--more" aria-label="更多" :class="{ 'tab--active': isMoreActive }" :aria-expanded="moreOpen ? 'true' : 'false'" @click.prevent="toggleMore">
         <span v-if="moreDisplayLabel === '更多'" class="tab__img tab__img--more" aria-hidden="true"></span>
-        <span v-else class="tab__label">{{ moreDisplayLabel }}</span>
+        <!-- 当选择“更多”中的某一项后，使用对应的图片文案替换文字 -->
+        <span v-else class="tab__img" :class="moreImgClass" aria-hidden="true"></span>
         <i class="caret" />
       </a>
       <!-- 下拉菜单：模拟数据，点击切换不同页面 -->
@@ -51,12 +52,11 @@ type TabId = 'home' | 'org' | 'member' | 'laomo' | 'yiliao';
 const route = useRoute();
 const activeTab = computed<TabId>(() => (route.name as TabId) || 'home');
 
-// 模拟“更多”下拉的条目（假数据）
+// “更多”下拉的真实条目
+// 仅包含：困难救助、经费返还
 const moreMenus = [
-  { label: '政策法规', name: 'policy' },
-  { label: '学习培训', name: 'training' },
-  { label: '数据报表', name: 'reports' },
-  { label: '服务大厅', name: 'service' }
+  { label: '困难救助', name: 'aid' },
+  { label: '经费返还', name: 'refund' }
 ] as const;
 
 const moreOpen = ref(false);
@@ -73,6 +73,12 @@ const isMoreActive = computed(() => moreMenus.some(m => m.name === (route.name a
 const moreDisplayLabel = computed(() => {
   const cur = moreMenus.find(m => m.name === (route.name as string));
   return cur ? cur.label : '更多';
+});
+// 选择后用于显示在“更多”tab上的图片 class
+const moreImgClass = computed(() => {
+  const cur = moreMenus.find(m => m.name === (route.name as string));
+  if (!cur) return '';
+  return cur.name === 'aid' ? 'tab__img--aid' : 'tab__img--refund';
 });
 onMounted(() => document.addEventListener('click', onDocClick));
 onBeforeUnmount(() => document.removeEventListener('click', onDocClick));
@@ -126,6 +132,9 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick));
 .tab__img--laomo { width: 73px; height: 16px; background-image: -webkit-image-set(url('../images/font/劳模信息/劳模信息.png') 1x, url('../images/font/劳模信息/劳模信息@2x.png') 2x); background-image: image-set(url('../images/font/劳模信息/劳模信息.png') 1x, url('../images/font/劳模信息/劳模信息@2x.png') 2x); }
 .tab__img--yiliao { width: 74px; height: 16px; background-image: -webkit-image-set(url('../images/font/医疗互助/医疗互助.png') 1x, url('../images/font/医疗互助/医疗互助@2x.png') 2x); background-image: image-set(url('../images/font/医疗互助/医疗互助.png') 1x, url('../images/font/医疗互助/医疗互助@2x.png') 2x); }
 .tab__img--more { width: 37px; height: 16px; background-image: -webkit-image-set(url('../images/font/更多/更多.png') 1x, url('../images/font/更多/更多@2x.png') 2x); background-image: image-set(url('../images/font/更多/更多.png') 1x, url('../images/font/更多/更多@2x.png') 2x); }
+/* “更多”被替换为两种具体图片态 */
+.tab__img--aid { width: 74px; height: 16px; background-image: -webkit-image-set(url('../images/more-menu/困难救助/困难救助.png') 1x, url('../images/more-menu/困难救助/困难救助@2x.png') 2x); background-image: image-set(url('../images/more-menu/困难救助/困难救助.png') 1x, url('../images/more-menu/困难救助/困难救助@2x.png') 2x); }
+.tab__img--refund { width: 74px; height: 16px; background-image: -webkit-image-set(url('../images/more-menu/经费返还/经费返还.png') 1x, url('../images/more-menu/经费返还/经费返还@2x.png') 2x); background-image: image-set(url('../images/more-menu/经费返还/经费返还.png') 1x, url('../images/more-menu/经费返还/经费返还@2x.png') 2x); }
 
 /* 下拉菜单 */
 .more-menu { position: absolute; right: 0; top: 100%; margin-top: 8px; min-width: 160px; background: rgba(255,255,255,.96); box-shadow: 0 6px 20px rgba(20,80,200,.18); border: 1px solid rgba(120,170,255,.35); border-radius: 8px; padding: 6px; backdrop-filter: blur(6px); z-index: 10; }
