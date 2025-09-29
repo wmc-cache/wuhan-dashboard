@@ -3,15 +3,15 @@
     <div class="content">
       <!-- 左：性别分布环图 -->
       <div class="left">
-        <h3 class="sub-title">{{ leftTitle }}</h3>
+        <span class="title-img title-img--aid-title1" aria-hidden="true"></span>
         <GenderPie :data="gender" :chart-center="['54%', '55%']" />
       </div>
 
       <!-- 右：年龄分布（男女） -->
       <div class="right">
-        <div class="sub-title">{{ rightTitle }}</div>
+        <span class="title-img" aria-hidden="true"></span>
         <HorizontalGenderStack :labels="ageLabels" :male="male" :female="female" :min-total="60" :step="15"
-          unit-text="万人" :grid-left="112" :grid-right="16" :grid-top="36" :grid-bottom="50" />
+          unit-text="万人" :grid-left="80" :grid-right="30" :grid-top="36" :grid-bottom="50" />
       </div>
     </div>
   </section>
@@ -58,7 +58,10 @@ const female = props.female;
 <style scoped lang="scss">
 .mod { border: none; border-radius: 10px; background: rgba(235,241,247,.74); box-shadow: inset 0 0 40px rgba(120,170,255,.08); padding: 14px; }
 .content { display: grid; grid-template-columns: 1.05fr 1fr; column-gap: 16px; height: 100%; }
-.sub-title { margin: 0 0 10px; font-size: 16px; font-weight: 800; letter-spacing: 1px; color: #2a6ff0; }
+.sub-title { display:none; }
+.title-img { display: inline-block; background-repeat: no-repeat; background-size: 100% 100%; margin: 0 0 10px; }
+.title-img--aid-title1 { width: 186px; height: 35px; background-image: -webkit-image-set(url('../../images/aid/title1/编组 21.png') 1x, url('../../images/aid/title1/编组 21@2x.png') 2x); background-image: image-set(url('../../images/aid/title1/编组 21.png') 1x, url('../../images/aid/title1/编组 21@2x.png') 2x); }
+.title-img--aid-title2 { width: 151px; height: 35px; background-image: -webkit-image-set(url('../../images/aid/title2/编组 21.png') 1x, url('../../images/aid/title2/编组 21@2x.png') 2x); background-image: image-set(url('../../images/aid/title2/编组 21.png') 1x, url('../../images/aid/title2/编组 21@2x.png') 2x); }
 .left,
 .right {
   display: grid;

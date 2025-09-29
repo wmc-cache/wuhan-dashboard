@@ -1,6 +1,6 @@
 <template>
   <section class="mod">
-    <h3 class="mod__title">{{ title }}</h3>
+    <h3 class="mod__title"><span class="title-img title-img--aid-title2" aria-hidden="true"></span></h3>
     <div class="mod__body">
       <GridTable :columns="cols" :rows="rows" :grid-template="'64px 1.6fr .8fr 1.1fr 1fr'" :visible-rows="6"
         :row-height="38" :show-header="false" empty-text="暂无数据" />
@@ -50,13 +50,23 @@ const rows = props.rows;
 
 .mod__title {
   margin: 0 0 10px;
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  color: #2a6ff0;
 }
 
 .mod__body {
   overflow: auto;
+}
+
+/* 标题切图（1x/2x） */
+.title-img {
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.title-img--aid-title2 {
+  width: 151px;
+  height: 35px;
+  background-image: -webkit-image-set(url('../../images/aid/title2/编组 21.png') 1x, url('../../images/aid/title2/编组 21@2x.png') 2x);
+  background-image: image-set(url('../../images/aid/title2/编组 21.png') 1x, url('../../images/aid/title2/编组 21@2x.png') 2x);
 }
 </style>
