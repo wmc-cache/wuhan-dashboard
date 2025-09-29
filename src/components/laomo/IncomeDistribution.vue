@@ -13,6 +13,8 @@ interface Props {
   categories?: string[];
   values?: number[];
   yMax?: number;
+  yUnit?: string;        // y 轴单位 (默认“人”)
+  yAxisName?: string;    // 覆盖 y 轴名称，优先级高于 yUnit
   gridLeft?: number;
   gridRight?: number;
   gridTop?: number;
@@ -26,9 +28,11 @@ const props = withDefaults(defineProps<Props>(), {
   categories: () => ['3千以下', '3-5千', '5-7千', '7千-1万', '1万以上'],
   values: () => [120, 782, 260, 740, 430],
   yMax: 1200,
+  yUnit: '人',
+  yAxisName: '',
   gridLeft: 56,
   gridRight: 16,
-  gridTop: 14,
+  gridTop: 25,
   gridBottom: 40,
   lineColor: '#3E7BFF',
   areaStart: 'rgba(62,123,255,0.45)',
@@ -50,9 +54,10 @@ const option = computed(() => ({
     min: 0,
     max: props.yMax,
     splitNumber: 4,
-    name: '(人)',
-    nameLocation: 'start',
-    nameGap: 18,
+    // 单位放在 y 轴顶部
+    name: props.yAxisName ? props.yAxisName : (props.yUnit ? `(${props.yUnit})` : ''),
+    nameLocation: 'end',
+    nameGap: 12,
     nameTextStyle: { color: 'rgba(25,90,200,0.95)', fontWeight: 700 },
     axisTick: { show: false },
     axisLine: { lineStyle: { color: 'rgba(67,127,255,0.35)' } },

@@ -1,25 +1,9 @@
 <template>
   <div class="region-distribution">
-    <StripedBarChart
-      :categories="categories"
-      :values="values"
-      :yMax="1200"
-      :xLabelInterval="0"
-      :gridLeft="64"
-      :gridRight="20"
-      :gridTop="8"
-      :gridBottom="56"
-      :barWidth="40"
-      :stripeWidth="28"
-      :stripeHeight="14"
-      :stripeGap="2"
-      :showLabels="false"
-      :enableTooltip="true"
-      stripeColor="#5EE0D2"
-      axisColor="rgba(67,127,255,0.35)"
-      textColor="rgba(25, 90, 200, 0.95)"
-      gridLineColor="rgba(67,127,255,0.22)"
-    />
+    <StripedBarChart y-unit="个" :categories="categories" :values="values" :yMax="1200" :xLabelInterval="0"
+      :gridLeft="64" :gridRight="20" :gridTop="25" :gridBottom="56" :barWidth="40" :stripeWidth="28" :stripeHeight="14"
+      :stripeGap="2" :showLabels="false" :enableTooltip="true" stripeColor="#5EE0D2" axisColor="rgba(67,127,255,0.35)"
+      textColor="rgba(25, 90, 200, 0.95)" gridLineColor="rgba(67,127,255,0.22)" />
   </div>
 </template>
 

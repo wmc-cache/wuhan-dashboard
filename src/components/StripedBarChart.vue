@@ -14,6 +14,10 @@ interface Props {
   categories?: string[];
   values?: number[];
   yMax?: number;
+  // y 轴单位（传入后会在坐标轴顶部显示“单位（xx）”）
+  yUnit?: string;
+  // 直接覆盖 y 轴名称文案（如果传入则优先使用该值）
+  yAxisName?: string;
 
   // 样式配置
   bgGradientTop?: string;      // 背景柱顶部颜色
@@ -52,6 +56,8 @@ const props = withDefaults(defineProps<Props>(), {
   categories: () => ['类别1', '类别2', '类别3', '类别4', '类别5', '类别6'],
   values: () => [662, 483, 784, 900, 432, 661],
   yMax: 1200,
+  yUnit: '',
+  yAxisName: '',
 
   // 默认样式（保持与原来一致）
   bgGradientTop: 'rgba(80, 150, 255, 0.22)',
@@ -107,6 +113,12 @@ const option = computed(() => {
       min: 0,
       max: props.yMax,
       splitNumber: props.ySplitNumber,
+      // 在 y 轴顶部显示单位/名称
+      name: props.yAxisName ? props.yAxisName : (props.yUnit ? `单位（${props.yUnit}）` : ''),
+      nameLocation: 'end',
+      nameRotate: 0,
+      nameGap: 12,
+      nameTextStyle: { color: props.textColor, fontWeight: 700 },
       axisTick: { show: false },
       axisLine: { lineStyle: { color: props.axisColor } },
       axisLabel: { color: props.textColor },

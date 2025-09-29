@@ -1,10 +1,7 @@
 <template>
   <div class="org-industry">
-    <StripedBarChart
-      :categories="props.categories"
-      :values="props.values"
-      :y-max="props.yMax"
-    />
+    <StripedBarChart y-unit="个" :gridTop="25" :categories="props.categories" :values="props.values"
+      :y-max="props.yMax" />
   </div>
 </template>
 

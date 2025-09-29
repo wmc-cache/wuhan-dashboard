@@ -5,7 +5,8 @@
     </h3>
     <div class="mod__body mod__body--full">
       <!-- 金额统计：改为橙色条纹与数值颜色 -->
-      <StripedBarChart :categories="categories" :values="values" :y-max="yMax" stripe-color="#FF7A00" />
+      <StripedBarChart y-unit="金额" :grid-top="25" :categories="categories" :values="values" :y-max="yMax"
+        stripe-color="#FF7A00" />
     </div>
   </section>
 </template>

@@ -2,7 +2,7 @@
   <section class="mod">
     <h3 class="mod__title"><span class="title-img title-img--aid-title3" aria-hidden="true"></span></h3>
     <div class="mod__body mod__body--full">
-      <StripedBarChart :categories="categories" :values="values" :y-max="yMax" />
+      <StripedBarChart y-unit="人次" :grid-top="25" :categories="categories" :values="values" :y-max="yMax" />
     </div>
   </section>
 </template>
