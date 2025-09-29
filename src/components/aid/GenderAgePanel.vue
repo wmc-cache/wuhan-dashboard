@@ -4,23 +4,7 @@
       <!-- 左：性别分布环图 -->
       <div class="left">
         <h3 class="sub-title">{{ leftTitle }}</h3>
-        <div class="left__inner">
-          <RingPie :data="gender" :center="['35%','56%']" :radius="['50%','75%']">
-            <template #center>
-              <div class="center">
-                <div class="total">{{ pretty(total) }}</div>
-                <div class="txt">总人数</div>
-              </div>
-            </template>
-          </RingPie>
-          <ul class="legend">
-            <li v-for="g in gender" :key="g.name">
-              <span class="dot" :style="{ background: g.color }"></span>
-              <span class="name">{{ g.name }}</span>
-              <span class="val">{{ pretty(g.value) }}</span>
-            </li>
-          </ul>
-        </div>
+        <GenderPie :data="gender" :chart-center="['54%', '55%']" />
       </div>
 
       <!-- 右：年龄分布（男女） -->
@@ -35,7 +19,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import RingPie from '../RingPie.vue';
+import GenderPie from './GenderPie.vue';
 import HorizontalGenderStack from '../HorizontalGenderStack.vue';
 
 interface Gender { name: string; value: number; color?: string }
@@ -68,8 +52,7 @@ const ageLabels = props.ageLabels;
 const male = props.male;
 const female = props.female;
 
-const total = computed(() => gender.reduce((s, i) => s + i.value, 0));
-function pretty(n: number) { return n.toLocaleString('zh-CN'); }
+// 左侧饼图交由 GenderPie 处理
 </script>
 
 <style scoped lang="scss">
@@ -90,4 +73,3 @@ function pretty(n: number) { return n.toLocaleString('zh-CN'); }
 .center .total { font-weight: 900; font-size: 22px; color: #2a6ff0; }
 .center .txt { color: rgba(0,0,0,.55); margin-top: 4px; font-weight: 700; }
 </style>
-

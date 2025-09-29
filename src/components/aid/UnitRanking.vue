@@ -2,15 +2,8 @@
   <section class="mod">
     <h3 class="mod__title">{{ title }}</h3>
     <div class="mod__body">
-      <GridTable
-        :columns="cols"
-        :rows="rows"
-        :grid-template="'1.6fr .8fr 1.1fr 1fr'"
-        :visible-rows="6"
-        :row-height="38"
-        :show-header="false"
-        empty-text="暂无数据"
-      />
+      <GridTable :columns="cols" :rows="rows" :grid-template="'64px 1.6fr .8fr 1.1fr 1fr'" :visible-rows="6"
+        :row-height="38" :show-header="false" empty-text="暂无数据" />
     </div>
   </section>
 </template>
@@ -18,7 +11,7 @@
 <script setup lang="ts">
 import GridTable, { type ColumnDef } from '../GridTable.vue';
 
-interface Row { name: string; count: number; amount: number; union: string }
+interface Row { lv?: string | number; name: string; count: number; amount: number; union: string }
 interface Props { title?: string; rows?: Row[] }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -34,6 +27,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const cols: ColumnDef[] = [
+  { key: 'lv', title: '', iconLv: true },
   { key: 'name', title: '单位名称', align: 'left' },
   { key: 'count', title: '申请人次' },
   { key: 'amount', title: '申请金额(元)', formatter: (v) => Number(v).toLocaleString('zh-CN') },
@@ -44,8 +38,25 @@ const rows = props.rows;
 </script>
 
 <style scoped lang="scss">
-.mod { border: none; border-radius: 10px; background: rgba(235,241,247,.74); box-shadow: inset 0 0 40px rgba(120,170,255,.08); padding: 14px; display: grid; grid-template-rows: auto 1fr; }
-.mod__title { margin: 0 0 10px; font-size: 16px; font-weight: 800; letter-spacing: 1px; color: #2a6ff0; }
-.mod__body { overflow: auto; }
-</style>
+.mod {
+  border: none;
+  border-radius: 10px;
+  background: rgba(235, 241, 247, .74);
+  box-shadow: inset 0 0 40px rgba(120, 170, 255, .08);
+  padding: 14px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
 
+.mod__title {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #2a6ff0;
+}
+
+.mod__body {
+  overflow: auto;
+}
+</style>

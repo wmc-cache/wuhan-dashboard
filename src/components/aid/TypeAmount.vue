@@ -2,7 +2,13 @@
   <section class="mod">
     <h3 class="mod__title">{{ title }}</h3>
     <div class="mod__body mod__body--full">
-      <StripedBarChart :categories="categories" :values="values" :y-max="yMax" />
+      <!-- 金额统计：改为橙色条纹与数值颜色 -->
+      <StripedBarChart
+        :categories="categories"
+        :values="values"
+        :y-max="yMax"
+        stripe-color="#FF7A00"
+      />
     </div>
   </section>
 </template>
@@ -33,4 +39,3 @@ const { title, categories, values, yMax } = props;
 .mod__body { overflow: auto; }
 .mod__body--full { display: grid; }
 </style>
-

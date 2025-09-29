@@ -35,7 +35,12 @@
         >
           <span class="cell" :class="{ clickable: !!col.clickable }">
             <template v-if="!isPlaceholderRow(row)">
-              {{ formatCell((row as any)[col.key], col) }}
+              <template v-if="col.iconLv">
+                <i class="lv-icon" :class="lvClass((row as any)[col.key], rIdx)" aria-hidden="true"></i>
+              </template>
+              <template v-else>
+                {{ formatCell((row as any)[col.key], col) }}
+              </template>
             </template>
             <template v-else>
               
@@ -60,6 +65,8 @@ export interface ColumnDef {
   align?: 'left' | 'center' | 'right';
   clickable?: boolean; // 是否可点击
   formatter?: (val: any, row: Record<string, any>) => string;
+  // 特殊渲染：LV 图标列（值为 1/2/3/3+ 或留空按排名自动）
+  iconLv?: boolean;
 }
 
 interface Props {
@@ -162,6 +169,30 @@ function formatCell(val: any, col: ColumnDef): string {
   if (col.formatter) return col.formatter(val, {} as any);
   return String(val ?? '');
 }
+
+// LV 图标类名计算：
+// - 允许传入 1/2/3/'3+'/'lv1' 等；
+// - 未提供时按排名 rIdx+1 自动分配（1/2/3/其他=3+）
+function lvClass(val: any, rIdx: number): string {
+  let v: string = '';
+  if (val == null || val === '') {
+    const rank = rIdx + 1;
+    if (rank === 1) v = '1';
+    else if (rank === 2) v = '2';
+    else if (rank === 3) v = '3';
+    else v = '3p';
+  } else {
+    const s = String(val).toLowerCase().replace('lv', '').trim();
+    if (s === '1' || s === '2' || s === '3') v = s;
+    else if (s === '3+' || s === '3p' || s === 'plus' || s === '+') v = '3p';
+    else {
+      const n = parseInt(s, 10);
+      if (n === 1 || n === 2 || n === 3) v = String(n);
+      else v = '3p';
+    }
+  }
+  return `lv-${v}`;
+}
 </script>
 
 <style scoped lang="scss">
@@ -208,9 +239,6 @@ function formatCell(val: any, col: ColumnDef): string {
 
 .thead {
   background: rgba(50, 135, 254, 0.18);
-  color: #2a6ff0;
-  font-weight: 800;
-  letter-spacing: 0.5px;
   border-radius: 4px;
 }
 
@@ -233,7 +261,10 @@ function formatCell(val: any, col: ColumnDef): string {
 }
 
 .th {
-  font-size: 18px;
+  font-weight: 500;
+  font-size: 14px;
+  color: #333333;
+  line-height: 20px;
   text-align: center;
 }
 
@@ -269,5 +300,24 @@ function formatCell(val: any, col: ColumnDef): string {
 
 .cell.clickable:hover {
   text-decoration: underline;
+}
+
+/* LV 图标（28x28），使用 1x/2x 切图 */
+.lv-icon { display: inline-block; width: 28px; height: 28px; background-repeat: no-repeat; background-size: 100% 100%; }
+.lv-1 {
+  background-image: -webkit-image-set(url('../images/aid/LV/lv1/位图.png') 1x, url('../images/aid/LV/lv1/位图@2x.png') 2x);
+  background-image: image-set(url('../images/aid/LV/lv1/位图.png') 1x, url('../images/aid/LV/lv1/位图@2x.png') 2x);
+}
+.lv-2 {
+  background-image: -webkit-image-set(url('../images/aid/LV/lv2/位图.png') 1x, url('../images/aid/LV/lv2/位图@2x.png') 2x);
+  background-image: image-set(url('../images/aid/LV/lv2/位图.png') 1x, url('../images/aid/LV/lv2/位图@2x.png') 2x);
+}
+.lv-3 {
+  background-image: -webkit-image-set(url('../images/aid/LV/lv3/位图.png') 1x, url('../images/aid/LV/lv3/位图@2x.png') 2x);
+  background-image: image-set(url('../images/aid/LV/lv3/位图.png') 1x, url('../images/aid/LV/lv3/位图@2x.png') 2x);
+}
+.lv-3p {
+  background-image: -webkit-image-set(url('../images/aid/LV/lv3+/编组 10.png') 1x, url('../images/aid/LV/lv3+/编组 10@2x.png') 2x);
+  background-image: image-set(url('../images/aid/LV/lv3+/编组 10.png') 1x, url('../images/aid/LV/lv3+/编组 10@2x.png') 2x);
 }
 </style>

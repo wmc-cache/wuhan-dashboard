@@ -1,7 +1,18 @@
 <template>
   <div class="honor-rings">
     <EChart :option="option" />
-    <div v-if="centerText" class="center-label">{{ centerText }}</div>
+    <!-- 可选中心内容：图标与文字，位置跟随 center -->
+    <div v-if="centerText || centerIcon" class="center-layer" :style="centerStyle">
+      <img
+        v-if="centerIcon"
+        class="center-icon"
+        :src="centerIcon"
+        :srcset="centerIcon2x ? `${centerIcon2x} 2x` : undefined"
+        :style="{ width: centerIconSize + 'px', height: centerIconSize + 'px' }"
+        alt=""
+      />
+      <div v-if="centerText" class="center-label">{{ centerText }}</div>
+    </div>
   </div>
 </template>
 
@@ -16,6 +27,10 @@ interface Props {
   items?: Item[]; // 三项：省/市/国家 之类
   // 中心文案
   centerText?: string;
+  // 中心图标（可选），建议传入经 Vite 导入的资源 URL
+  centerIcon?: string;
+  centerIcon2x?: string; // Retina 可选
+  centerIconSize?: number; // px
   // 布局参数（按当前视觉还原给出默认值，可按需覆写）
   center?: [string, string];
   sweepAngle?: number; // 每个环扫过的角度（非整圈，用于留白断口）
@@ -30,6 +45,9 @@ const props = withDefaults(defineProps<Props>(), {
     { name: '国家级', value: 44, color: '#FF7875' }
   ],
   centerText: '荣誉分类',
+  centerIcon: undefined,
+  centerIcon2x: undefined,
+  centerIconSize: 34,
   center: () => ['46%', '55%'],
   sweepAngle: 260,
   baseStart: 20,
@@ -43,12 +61,26 @@ function angleByValue(v: number) {
   return (v / total.value) * props.sweepAngle;
 }
 
-// 3 个环的几何参数与对应数据（外/中/内）
-const rings = computed(() => [
-  { radius: ['60%', '74%'] as [string, string], startAngle: 30,  color: data[0].color, value: data[0].value }, // 省级（外）
-  { radius: ['46%', '58%'] as [string, string], startAngle: 180, color: data[2].color, value: data[2].value }, // 国家级（中）
-  { radius: ['32%', '44%'] as [string, string], startAngle: 315, color: data[1].color, value: data[1].value }  // 市级（内）
-]);
+// 支持 1~3 项时的环图图层（外/中/内）配置
+// 说明：之前写死了 data[2] 等索引，导致只有两项时会越界。
+// 这里根据传入项数量自适应映射，保证 2 项也能正常显示。
+const rings = computed(() => {
+  const defs = [
+    { radius: ['60%', '74%'] as [string, string], startAngle: 30 },   // 外环
+    { radius: ['46%', '58%'] as [string, string], startAngle: 180 },  // 中环
+    { radius: ['32%', '44%'] as [string, string], startAngle: 315 }   // 内环
+  ];
+  const n = Math.max(0, Math.min(3, data.length));
+  // 与旧版展示顺序保持一致：三项时为 [0,2,1]（省→国→市）
+  // 两项时简化为 [0,1]；一项时为 [0]
+  const order = n >= 3 ? [0, 2, 1] : n === 2 ? [0, 1] : [0];
+  return order.map((dataIdx, k) => ({
+    radius: defs[k].radius,
+    startAngle: defs[k].startAngle,
+    color: data[dataIdx].color,
+    value: data[dataIdx].value
+  }));
+});
 
 const option = computed(() => {
   const center = props.center as any;
@@ -105,7 +137,8 @@ const option = computed(() => {
   });
 
   // 主环（半透明底 + 实色层），并带缝隙
-  const order = [0, 2, 1]; // 省→国→市
+  // 三项时顺序为 [0,2,1]；两项时为 [0,1]；一项为 [0]
+  const order = data.length >= 3 ? [0, 2, 1] : (data.length === 2 ? [0, 1] : [0]);
   const sumVal = data.reduce((s, d) => s + d.value, 0);
   const usable = 360 - props.gapDeg * data.length;
   const ang = data.map((d) => (d.value / sumVal) * usable);
@@ -155,18 +188,17 @@ const option = computed(() => {
   return base;
 });
 
+// 中心层样式跟随 center，避免移动时错位
+const centerStyle = computed(() => ({
+  left: props.center?.[0] || '46%',
+  top: props.center?.[1] || '55%'
+}));
+
 </script>
 
 <style scoped lang="scss">
 .honor-rings { position: relative; width: 100%; height: 100%; }
-.center-label {
-  position: absolute;
-  top: 55%;
-  left: 46%;
-  transform: translate(-50%, -50%);
-  font-size: 16px;
-  font-weight: 600;
-  color: #607d8b;
-  pointer-events: none;
-}
+.center-layer { position: absolute; transform: translate(-50%, -50%); display: grid; place-items: center; pointer-events: none; }
+.center-icon { object-fit: contain; display: block; }
+.center-label { margin-top: 6px; font-size: 14px; font-weight: 600; color: #607d8b; text-align: center; }
 </style>
