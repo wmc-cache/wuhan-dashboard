@@ -4,8 +4,8 @@
     <section class="mod" style="grid-area: tl;">
       <img
         class="mod__title-img"
-        src="../images/org/font-title/1/编组 21.png"
-        srcset="../images/org/font-title/1/编组 21.png 1x, ../images/org/font-title/1/编组 21@2x.png 2x"
+        src="../images/org/font-title/1/编组21.png"
+        srcset="../images/org/font-title/1/编组21.png 1x, ../images/org/font-title/1/编组21@2x.png 2x"
         alt="工会总数"
       />
       <div class="mod__body">
@@ -23,8 +23,8 @@
     <section class="mod" style="grid-area: tr;">
       <img
         class="mod__title-img"
-        src="../images/org/font-title/4/编组 21.png"
-        srcset="../images/org/font-title/4/编组 21.png 1x, ../images/org/font-title/4/编组 21@2x.png 2x"
+        src="../images/org/font-title/4/编组21.png"
+        srcset="../images/org/font-title/4/编组21.png 1x, ../images/org/font-title/4/编组21@2x.png 2x"
         alt="工会会员总数"
       />
       <div class="mod__body">
@@ -42,8 +42,8 @@
     <section class="mod" style="grid-area: mc;">
       <img
         class="mod__title-img"
-        src="../images/org/font-title/5/编组 21.png"
-        srcset="../images/org/font-title/5/编组 21.png 1x, ../images/org/font-title/5/编组 21@2x.png 2x"
+        src="../images/org/font-title/5/编组21.png"
+        srcset="../images/org/font-title/5/编组21.png 1x, ../images/org/font-title/5/编组21@2x.png 2x"
         alt="年度工会创建数"
       />
       <div class="mod__body">
@@ -54,8 +54,8 @@
     <section class="mod" style="grid-area: mr;">
       <img
         class="mod__title-img"
-        src="../images/org/font-title/2/编组 21.png"
-        srcset="../images/org/font-title/2/编组 21.png 1x, ../images/org/font-title/2/编组 21@2x.png 2x"
+        src="../images/org/font-title/2/编组21.png"
+        srcset="../images/org/font-title/2/编组21.png 1x, ../images/org/font-title/2/编组21@2x.png 2x"
         alt="工会会员数"
       />
       <div class="mod__body">
@@ -67,8 +67,8 @@
     <section class="mod" style="grid-area: bl;">
       <img
         class="mod__title-img"
-        src="../images/org/font-title/3/编组 21.png"
-        srcset="../images/org/font-title/3/编组 21.png 1x, ../images/org/font-title/3/编组 21@2x.png 2x"
+        src="../images/org/font-title/3/编组21.png"
+        srcset="../images/org/font-title/3/编组21.png 1x, ../images/org/font-title/3/编组21@2x.png 2x"
         alt="工会区域分布"
       />
       <div class="mod__body">
