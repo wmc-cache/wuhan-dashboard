@@ -38,16 +38,21 @@
 
     <!-- 右列 -->
     <section class="mod" style="grid-area: tr;">
-      <h3 class="mod__title">区县金额 TOP4</h3>
+      <h3 class="mod__title">州市金额 TOP4</h3>
       <div class="mod__body">
         <RefundRankList :items="districtTop4" :max-rows="4" bar-color="#52c41a" show-no />
       </div>
     </section>
 
     <section class="mod" style="grid-area: mr;">
-      <h3 class="mod__title">区县金额 TOP5</h3>
       <div class="mod__body">
-        <RefundRankList :items="districtTop5" :max-rows="5" bar-color="#2a6ff0" />
+        <RefundRankType2
+          :items="districtTop5"
+          :show-right-name="false"
+          :bar-color="'#4E8FFF'"
+          title-img1x="../images/refund/title5/编组 21.png"
+          title-img2x="../images/refund/title5/编组 21@2x.png"
+        />
       </div>
     </section>
 
