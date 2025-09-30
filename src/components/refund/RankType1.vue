@@ -39,11 +39,11 @@ function money(v: number) {
 .list {
   list-style: none;
   margin: 0;
-  padding: 2px 6px 14px 2px; /* 底部预留给蓝线，不产生溢出 */
+  padding: 2px 6px 10px 2px; /* 底部更紧凑 */
   display: grid;
-  row-gap: 16px;
+  row-gap: 14px;
 }
-.row { position: relative; display: grid; grid-template-columns: 44px 1fr auto; align-items: center; column-gap: 16px; min-height: 56px; padding-bottom: 12px; }
+.row { position: relative; display: grid; grid-template-columns: 44px 1fr auto; align-items: center; column-gap: 16px; min-height: 52px; padding-bottom: 10px; }
 
 .medal { width: 32px; height: 38px; background-repeat: no-repeat; background-size: 100% 100%; }
 .medal--1 { background-image: -webkit-image-set(url('../../images/refund/rank-type1/1/位图.png') 1x, url('../../images/refund/rank-type1/1/位图@2x.png') 2x); background-image: image-set(url('../../images/refund/rank-type1/1/位图.png') 1x, url('../../images/refund/rank-type1/1/位图@2x.png') 2x); }
@@ -64,5 +64,5 @@ function money(v: number) {
 }
 
 /* 蓝色粗横线（行底部装饰） */
-.underline { position: absolute; left: 0; right: 0; bottom: 0; height: 12px; background-repeat: no-repeat; background-size: 100% 100%; background-image: -webkit-image-set(url('../../images/refund/line/编组 14.png') 1x, url('../../images/refund/line/编组 14@2x.png') 2x); background-image: image-set(url('../../images/refund/line/编组 14.png') 1x, url('../../images/refund/line/编组 14@2x.png') 2x); pointer-events: none; }
+.underline { position: absolute; left: 0; right: 0; bottom: 0; height: 10px; background-repeat: no-repeat; background-size: 100% 100%; background-image: -webkit-image-set(url('../../images/refund/line/编组 14.png') 1x, url('../../images/refund/line/编组 14@2x.png') 2x); background-image: image-set(url('../../images/refund/line/编组 14.png') 1x, url('../../images/refund/line/编组 14@2x.png') 2x); pointer-events: none; }
 </style>

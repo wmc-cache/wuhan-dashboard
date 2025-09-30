@@ -124,17 +124,16 @@ const basicTop5 = [
 <style scoped lang="scss">
 .refund__grid {
   height: 980px;
-  padding: 0 20px 20px;
+  padding: 0 20px 16px; /* 底部余量更紧凑 */
   display: grid;
   grid-template-columns: 540px 1fr 540px;
-  /* 三行统一高度，左侧三个模块自然等高；
-     中央概览模块依旧跨两行，获得两倍高度 */
-  grid-template-rows: 1fr 1fr 1fr;
+  /* 收紧上下行的占比，避免底部越界 */
+  grid-template-rows: .95fr 1fr .95fr;
   grid-template-areas:
     'tl tc tr'
     'ml mc mr'
     'bl bc br';
-  gap: 20px;
+  gap: 16px;
 }
 
 .mod {
@@ -142,7 +141,7 @@ const basicTop5 = [
   border-radius: 10px;
   background: rgba(235, 241, 247, .74);
   box-shadow: inset 0 0 40px rgba(120, 170, 255, .08);
-  padding: 14px;
+  padding: 12px; /* 卡片内边距略收紧 */
   display: grid;
   grid-template-rows: auto 1fr;
 }
@@ -165,7 +164,7 @@ const basicTop5 = [
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .mod__head .head-title {

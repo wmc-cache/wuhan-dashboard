@@ -1,5 +1,5 @@
 <template>
-  <GridTable :columns="cols" :rows="rows" :grid-template="'64px 1.6fr 1.1fr'" :visible-rows="6" :row-height="44"
+  <GridTable :columns="cols" :rows="rows" :grid-template="'64px 1.6fr 1.1fr'" :visible-rows="5" :row-height="40"
     :show-header="true" empty-text="暂无数据" title-width="180px" title-height="35px" :title-img1x="title1x"
     :title-img2x="title2x" />
 </template>
