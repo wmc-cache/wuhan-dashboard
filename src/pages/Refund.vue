@@ -9,16 +9,14 @@
     </section>
 
     <section class="mod" style="grid-area: ml;">
-      <h3 class="mod__title">市总金额 TOP4</h3>
       <div class="mod__body">
-        <RefundRankList :items="cityAmountTop" :max-rows="4" bar-color="#2a6ff0" />
+        <RefundRankType1 :items="provinceAmountTop" />
       </div>
     </section>
 
     <section class="mod" style="grid-area: bl;">
-      <h3 class="mod__title">手续费 TOP5</h3>
       <div class="mod__body">
-        <RefundRankList :items="feeTop" :max-rows="5" bar-color="#f59e0b" />
+        <RefundRankType2 :items="feeTop" />
       </div>
     </section>
 
@@ -66,8 +64,10 @@
 import NiceSelect from '../components/NiceSelect.vue';
 import RefundTopCards from '../components/refund/TopCards.vue';
 import RefundRankList from '../components/refund/RankList.vue';
+import RefundRankType1 from '../components/refund/RankType1.vue';
 import RefundCompanyTable from '../components/refund/CompanyTable.vue';
 import RefundOverview from '../components/refund/Overview.vue';
+import RefundRankType2 from '../components/refund/RankType2.vue';
 import { ref } from 'vue';
 
 // 年份选择
@@ -82,7 +82,7 @@ const topCards = [
   { name: '汉阳区总工会', amount: 6189873.092 }
 ];
 
-const cityAmountTop = [
+const provinceAmountTop = [
   { name: '武汉市新鑫工会', value: 6189873.092 },
   { name: '江岸区总工会', value: 6189873.092 },
   { name: '洪山区工会', value: 6189873.092 },
@@ -155,9 +155,7 @@ const basicTop5 = [
   color: #2a6ff0;
 }
 
-.mod__body {
-  overflow: auto;
-}
+.mod__body { overflow: hidden; }
 
 .mod__body--full {
   display: grid;
