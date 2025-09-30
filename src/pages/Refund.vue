@@ -38,28 +38,23 @@
 
     <!-- 右列 -->
     <section class="mod" style="grid-area: tr;">
-      <h3 class="mod__title">州市金额 TOP4</h3>
+      <span class="title-img title-img--refund-6" aria-hidden="true"></span>
+
       <div class="mod__body">
-        <RefundRankList :items="districtTop4" :max-rows="4" bar-color="#52c41a" show-no />
+        <RefundRankList :items="districtTop4" :max-rows="4" bar-color="#52c41a" show-no variant="plain" />
       </div>
     </section>
 
     <section class="mod" style="grid-area: mr;">
       <div class="mod__body">
-        <RefundRankType2
-          :items="districtTop5"
-          :show-right-name="false"
-          :bar-color="'#4E8FFF'"
-          title-img1x="../images/refund/title5/编组 21.png"
-          title-img2x="../images/refund/title5/编组 21@2x.png"
-        />
+        <RefundRankType2 :items="districtTop5" :show-right-name="false" :bar-color="'#4E8FFF'" :title-img1x="titleImg1x"
+          :title-img2x="titleImg2x" />
       </div>
     </section>
 
     <section class="mod" style="grid-area: br;">
-      <h3 class="mod__title">基层金额 TOP5</h3>
       <div class="mod__body">
-        <RefundRankList :items="basicTop5" :max-rows="5" bar-color="#ff4d4f" />
+        <RefundRankType3 :items="basicTop5" />
       </div>
     </section>
   </main>
@@ -73,7 +68,10 @@ import RefundRankType1 from '../components/refund/RankType1.vue';
 import RefundCompanyTable from '../components/refund/CompanyTable.vue';
 import RefundOverview from '../components/refund/Overview.vue';
 import RefundRankType2 from '../components/refund/RankType2.vue';
+import RefundRankType3 from '../components/refund/RankType3.vue';
 import { ref } from 'vue';
+import titleImg1x from '../images/refund/title5/编组 21.png';
+import titleImg2x from '../images/refund/title5/编组 21@2x.png';
 
 // 年份选择
 const years = [2021, 2022, 2023, 2024, 2025];
@@ -176,5 +174,23 @@ const basicTop5 = [
   font-size: 16px;
   font-weight: 800;
   color: #2a6ff0;
+}
+/* 图片标题（替换文字标题） */
+.mod>.title-img {
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.title-img {
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.title-img--refund-6 {
+  width: 151px;
+  height: 35px;
+  background-image: -webkit-image-set(url('../images/refund/title6/编组 21.png') 1x, url('../images/refund/title6/编组 21@2x.png') 2x);
+  background-image: image-set(url('../images/refund/title6/编组 21.png') 1x, url('../images/refund/title6/编组 21@2x.png') 2x);
 }
 </style>

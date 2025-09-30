@@ -1,7 +1,8 @@
 <template>
   <div class="rank-type2">
     <div class="header">
-      <i class="title-img" aria-hidden="true" />
+      <i class="title-img" :style="{ backgroundImage: `url(${props.titleImg1x})` }" :src="props.titleImg1x"
+        aria-hidden="true" />
       <i class="more-img" role="button" aria-label="查看更多" @click="$emit('more')" />
     </div>
 
@@ -21,20 +22,25 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import SegmentedBar from '../SegmentedBar.vue';
+import titleImg1x from '../../images/refund/title4/编组 21.png';
+import titleImg2x from '../../images/refund/title4/编组 21@2x.png';
+
 
 interface Item { name: string; value: number }
 interface Props {
   items: Item[];
   maxRows?: number;
   barColor?: string;
-
+  titleImg1x?: string;
+  titleImg2x?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   items: () => [],
   maxRows: 5,
   barColor: '#F59E0B',
-  showRightName: true
+  titleImg1x,
+  titleImg2x
 });
 
 const rows = computed(() => props.items.slice(0, props.maxRows));
@@ -85,7 +91,7 @@ function money(v: number) { return Number(v).toLocaleString('zh-CN', { maximumFr
   margin: 0;
   padding: 2px 6px 2px 2px;
   display: grid;
-  row-gap: 4px;
+  row-gap: 10px;
 }
 
 .row {
@@ -93,7 +99,7 @@ function money(v: number) { return Number(v).toLocaleString('zh-CN', { maximumFr
   display: grid;
   grid-template-columns: 34px 1.2fr auto 1fr auto;
   align-items: center;
-  column-gap: 1px;
+  column-gap: 10px;
   min-height: 18px;
   background: rgba(174, 203, 255, 0.23);
   border: 1px solid #6DA1FB;

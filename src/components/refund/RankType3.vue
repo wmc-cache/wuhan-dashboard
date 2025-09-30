@@ -1,0 +1,109 @@
+<template>
+  <div class="rank-type3">
+    <div class="header">
+      <i class="title-img" aria-hidden="true" />
+      <i class="more-img" role="button" aria-label="查看更多" @click="$emit('more')" />
+    </div>
+
+    <ul class="list">
+      <li v-for="(it, i) in rows" :key="it.name + i" class="row val-box">
+        <span class="no-badge" :class="'no-badge--' + (i + 1)"><span class="no-text">NO.{{ i + 1 }}</span></span>
+        <span class="name" :title="it.name">{{ it.name }}</span>
+
+        <SegmentedBar class="bar" mode="segment" :seg-total="12" :gap="4" :percent="percent(it.value)"
+          :color="rowColor(i)" :width="100" :height="12" :radius="3" />
+
+        <span class="">
+          <span class="val">{{ money(it.value) }}</span>
+        </span>
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed } from 'vue';
+import SegmentedBar from '../SegmentedBar.vue';
+
+interface Item { name: string; value: number }
+interface Props { items: Item[]; maxRows?: number }
+const props = withDefaults(defineProps<Props>(), { items: () => [], maxRows: 5 });
+
+const rows = computed(() => props.items.slice(0, props.maxRows));
+const maxV = computed(() => Math.max(1, ...rows.value.map(r => r.value || 0)));
+function percent(v: number) { return Math.max(0, Math.min(1, v / maxV.value)); }
+function money(v: number) {
+  return Number(v).toLocaleString('zh-CN', { maximumFractionDigits: 3, useGrouping: false }) + '万元';
+}
+
+// 行颜色（依次：红、橙、黄、蓝、深蓝）
+function rowColor(i: number) {
+  const palette = ['#FF5A58', '#FF8A4A', '#F2C84B', '#4E8FFF', '#5C8CFF'];
+  return palette[i] || palette[palette.length - 1];
+}
+</script>
+
+<style scoped lang="scss">
+.rank-type3 { height: 100%; display: grid; grid-template-rows: auto 1fr; }
+
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.title-img, .more-img { display: inline-block; background-repeat: no-repeat; background-size: 100% 100%; }
+/* 标题切图：基层金额 TOP5 */
+.title-img { width: 151px; height: 35px; background-image: -webkit-image-set(url('../../images/refund/title7/编组 21.png') 1x, url('../../images/refund/title7/编组 21@2x.png') 2x); background-image: image-set(url('../../images/refund/title7/编组 21.png') 1x, url('../../images/refund/title7/编组 21@2x.png') 2x); }
+.more-img { width: 59px; height: 13px; cursor: pointer; background-image: -webkit-image-set(url('../../images/refund/see-all/查看更多.png') 1x, url('../../images/refund/see-all/查看更多@2x.png') 2x); background-image: image-set(url('../../images/refund/see-all/查看更多.png') 1x, url('../../images/refund/see-all/查看更多@2x.png') 2x); }
+
+.list {
+  list-style: none;
+  margin: 5px;
+  padding: 2px 2px 2px 0;
+  display: grid;
+  row-gap: 12px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 84px 1fr auto auto; /* 左 NO | 名称 | 条 | 值 */
+  align-items: center;
+  column-gap: 10px;
+  min-height: 56px;
+  padding: 8px 0;
+  position: relative;
+}
+
+/* 分割横线（行与行之间） */
+.row::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: linear-gradient(90deg, rgba(109,161,251,.2), rgba(109,161,251,.6) 30%, rgba(109,161,251,.2)); }
+
+/* 左侧斜切角徽标（NO.x） */
+.no-badge {
+  display: inline-grid;
+  place-items: center;
+  width: 74px; height: 34px;
+  color: #fff; font-weight: 900; font-size: 14px;
+  position: relative;
+  border-radius: 4px;
+  --shadow: rgba(46, 115, 241, .45);
+  box-shadow: 0 2px 0 var(--shadow);
+  transform: skewX(-10deg);
+}
+.no-badge .no-text { display: inline-block; transform: skewX(10deg); }
+.no-badge--1 { background: linear-gradient(180deg, #FF6A68 0%, #FF4D4F 100%); }
+.no-badge--2 { background: linear-gradient(180deg, #FFA666 0%, #FF8A4A 100%); }
+.no-badge--3 { background: linear-gradient(180deg, #F6D76B 0%, #F2C84B 100%); color: #7A4E00; }
+.no-badge--4 { background: linear-gradient(180deg, #70A4FF 0%, #4E8FFF 100%); }
+.no-badge--5 { background: linear-gradient(180deg, #7EA0FF 0%, #5C8CFF 100%); }
+
+.name { font-weight: 800; font-size: 16px; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.bar { justify-self: start; }
+
+
+.val-box {
+  display: inline-grid; place-items: center;
+  padding: 10px;
+  min-width: 160px;
+  border: 1px solid #6DA1FB;
+  background: rgba(219, 235, 255, .45);
+  transform: skewX(-10deg)
+}
+.val { color: #333; font-weight: 900; font-size: 16px; }
+</style>
