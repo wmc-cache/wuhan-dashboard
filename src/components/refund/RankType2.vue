@@ -99,11 +99,11 @@ function money(v: number) { return Number(v).toLocaleString('zh-CN', { maximumFr
   display: grid;
   grid-template-columns: 34px 1.2fr auto 1fr auto;
   align-items: center;
-  column-gap: 10px;
+  column-gap: 12px;
   min-height: 18px;
   background: rgba(174, 203, 255, 0.23);
   border: 1px solid #6DA1FB;
-  padding: 5px;
+  padding: 5px 10px;
 }
 
 /* 名次圆形徽章（1~5） */

@@ -19,7 +19,10 @@
     </template>
     <!-- Smooth mode: a single continuously filled pill -->
     <template v-else>
-      <span class="track"><span class="fill" /></span>
+      <span class="track">
+        <span class="fill" />
+        <span v-if="showDot" class="dot" />
+      </span>
     </template>
   </div>
 </template>
@@ -45,6 +48,10 @@ interface Props {
   radius?: number;
   // 段间距（px，仅 segment 模式）
   gap?: number;
+  // 是否使用渐变（从颜色到透明）
+  gradient?: boolean;
+  // 是否显示末端圆点
+  showDot?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -55,7 +62,9 @@ const props = withDefaults(defineProps<Props>(), {
   width: 100,
   height: 10,
   radius: 3,
-  gap: 2
+  gap: 2,
+  gradient: false,
+  showDot: false
 });
 
 // 暴露给 <style> 使用的动态颜色变量
@@ -146,5 +155,25 @@ function segStyle(i: number) {
   transform: scaleX(v-bind(p));
   background: v-bind(color);
   border-radius: v-bind(radiusPx);
+}
+
+/* Gradient variant for smooth mode */
+.segmented-bar.smooth .fill:has(~ .dot) {
+  background: linear-gradient(to right, transparent, v-bind(color));
+  
+}
+
+/* Dot at the end of the bar */
+.segmented-bar.smooth .dot {
+  position: absolute;
+  top: 50%;
+  left: calc(v-bind(p) * 100%);
+  width: calc(v-bind(heightPx) + 4px);
+    height: calc(v-bind(heightPx) + 4px);
+  border-radius: 50%;
+  background: white;
+  transform: translate(-50%, -50%);
+    z-index: 100000;
+      border: 1px solid #fff;
 }
 </style>
