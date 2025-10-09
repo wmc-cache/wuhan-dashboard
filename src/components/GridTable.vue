@@ -7,9 +7,16 @@
     </div>
     <!-- 表头 -->
     <div class="thead" :style="rowGridStyle" role="row">
-      <div v-for="col in columns" :key="col.key" class="th" :style="{ textAlign: col.align || 'center' }"
-        role="columnheader">
-        {{ col.title }}
+      <div
+        v-for="col in columns"
+        :key="col.key"
+        class="th"
+        :style="{ textAlign: col.align || 'center' }"
+        role="columnheader"
+      >
+        <el-tooltip :content="col.title" placement="top" effect="dark">
+          <span>{{ col.title }}</span>
+        </el-tooltip>
       </div>
     </div>
 
@@ -33,19 +40,26 @@
           role="cell"
           @click="col.clickable && !isPlaceholderRow(row) ? emitCell(row, col, rIdx) : void 0"
         >
-          <span class="cell" :class="{ clickable: !!col.clickable }">
-            <template v-if="!isPlaceholderRow(row)">
-              <template v-if="col.iconLv">
-                <i class="lv-icon" :class="lvClass((row as any)[col.key], rIdx)" aria-hidden="true"></i>
+          <el-tooltip
+            :content="!isPlaceholderRow(row) && !col.iconLv ? formatCell((row as any)[col.key], col) : ''"
+            placement="top"
+            effect="dark"
+            :disabled="isPlaceholderRow(row) || col.iconLv"
+          >
+            <span class="cell" :class="{ clickable: !!col.clickable }">
+              <template v-if="!isPlaceholderRow(row)">
+                <template v-if="col.iconLv">
+                  <i class="lv-icon" :class="lvClass((row as any)[col.key], rIdx)" aria-hidden="true"></i>
+                </template>
+                <template v-else>
+                  {{ formatCell((row as any)[col.key], col) }}
+                </template>
               </template>
               <template v-else>
-                {{ formatCell((row as any)[col.key], col) }}
+
               </template>
-            </template>
-            <template v-else>
-              
-            </template>
-          </span>
+            </span>
+          </el-tooltip>
         </div>
       </li>
       <div v-if="isEmpty" class="empty">{{ props.emptyText }}</div>
@@ -55,6 +69,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { ElTooltip } from 'element-plus';
+import 'element-plus/es/components/tooltip/style/css';
 // 默认标题切图：新增公会
 import titleOrg1x from '../images/home-title/新增公会/编组 18.png';
 import titleOrg2x from '../images/home-title/新增公会/编组 18@2x.png';
@@ -129,8 +145,8 @@ const titleStyle = computed(() => {
 });
 
 const moreStyle = computed(() => ({
-  width: props.moreWidth || '45px',
-  height: props.moreHeight || '20px'
+  width: props.moreWidth || '59px',
+  height: props.moreHeight || '13px'
 }));
 
 // 计算表体固定高度：可见行数 × 行高；
@@ -266,11 +282,34 @@ function lvClass(val: any, rIdx: number): string {
   color: #333333;
   line-height: 20px;
   text-align: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.th > :deep(.el-tooltip__trigger) {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.th span {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .td {
   font-size: 16px;
   text-align: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.td > :deep(.el-tooltip__trigger) {
+  display: block;
+  width: 100%;
 }
 
 /* 占位行：仅用于撑开高度，采用更淡的背景 */
@@ -296,6 +335,13 @@ function lvClass(val: any, rIdx: number): string {
 
 .td--text .cell {
   color: rgba(51, 51, 51, 1);
+}
+
+.cell {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cell.clickable:hover {

@@ -74,11 +74,12 @@ import OverallOverview from '../components/yiliao/OverallOverview.vue';
 
 <style scoped lang="scss">
 .yiliao__grid {
-  height: 980px;
+  /* 所有模块平均减高：每行各减少 20px（顶/中/底），整体高度 -60px */
+  height: 930px;
   padding: 0 20px 20px;
   display: grid;
   grid-template-columns: 540px 1fr 540px;
-  grid-template-rows: 220px 360px 1fr;
+  grid-template-rows: 210px 330px 1fr;
   grid-template-areas:
     'tl tc tr'
     'ml mc mr'
