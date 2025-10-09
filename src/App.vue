@@ -1,16 +1,23 @@
 <template>
   <!-- 等比缩放容器，基于 1920x1080 设计稿 -->
   <ScaleBox :base-width="1920" :base-height="1080">
-    <div class="dash">
-      <HeaderBar />
-      <router-view />
-    </div>
+    <!-- 全局 Element Plus 语言：中文 -->
+    <el-config-provider :locale="zhCn">
+      <div class="dash">
+        <HeaderBar />
+        <router-view />
+      </div>
+    </el-config-provider>
   </ScaleBox>
 </template>
 
 <script setup lang="ts">
 import ScaleBox from './components/ScaleBox.vue';
 import HeaderBar from './components/HeaderBar.vue';
+// Element Plus 中文
+import { ElConfigProvider } from 'element-plus';
+import zhCn from 'element-plus/es/locale/lang/zh-cn';
+import 'element-plus/es/components/config-provider/style/css';
 </script>
 
 <style>

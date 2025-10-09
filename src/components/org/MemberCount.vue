@@ -92,9 +92,10 @@ const option = computed(() => {
     // 三 grid：左/中(0宽)/右，完全参考给定配置
     grid: [
       // 可配置的三列布局
-      { show: false, left: '2%',  top: '10%', bottom: '12%', containLabel: true, width: props.sideWidth },
-      { show: false, left: `${centerLeftPct}%`, top: '15%', bottom: '12%', containLabel: true, width: props.centerWidth },
-      { show: false, right: '-3%', top: '10%', bottom: '12%', containLabel: true, width: props.sideWidth }
+      // 收紧上下留白，提升可用高度（原 top:10/15%, bottom:12%）
+      { show: false, left: '2%', top: '8%', bottom: '4%', containLabel: true, width: props.sideWidth },
+      { show: false, left: `${centerLeftPct}%`, top: '6%', bottom: '4%', containLabel: true, width: props.centerWidth },
+      { show: false, right: '-3%', top: '8%', bottom: '4%', containLabel: true, width: props.sideWidth }
     ],
     legend: {
       top: '2%', right: '5%', itemWidth: 20, itemHeight: 5,
@@ -125,6 +126,8 @@ const option = computed(() => {
         type: 'category', inverse: true, position: 'right',
         axisLine: { show: true, lineStyle: { color: splitLine } },
         axisTick: { show: false }, axisLabel: { show: false },
+        // 缩小首尾空隙，让条形图更“顶满”
+        boundaryGap: ['4%', '4%'],
         data: categories
       },
       {
@@ -133,12 +136,14 @@ const option = computed(() => {
         // 轴线放在中间列中心，通过 offset=列宽/2 实现；允许微调 nudge 修正视觉居中
         offset: centerOffsetPxRef.value + (props.centerNudgePx || 0),
         axisLabel: { show: true, inside: true, margin: 0, align: 'center', color: '#2a6ff0', fontSize: 16, fontWeight: 700 },
+        boundaryGap: ['4%', '4%'],
         data: categories.map((v) => ({ value: v, textStyle: { align: 'center' } }))
       },
       {
         gridIndex: 2, type: 'category', inverse: true, position: 'left',
         axisLine: { show: true, lineStyle: { color: splitLine } },
         axisTick: { show: false }, axisLabel: { show: false },
+        boundaryGap: ['4%', '4%'],
         data: categories
       }
     ],

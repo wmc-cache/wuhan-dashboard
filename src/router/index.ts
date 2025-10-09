@@ -9,6 +9,8 @@ const routes: RouteRecordRaw[] = [
   // 更多 下拉真实页面
   { path: '/aid', name: 'aid', component: () => import('../pages/Aid.vue') },
   { path: '/refund', name: 'refund', component: () => import('../pages/Refund.vue') },
+  // 表格演示（GridTable）
+  { path: '/grid-table', name: 'grid-table', component: () => import('../pages/GridTablePage.vue') },
 ];
 
 const router = createRouter({

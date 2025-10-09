@@ -10,7 +10,7 @@
         <OrgIndustry />
       </div>
       <div class="panel h300">
-        <OrgNew />
+        <OrgNew @more="goGridTable" />
       </div>
     </section>
 
@@ -45,6 +45,10 @@ import WuhanMap from '../components/dashboard/WuhanMap.vue';
 import MemberTotal from '../components/dashboard/MemberTotal.vue';
 import MemberNewBiz from '../components/dashboard/MemberNewBiz.vue';
 import MemberNew from '../components/dashboard/MemberNew.vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+function goGridTable() { router.push({ name: 'grid-table' }); }
 </script>
 
 <style scoped lang="scss">
