@@ -11,6 +11,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/refund', name: 'refund', component: () => import('../pages/Refund.vue') },
   // 表格演示（GridTable）
   { path: '/grid-table', name: 'grid-table', component: () => import('../pages/GridTablePage.vue') },
+  { path: '/grid-table-2', name: 'grid-table-2', component: () => import('../pages/GridTablePage2.vue') },
 ];
 
 const router = createRouter({

@@ -3,7 +3,7 @@
     <!-- 顶部标题 + 查看更多 -->
     <div v-if="showHeader" class="table-header">
       <span class="title-img" :style="titleStyle" aria-hidden="true"></span>
-      <i class="more-img" :style="moreStyle" role="button" aria-label="查看更多" @click="emit('more')"></i>
+      <i class="more-img" :style="moreStyle" role="button" aria-label="查看更多" @click="onMoreClick"></i>
     </div>
     <!-- 表头 -->
     <div class="thead" :style="rowGridStyle" role="row">
@@ -69,6 +69,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { ElTooltip } from 'element-plus';
 import 'element-plus/es/components/tooltip/style/css';
 // 默认标题切图：新增公会
@@ -103,6 +104,8 @@ interface Props {
   // 查看更多尺寸
   moreWidth?: string;
   moreHeight?: string;
+  // 点击“查看更多”要跳转的路由名称；默认跳转到新建的表格页
+  morePageName?: string;
   // 空数据占位
   emptyText?: string;   // 空数据时显示的文字
   fillPlaceholder?: boolean; // 是否以空行填充至 visibleRows 行
@@ -115,13 +118,24 @@ const props = withDefaults(defineProps<Props>(), {
   emptyText: '暂无数据',
   fillPlaceholder: true,
   titleImg1x: titleOrg1x,
-  titleImg2x: titleOrg2x
+  titleImg2x: titleOrg2x,
+  morePageName: 'grid-table'
 });
 
 const emit = defineEmits<{
   (e: 'cell-click', payload: { row: Record<string, any>; column: ColumnDef; rowIndex: number }): void;
   (e: 'more'): void;
 }>();
+
+// 内部处理“查看更多”：兼容对外事件并提供内置跳转
+const router = useRouter();
+function onMoreClick() {
+  // 先对外通知（若外部需要自定义行为）
+  emit('more');
+  // 默认路由跳转（允许通过 morePageName 自定义路由名）
+  const name = (props.morePageName || 'grid-table') as any;
+  try { router.push({ name }); } catch {}
+}
 
 const rowGridStyle = computed(() => ({ gridTemplateColumns: props.gridTemplate }));
 
