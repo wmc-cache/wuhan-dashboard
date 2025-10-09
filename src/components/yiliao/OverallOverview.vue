@@ -127,18 +127,8 @@ function pretty(n: number) { return n.toLocaleString('zh-CN'); }
 
 /* 年份选择：浅底 + 蓝边 + 自定义箭头 */
 .year-select { position: absolute; right: 18px; top: 8px; }
-.year-select select {
-  appearance: none; -webkit-appearance: none; outline: none;
-  padding: 6px 34px 6px 14px; border: 1px solid rgba(44,120,255,0.55);
-  border-radius: 8px; background: rgba(240,246,255,0.95);
-  color: #1b59c8; font-weight: 800; letter-spacing: .5px;
-  box-shadow: 0 2px 0 rgba(62,126,255,0.18) inset;
-}
-.year-select::after {
-  content: ''; position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-  width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid #2a6ff0;
-  pointer-events: none;
-}
+/* 控制组件内按钮高度，与设计一致 */
+.year-select :deep(.trigger) { height: 32px; }
 
 /* 中心图标：略靠上 */
 .center-icon {

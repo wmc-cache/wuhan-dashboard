@@ -1,5 +1,5 @@
 <template>
-  <div class="overview">
+  <div class="overview" @click="onClick">
     <div class="center-pic" aria-label="经费返还概览插图" />
   </div>
   
@@ -9,6 +9,11 @@
 // 仅保留年份 prop，以后接数据时可用
 interface Props { year: number }
 defineProps<Props>();
+const emit = defineEmits<{ (e: 'open-detail', payload: { x: number; y: number }): void }>();
+
+function onClick(e: MouseEvent) {
+  emit('open-detail', { x: e.clientX, y: e.clientY });
+}
 </script>
 
 <style scoped lang="scss">

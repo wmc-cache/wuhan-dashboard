@@ -2,7 +2,6 @@
   <div class="nice-select" ref="wrap" :style="{ width: width + 'px' }">
     <button type="button" class="trigger" @click="toggle" :aria-expanded="open">
       <span class="label">{{ format(modelValue) }}</span>
-      <!-- <i class="caret"></i> -->
     </button>
     <ul v-if="open" class="menu" role="listbox">
       <li
@@ -54,6 +53,7 @@ function format(v: any) { return props.formatter ? props.formatter(v) : String(v
 <style scoped lang="scss">
 .nice-select { position: relative; }
 .trigger {
+  position: relative; /* 用伪元素画箭头 */
   width: 100%;
   height: 34px;
   padding: 0 34px 0 14px;
@@ -65,9 +65,16 @@ function format(v: any) { return props.formatter ? props.formatter(v) : String(v
   display: grid; grid-template-columns: 1fr 12px; align-items: center; cursor: pointer;
 }
 .trigger .label { justify-self: start; }
-.trigger .caret {
-  width: 0; height: 0; justify-self: end;
-  border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid #2a6ff0;
+/* 统一的下拉箭头：与页面容器::after风格一致 */
+.trigger::after {
+  content: '';
+  position: absolute;
+  right: 12px; top: 50%; transform: translateY(-50%);
+  width: 0; height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid #2a6ff0;
+  pointer-events: none;
 }
 
 .menu {
@@ -82,4 +89,3 @@ function format(v: any) { return props.formatter ? props.formatter(v) : String(v
 .item:hover { background: rgba(120,170,255,0.12); }
 .item.active { color: #0c3a9a; background: rgba(120,170,255,0.2); }
 </style>
-
