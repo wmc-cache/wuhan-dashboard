@@ -170,7 +170,10 @@ const panelStyle = computed(() => {
 .nice-dlg__title { color: #e9f3ff; text-shadow: 0 2px 0 rgba(0,0,0,0.18); font-weight: 900; letter-spacing: 1px; white-space: nowrap; max-width: 92%; overflow: hidden; text-overflow: ellipsis; font-size: 18px; }
 
 .nice-dlg__close {
-  justify-self: end; align-self: start;
+  justify-self: end;
+    align-self: center;
+    /* 垂直居中关闭按钮 */
+    margin-top: -15px;
   width: 18px; height: 18px; border: 0; background: transparent; cursor: pointer;
   background-repeat: no-repeat; background-position: center; background-size: 100% 100%;
   background-image: -webkit-image-set(

@@ -93,7 +93,7 @@ function placeInfoAtPixel(px: [number, number]) {
   let x = (px?.[0] ?? 0) + GAP; let y = (px?.[1] ?? 0) + GAP;
   x = Math.min(Math.max(PAD, x), Math.max(PAD, w - CARD_W - PAD));
   y = Math.min(Math.max(PAD, y), Math.max(PAD, h - CARD_H - PAD));
-  infoPos.value = { x, y };
+  infoPos.value = { x: x-12, y: y-28};
 }
 
 const featureCenters: Record<DistrictName, [number, number]> = {};
