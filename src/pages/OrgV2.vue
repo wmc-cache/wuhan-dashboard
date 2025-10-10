@@ -4,26 +4,21 @@
     <section class="mod" style="grid-area: tl;">
       <img class="mod__title-img" :src="titleImg1x" :srcset="titleImg2x + ' 2x'" alt="单位所属行业占比" />
       <div class="mod__body">
-        <RingPie
-          :data="industryPieItems"
-          :center="['42%','54%']"
-          :radius="['48%','72%']"
-          enable-pagination
-          :page-size="6"
-        >
+        <RingPie :data="industryPieItems" :center="['42%', '54%']" :radius="['48%', '72%']" enable-pagination
+          :page-size="6" v-model:activeIndex="activeIndustryIndex">
           <template #center>
             <div class="pie-center">
-              <b class="pie-center__num">{{ totalIndustry }}</b>
-              <div class="pie-center__label">其他组织</div>
+              <b class="pie-center__num">{{ fmt(activeIndustry.value) }}</b>
+              <div class="pie-center__label">{{ activeIndustry.name }}</div>
             </div>
           </template>
         </RingPie>
       </div>
     </section>
 
-    <section  style="grid-area: tc;">
-      <div class="mod__body">
-        <OrgSearchKpis :items="searchKpiItems" />
+    <section style="grid-area: tc;">
+      <div class="mod__body" style="margin-top: 10px;">
+        <OrgSearchKpis style="margin-top: 10px;" :items="searchKpiItems" />
       </div>
     </section>
 
@@ -33,14 +28,17 @@
         <div class="overview3">
           <div class="k">
             <div class="k__num">{{ fmt(kpiOverview.downUnion) }}</div>
+            <img class="badge" :src="pin1x" :srcset="pin2x + ' 2x'" alt="行业产业工会" draggable="false" />
             <div class="k__label">下辖工会</div>
           </div>
           <div class="k">
             <div class="k__num">{{ fmt(kpiOverview.openGov) }}</div>
+            <img class="badge" :src="pin1x" :srcset="pin2x + ' 2x'" alt="行业产业工会" draggable="false" />
             <div class="k__label">执行厂务公开制度</div>
           </div>
           <div class="k">
             <div class="k__num">{{ fmt(kpiOverview.staffRep) }}</div>
+            <img class="badge" :src="pin1x" :srcset="pin2x + ' 2x'" alt="行业产业工会" draggable="false" />
             <div class="k__label">执行职代会制度</div>
           </div>
         </div>
@@ -51,33 +49,27 @@
     <section class="mod" style="grid-area: ml;">
       <img class="mod__title-img" :src="titleImgRank1x" :srcset="titleImgRank2x + ' 2x'" alt="下辖工会组织排行统计" />
       <div class="mod__body">
-        <RefundRankList :items="rankList" :max-rows="6" variant="plain" show-no />
+        <OrgAreaRank :items="rankList" />
       </div>
     </section>
 
     <section class="mod" style="grid-area: mc;">
       <img class="mod__title-img" :src="titleImgType1x" :srcset="titleImgType2x + ' 2x'" alt="工会类型统计" />
       <div class="mod__body">
-        <StripedBarChart
-          :categories="unionTypeCategories"
-          :values="unionTypeValues"
-          :yMax="typeYMax"
-          y-unit="个"
-          :gridTop="20"
-          :gridBottom="52"
-          :xLabelInterval="0"
-        />
+        <StripedBarChart :categories="unionTypeCategories" :values="unionTypeValues" :yMax="typeYMax" y-unit="个"
+          :gridTop="25" :gridBottom="32" :xLabelInterval="0" />
       </div>
     </section>
 
     <section class="mod" style="grid-area: mr;">
       <img class="mod__title-img" :src="titleImgBiz1x" :srcset="titleImgBiz2x + ' 2x'" alt="企业性质占比" />
       <div class="mod__body">
-        <RingPie :data="bizPieItems" :center="['42%','54%']" :radius="['48%','72%']">
+        <RingPie :data="bizPieItems" :center="['42%', '54%']" :radius="['48%', '72%']" enable-pagination
+          :page-size="6" v-model:activeIndex="activeBizIndex">
           <template #center>
             <div class="pie-center">
-              <b class="pie-center__num">{{ totalBiz }}</b>
-              <div class="pie-center__label">企业组织</div>
+              <b class="pie-center__num">{{ fmt(activeBiz.value) }}</b>
+              <div class="pie-center__label">{{ activeBiz.name }}</div>
             </div>
           </template>
         </RingPie>
@@ -91,13 +83,8 @@
       <section class="mod mod--wide">
         <img class="mod__title-img" :src="titleImgRegion1x" :srcset="titleImgRegion2x + ' 2x'" alt="各行政区组织分布统计" />
         <div class="mod__body">
-          <StackedColumnChart
-            :categories="rdCategories"
-            :series="districtStackSeries"
-            :yMax="rdYMax"
-            :xLabelInterval="0"
-            :ySplitNumber="4"
-          />
+          <StackedColumnChart :categories="rdCategories" :series="districtStackSeries" :yMax="rdYMax"
+            :xLabelInterval="0" :ySplitNumber="4" />
         </div>
       </section>
 
@@ -107,17 +94,8 @@
         <div class="mod__body">
           <div class="split2">
             <SmallTripleGauge :total="small3Total" />
-            <StripedBarChart
-              :categories="rightBarCats"
-              :values="rightBarVals"
-              :yMax="rightBarMax"
-              y-unit="个"
-              :gridTop="20"
-              :gridBottom="52"
-              :xLabelInterval="0"
-              :xLabelRotate="30"
-              :showLabels="false"
-            />
+            <StripedBarChart :categories="rightBarCats" :values="rightBarVals" :yMax="rightBarMax" y-unit="个"
+              :gridTop="25" :gridBottom="52" :xLabelInterval="0" :xLabelRotate="30" :showLabels="false" />
           </div>
         </div>
       </section>
@@ -132,9 +110,13 @@ import OrgSearchKpis from '../components/org/SearchKpis.vue';
 import StackedColumnChart from '../components/StackedColumnChart.vue';
 import SmallTripleGauge from '../components/org/SmallTripleGauge.vue';
 import StripedBarChart from '../components/StripedBarChart.vue';
-import RefundRankList from '../components/refund/RankList.vue';
+import OrgAreaRank from '../components/org/AreaRank.vue';
 
 import { computed, ref } from 'vue';
+
+import pin1x from '../images/org/title2/地图／定位／选中.png';
+import pin2x from '../images/org/title2/地图／定位／选中@2x.png';
+
 import icon31x from '../images/org/title3/位图.png';
 import icon32x from '../images/org/title3/位图@2x.png';
 import icon41x from '../images/org/title4/位图.png';
@@ -192,8 +174,11 @@ const industryPieItems = [
   { name: '制造业', value: 7878, color: '#5EE0D2' },
   { name: '居民服务、修理和其他服务业', value: 5436, color: '#6F85FF' },
   { name: '批发零售业', value: 4324, color: '#8D63FF' },
+  { name: '农林牧渔业', value: 3421, color: '#D8D6D2' },
   { name: '农林牧渔业', value: 3421, color: '#D8D6D2' }
 ];
+const activeIndustryIndex = ref(0);
+const activeIndustry = computed(() => industryPieItems[activeIndustryIndex.value] || { name: '—', value: 0 });
 const totalIndustry = computed(() => industryPieItems.reduce((s, it) => s + (it.value || 0), 0).toLocaleString('zh-CN'));
 
 // 右上：企业性质占比（占位）
@@ -205,7 +190,10 @@ const bizPieItems = [
   { name: '制造业', value: 4324, color: '#8D63FF' },
   { name: '外商投资企业', value: 427, color: '#D8D6D2' }
 ];
-const totalBiz = computed(() => bizPieItems.reduce((s, it) => s + (it.value || 0), 0).toLocaleString('zh-CN'));
+const activeBizIndex = ref(0);
+const activeBiz = computed(() => bizPieItems[activeBizIndex.value] || { name: '—', value: 0 });
+const bizTotalNum = computed(() => bizPieItems.reduce((s, it) => s + (it.value || 0), 0));
+const totalBiz = computed(() => bizTotalNum.value.toLocaleString('zh-CN'));
 
 // 中中：工会类型统计（占位）
 const unionTypeCategories = ['总工会', '工会小组', '分工会', '独立建制工会', '联合基层工会', '行业工会联合会', '镇街工会'];
@@ -217,23 +205,22 @@ const rankList = [
   { name: '武昌区', value: 61898 },
   { name: '东湖新技术开发区', value: 61897 },
   { name: '汉阳区', value: 3092 },
-  { name: '洪山区', value: 792 },
   { name: '江汉区', value: 6189 },
   { name: '江夏区', value: 5230 }
 ];
 
 // 底部左：各行政区组织分布（复用 OrgRegionDistribution 默认占位）
-const rdCategories = ['武昌区','硚口区','江岸区','东湖开发区','新洲区','洪山区','青山区','蔡甸区','江夏区','汉阳区','东西湖区','东湖风景区','黄陂区','经开区','江汉区'];
+const rdCategories = ['武昌区', '硚口区', '江岸区', '东湖开发区', '新洲区', '洪山区', '青山区', '蔡甸区', '江夏区', '汉阳区', '东西湖区', '东湖风景区', '黄陂区', '经开区', '江汉区'];
 const rdYMax = 1200;
 const districtStackSeries = [
-  { name: '未建会', data: [60,40,50,30,45,55,48,36,44,50,42,38,47,35,46] },
-  { name: '总工会', data: [180,120,150,110,130,140,145,120,150,160,148,135,142,150,155] },
-  { name: '其他', data: [40,35,38,28,30,32,30,28,29,30,30,28,30,28,29] },
-  { name: '工会小组', data: [120,80,90,70,72,75,68,66,74,78,70,72,76,74,79] },
-  { name: '分工会', data: [240,160,180,130,128,140,132,120,150,170,150,145,155,165,168] },
-  { name: '单独基层工会', data: [200,130,150,100,96,120,110,108,126,136,120,118,124,130,132] },
-  { name: '联合基层工会', data: [110,90,100,86,70,82,80,78,84,90,86,80,88,92,94] },
-  { name: '行业性工会联合会', data: [40,35,36,30,26,28,26,24,30,32,28,26,28,30,32] }
+  { name: '未建会', data: [60, 40, 50, 30, 45, 55, 48, 36, 44, 50, 42, 38, 47, 35, 46] },
+  { name: '总工会', data: [180, 120, 150, 110, 130, 140, 145, 120, 150, 160, 148, 135, 142, 150, 155] },
+  { name: '其他', data: [40, 35, 38, 28, 30, 32, 30, 28, 29, 30, 30, 28, 30, 28, 29] },
+  { name: '工会小组', data: [120, 80, 90, 70, 72, 75, 68, 66, 74, 78, 70, 72, 76, 74, 79] },
+  { name: '分工会', data: [240, 160, 180, 130, 128, 140, 132, 120, 150, 170, 150, 145, 155, 165, 168] },
+  { name: '单独基层工会', data: [200, 130, 150, 100, 96, 120, 110, 108, 126, 136, 120, 118, 124, 130, 132] },
+  { name: '联合基层工会', data: [110, 90, 100, 86, 70, 82, 80, 78, 84, 90, 86, 80, 88, 92, 94] },
+  { name: '行业性工会联合会', data: [40, 35, 36, 30, 26, 28, 26, 24, 30, 32, 28, 26, 28, 30, 32] }
 ];
 
 // 底部中：小三级工会组织统计（用环图表现一个总量）
@@ -245,41 +232,148 @@ const rightBarVals = [520, 680, 860, 740, 600, 560, 620];
 const rightBarMax = 1200;
 
 function fmt(n?: number) { return (n ?? 0).toLocaleString('zh-CN'); }
+function percent(v: number, total: number | { value: number }) {
+  const t = typeof total === 'number' ? total : (total as any).value;
+  const p = t > 0 ? (v / t) * 100 : 0;
+  return Math.round(p) + '%';
+}
 </script>
 
 <style scoped lang="scss">
 /* 三列布局，与现有 Org 页一致，便于快速替换 */
 .org2__grid {
-  height: 970px; /* 1080 - header */
+  height: 970px;
+    /* 1080 - header */
   padding: 0 20px 20px;
   display: grid;
   grid-template-columns: 540px 1fr 540px;
-  grid-template-rows: 340px 340px 1fr;
+  grid-template-rows: 350px 340px 1fr;
   grid-template-areas:
     'tl tc tr'
     'ml mc mr'
     'bottom bottom bottom';
-  gap: 10px;
+  gap: 5px;
   --title-img-h: 32px;
 }
 
-.mod { position: relative; border: none; border-radius: 10px; background: none; padding: 18px; display: grid; grid-template-rows: auto 1fr; }
-.mod::before { content: ''; position: absolute; left: -12px; right: -12px; top: -10px; bottom: -10px; background-repeat: no-repeat; background-size: 100% 100%; background-image: -webkit-image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x); background-image: image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x); pointer-events: none; z-index: -1; }
-.mod--wide::before { background-image: -webkit-image-set(url('../images/module-broder-width/矩形.png') 1x, url('../images/module-broder-width/矩形@2x.png') 2x); background-image: image-set(url('../images/module-broder-width/矩形.png') 1x, url('../images/module-broder-width/矩形@2x.png') 2x); }
-.mod__title-img { display: block; height: var(--title-img-h); margin: 0 0 10px; object-fit: contain; }
-.mod__body { display: grid; place-items: stretch; color: rgba(34, 110, 230, 0.8); font-size: 18px; }
-.mod__body > * { min-width: 0; min-height: 0; }
+.mod {
+  position: relative;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  padding: 18px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.mod::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  right: -12px;
+  top: -10px;
+  bottom: -10px;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-image: -webkit-image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x);
+  background-image: image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.mod--wide::before {
+  background-image: -webkit-image-set(url('../images/module-broder-width/矩形.png') 1x, url('../images/module-broder-width/矩形@2x.png') 2x);
+  background-image: image-set(url('../images/module-broder-width/矩形.png') 1x, url('../images/module-broder-width/矩形@2x.png') 2x);
+}
+
+.mod__title-img {
+  display: block;
+  height: var(--title-img-h);
+  margin: 0 0 10px;
+  object-fit: contain;
+}
+
+.mod__body {
+  display: grid;
+  place-items: stretch;
+  color: rgba(34, 110, 230, 0.8);
+  font-size: 18px;
+}
+
+.mod__body>* {
+  min-width: 0;
+  min-height: 0;
+}
 
 /* 合并的半宽容器：左侧仪表（占30%），右侧条形（占70%） */
-.split2 { display: grid; grid-template-columns: 30% 1fr; align-items: center; column-gap: 16px; }
+.split2 {
+  display: grid;
+  grid-template-columns: 30% 1fr;
+  align-items: center;
+  column-gap: 16px;
+}
 
 /* 底部 2 列等分容器 */
-.bottom-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.bottom-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
 
-.pie-center { display: grid; place-items: center; text-align: center; }
-.pie-center__num { font-size: 28px; font-weight: 900; color: #3e74ff; line-height: 1; }
-.pie-center__label { font-size: 14px; color: #2a6ff0; font-weight: 700; }
+.pie-center {
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
 
+.pie-center__num {
+  font-size: 28px;
+  font-weight: 900;
+  color: #3e74ff;
+  line-height: 1;
+}
+
+.pie-center__label {
+  font-size: 14px;
+  color: #2a6ff0;
+  font-weight: 700;
+}
+
+/* 右上企业性质占比 - 自定义图例 */
+.biz-legend {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  row-gap: 10px;
+}
+
+.biz-legend__item {
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  align-items: center;
+  column-gap: 8px;
+  color: #2a6ff0;
+  font-weight: 700;
+}
+
+.biz-legend__item .label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.biz-legend__item .count {
+  margin-left: 6px;
+  opacity: .9;
+}
+
+.biz-legend__item .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, .6) inset;
+}
 .overview3 { height: 100%; display: grid; grid-template-columns: repeat(3, 1fr); align-items: center; justify-items: center; }
 .k { display: grid; row-gap: 6px; justify-items: center; }
 .k__num { font-size: 30px; font-weight: 900; background: linear-gradient(180deg, #6FA7FF 0%, #1A65FF 90%); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 4px 9px rgba(30, 100, 220, 0.18); }

@@ -178,7 +178,13 @@ function formatNumber(n: number): string {
 
 const option = computed(() => ({
   animation: true,
-  tooltip: { trigger: 'item', formatter: '{b}<br/>{c}' },
+  // 工具提示：单行显示，不换行；内容为“名称 数值”
+  tooltip: {
+    trigger: 'item',
+    confine: true,
+    extraCssText: 'white-space:nowrap; max-width:280px; overflow:hidden; text-overflow:ellipsis;',
+    formatter: (p: any) => `${p?.name ?? ''} ${p?.value ?? ''}`
+  },
   series: [
     {
       type: 'pie',
@@ -186,7 +192,15 @@ const option = computed(() => ({
       radius: props.radius as any,
       startAngle: props.startAngle,
       avoidLabelOverlap: true,
-      label: { show: props.showLabel },
+      // 扇区外标签：单行显示，截断省略
+      label: {
+        show: props.showLabel,
+        formatter: (p: any) => `${p?.name ?? ''} ${p?.value ?? ''}`,
+        overflow: 'truncate',
+        width: 90,
+        color: '#2a6ff0',
+        fontSize: 12
+      },
       labelLine: { show: props.showLabel },
       clockwise: true,
       itemStyle: {
@@ -308,9 +322,11 @@ onBeforeUnmount(() => stopAuto());
   row-gap: 12px;
 }
 
+
 .legend-item {
   display: grid;
-  grid-template-columns: 20px auto 1fr;
+  /* 点 | 文本(弹性) | 数值(自适应) -> 文本可截断省略 */
+  grid-template-columns: 20px 1fr auto;
   align-items: center;
   column-gap: 8px;
   color: rgba(19, 115, 255, 0.9);
@@ -319,9 +335,7 @@ onBeforeUnmount(() => stopAuto());
   transition: all 0.2s ease;
 }
 
-.legend-item .label {
-  font-size: 16px;
-}
+.legend-item .label { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .legend-item .count {
   font-size: 14px;

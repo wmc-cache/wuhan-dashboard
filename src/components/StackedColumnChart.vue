@@ -43,7 +43,7 @@ const props = withDefaults(defineProps<Props>(), {
   axisColor: 'rgba(67,127,255,0.35)',
   gridLineColor: 'rgba(67,127,255,0.20)',
   textColor: 'rgba(25, 90, 200, 0.95)',
-  gridLeft: 56, gridRight: 16, gridTop: 28, gridBottom: 56,
+  gridLeft: 56, gridRight: 16, gridTop: 28, gridBottom: 0,
   xLabelRotate: 0, xLabelInterval: 0, ySplitNumber: 4,
   showLegend: true,
   legendTop: 0, legendLeft: 70,

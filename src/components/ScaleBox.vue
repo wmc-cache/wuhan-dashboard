@@ -61,16 +61,13 @@ onUnmounted(() => {
   background-size: cover;
   background-repeat: no-repeat;
   /* 1x 回退 */
-  background-image: url('../images/bg/bg.png');
+  background-image: url('../images/home/home-bg/背景.png');
   /* 视网膜屏/高分屏 */
   background-image: -webkit-image-set(
-    url('../images/bg/bg.png') 1x,
-    url('../images/bg/bg@2x.png') 2x
-  );
-  background-image: image-set(
-    url('../images/bg/bg.png') 1x,
-    url('../images/bg/bg@2x.png') 2x
-  );
+    url('../images/home/home-bg/背景.png') 1x,
+      url('../images/home/home-bg/背景@2x.png') 2x);
+      background-image: image-set(url('../images/home/home-bg/背景.png') 1x,
+          url('../images/home/home-bg/背景@2x.png') 2x);
 }
 
 /* 顶部“标题横幅”需要横向撑满整个视口，否则宽屏下两侧会露底。
