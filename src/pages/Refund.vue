@@ -170,7 +170,7 @@ function onOpenDetail(payload: { x: number; y: number }) {
     'ml mc mr'
     'bl bc br';
   /* 模块间距统一为 10px */
-  gap: 10px;
+  gap: 0px;
 }
 
 .mod {

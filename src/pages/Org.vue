@@ -103,7 +103,7 @@ import OrgRegionDistribution from '../components/org/RegionDistribution.vue';
     'ml mc mr'
     'bl bl mr';
   /* 模块间距统一为 10px */
-  gap: 10px;
+  gap: 15px;
   /* 标题图片统一大小，便于快速整体调节 */
   --title-img-h: 32px; /* 字体（标题）稍大一点 */
 }
