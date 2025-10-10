@@ -303,7 +303,8 @@ onBeforeUnmount(() => stopAuto());
 .legend-wrap {
   height: 100%;
   display: grid;
-  grid-template-rows: 1fr auto; // 列表占满，箭头置底
+  /* 让翻页器紧贴图例：使用自适应行高，而不是让上半区填满 */
+  grid-template-rows: auto auto; // 列表高度=内容，箭头紧随其后
 }
 
 /* 让图例在可用高度内垂直居中 */
@@ -365,7 +366,7 @@ onBeforeUnmount(() => stopAuto());
 // 翻页箭头样式
 .pagination-arrows {
   justify-self: start;
-  padding: 6px 0 2px;
+  padding: 2px 0 0; /* 与图例更贴近 */
 }
 
 .legend-arrows {

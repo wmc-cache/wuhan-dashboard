@@ -1,6 +1,9 @@
 <template>
   <div class="search-total">
-
+    <!-- 内部标题（贴图背景） -->
+    <div class="inner-title">
+      <span class="inner-title__text">{{ title }}</span>
+    </div>
 
     <!-- 数字翻牌（使用切图作为背景） -->
     <div class="digits" role="group" aria-label="今日会员总数">
@@ -12,7 +15,7 @@
     <!-- 辅助信息：环比/进度条 -->
     <div class="meta">
       <div class="incr">
-        <span class="arrow-up" aria-hidden="true"></span>
+        <span class="dash-icon" aria-hidden="true"></span>
         比上周新增 <span class="num">{{ weeklyIncrease }}</span> 人
       </div>
       <div class="progress">
@@ -40,6 +43,7 @@ interface Props {
   padLength?: number;           // 位数，不足前补 0
   weeklyIncrease?: number;      // 上周新增人数
   progress?: number;            // 进度条百分比
+  title?: string;               // 内部标题
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -48,7 +52,8 @@ const props = withDefaults(defineProps<Props>(), {
   todayTotal: 111211,
   padLength: 6,
   weeklyIncrease: 10,
-  progress: 68
+  progress: 68,
+  title: '小三级工会会员统计：'
 });
 
 const emit = defineEmits<{
@@ -74,7 +79,7 @@ function onInput(e: Event) {
   height: 100%;
   display: grid;
   grid-template-rows: auto auto auto 1fr;
-  row-gap: 6px;
+  row-gap: 8px;
 }
 
 /* 搜索条 */
@@ -134,15 +139,27 @@ function onInput(e: Event) {
   letter-spacing: 2px;
 }
 
+/* 内部标题：使用切图作为背景，文字置中 */
+.inner-title {
+  height: 44px;
+  display: grid;
+  place-items: center;
+  background-image: -webkit-image-set(url('../../images/member/title2/编组 44.png') 1x, url('../../images/member/title2/编组 44@2x.png') 2x);
+  background-image: image-set(url('../../images/member/title2/编组 44.png') 1x, url('../../images/member/title2/编组 44@2x.png') 2x);
+  background-size: 100% 100%;
+  filter: drop-shadow(0 6px 16px rgba(45,110,255,0.10));
+}
+.inner-title__text { font-size: 18px; font-weight: 900; color: #2a6ff0; letter-spacing: 2px; }
+
 /* 数字翻牌 */
 .digits {
   display: flex;
   align-items: flex-end;
   justify-content: center;
   gap: 15px;
-    /* 更紧凑 */
-    padding: 4px 0 0;
-  }
+  /* 更紧凑 */
+  padding: 2px 0 0;
+}
   
   .digit {
     width: 54px;
@@ -186,17 +203,9 @@ function onInput(e: Event) {
             color: #FFA36B;
             margin: 0 4px;
           }
-          
-          .arrow-up {
-            display: inline-block;
-              width: 0;
-              height: 0;
-              margin-right: 8px;
-              border-left: 6px solid transparent;
-              border-right: 6px solid transparent;
-              border-bottom: 10px solid #FFA36B;
-              transform: translateY(-1px);
-            }
+
+          /* 左侧方形虚线图标 */
+          .dash-icon { width: 14px; height: 14px; border: 2px dashed #FFA36B; border-radius: 2px; display: inline-block; margin-right: 8px; }
             
             .progress {
               position: relative;

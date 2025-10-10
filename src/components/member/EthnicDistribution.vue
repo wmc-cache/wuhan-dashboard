@@ -9,7 +9,7 @@
       :border-width="6"
       :emphasis-scale="18"
       enable-pagination
-      :page-size="6"
+      :page-size="5"
       :initial-active-index="0"
     >
       <!-- 环中心：人物位图 -->
@@ -126,9 +126,9 @@ const seriesCenter = ref<[string, string]>(['38%', '48%']);
   margin-bottom: 8px;
 }
 .summary__icon { width: 56px; height: 56px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(90,160,255,0.25)); }
-.summary__text { display: grid; row-gap: 4px; }
-.summary__name { font-size: 26px; font-weight: 900; color: #2a6ff0; letter-spacing: 1px; }
-.summary__meta { font-size: 22px; font-weight: 800; color: rgba(42,111,240,0.95); }
+.summary__text { display: flex; align-items: baseline; column-gap: 12px; white-space: nowrap; }
+.summary__name { font-size: 16 px; font-weight: 900; color: #2a6ff0; letter-spacing: 1px; }
+.summary__meta { font-size: 16px; font-weight: 800; color: rgba(42,111,240,0.95); line-height: 1; }
 
 /* 自定义图例样式，延续 RingPie 默认风格 */
 .legend { list-style: none; padding: 0 6px 0 0; margin: 0; display: grid; row-gap: 12px; }

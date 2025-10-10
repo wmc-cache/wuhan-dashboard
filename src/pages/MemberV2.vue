@@ -50,7 +50,18 @@
     <!-- 底部：左数字 | 右行业分布 -->
     <section class="mod mod--wide" style="grid-area: bl;">
       <div class="mod__body">
-        <SearchTodayTotal :today-total="111121" :weekly-increase="10" :progress="64" />
+        <div class="bottom-row">
+          <SearchTodayTotal :today-total="111121" :weekly-increase="10" :progress="64" />
+          <StripedBarChart
+            :categories="industryCats"
+            :values="industryVals"
+            y-unit="人"
+            :y-max="1200"
+            :grid-left="64"
+            :grid-right="20"
+            :grid-bottom="56"
+          />
+        </div>
       </div>
     </section>
 
@@ -137,6 +148,9 @@ const industryVals = [420, 360, 280, 340, 300, 360, 320];
   display: grid;
   place-items: stretch;
 }
+
+/* 底部宽模块：左数字 + 右条形图 */
+.bottom-row { display: grid; grid-template-columns: 520px 1fr; column-gap: 24px; align-items: stretch; }
 
 .title-img {
   display: inline-block;
