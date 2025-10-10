@@ -85,10 +85,5 @@ const femaleCount = props.femaleCount;
 .female .value { color: #ff6b97; }
 .num { margin-right: 4px; }
 
-/* 自适应较窄屏宽时的缩放与排版微调 */
-@media (max-width: 1680px) {
-  .item { grid-template-columns: 96px auto; column-gap: 14px; }
-  .icon { width: 96px; height: 102px; }
-  .value { font-size: 28px; }
-}
+
 </style>

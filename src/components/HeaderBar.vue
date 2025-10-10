@@ -141,7 +141,5 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick));
 .more-item { display: block; padding: 10px 12px; border-radius: 6px; color: #2a6ff0; font-weight: 700; text-decoration: none; }
 .more-item:hover { background: rgba(88,151,255,.1); }
 
-@media (max-width: 1680px) {
-  .tab { min-width: 120px; height: 40px; line-height: 40px; }
-}
+
 </style>

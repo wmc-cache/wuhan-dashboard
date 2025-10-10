@@ -162,7 +162,5 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick));
   box-shadow: 0 4px 18px rgba(30, 100, 220, 0.12), inset 0 0 20px rgba(120, 170, 255, .06);
 }
 
-@media (max-width: 1680px) {
-  .field, .btn { height: 44px; }
-}
+
 </style>

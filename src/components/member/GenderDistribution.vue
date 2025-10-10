@@ -118,10 +118,5 @@ function pretty(n?: number) {
 
 .icon { margin-top: 12px; width: 86px; height: auto; }
 
-/* 轻微自适应，避免极窄时溢出 */
-@media (max-width: 1180px) {
-  .gender-wrap { grid-template-columns: 200px 1fr; }
-  .right { column-gap: 22px; }
-  .value { font-size: 34px; }
-}
+
 </style>

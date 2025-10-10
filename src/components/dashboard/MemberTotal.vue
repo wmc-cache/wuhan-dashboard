@@ -144,15 +144,7 @@ function formatNumber(n?: number): string {
 .item__value--female { color: #ff9a1a; }
 .item__value--male { color: #2c6eff; }
 
-@media (max-width: 1280px) {
-  .num { font-size: 44px; }
-  .stage { width: 96px; height: 80px; }
-  .label { font-size: 14px; }
-  .item { height: 64px; grid-template-columns: 88px auto 1fr; }
-  .item__icon { width: 40px; height: 40px; }
-  .item__label { font-size: 13px; }
-  .item__value { font-size: 16px; }
-}
+
 
 /* 留白由父布局控制：见 Dashboard.vue 中 .panel > .title-img { margin-bottom: 8px; } */
 </style>

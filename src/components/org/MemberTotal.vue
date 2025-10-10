@@ -83,10 +83,5 @@ function fmt(n?: number) { return (n ?? 0).toLocaleString('zh-CN'); }
 .badge { width: 56px; height: auto; }
 .label { font-size: 14px; font-weight: 900; color: #2a6ff0; letter-spacing: 0.5px; }
 
-@media (max-width: 1280px) {
-  .left-img { width: 150px; }
-  .num { font-size: 42px; }
-  .badge { width: 48px; }
-  .label { font-size: 12px; }
-}
+
 </style>
