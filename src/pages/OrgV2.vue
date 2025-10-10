@@ -5,7 +5,7 @@
       <img class="mod__title-img" :src="titleImg1x" :srcset="titleImg2x + ' 2x'" alt="单位所属行业占比" />
       <div class="mod__body">
         <RingPie :data="industryPieItems" :center="['42%', '54%']" :radius="['48%', '72%']" enable-pagination
-          :page-size="6" v-model:activeIndex="activeIndustryIndex">
+          :page-size="6" v-model:activeIndex="activeIndustryIndex" :border-width="6" gap-color="transparent">
           <template #center>
             <div class="pie-center">
               <b class="pie-center__num">{{ fmt(activeIndustry.value) }}</b>
@@ -65,7 +65,7 @@
       <img class="mod__title-img" :src="titleImgBiz1x" :srcset="titleImgBiz2x + ' 2x'" alt="企业性质占比" />
       <div class="mod__body">
         <RingPie :data="bizPieItems" :center="['42%', '54%']" :radius="['48%', '72%']" enable-pagination
-          :page-size="6" v-model:activeIndex="activeBizIndex">
+          :page-size="6" v-model:activeIndex="activeBizIndex" :border-width="6" gap-color="transparent">
           <template #center>
             <div class="pie-center">
               <b class="pie-center__num">{{ fmt(activeBiz.value) }}</b>

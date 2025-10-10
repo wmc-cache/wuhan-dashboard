@@ -60,6 +60,7 @@
             :grid-left="64"
             :grid-right="20"
             :grid-bottom="56"
+            :x-label-rotate="25"
           />
         </div>
       </div>

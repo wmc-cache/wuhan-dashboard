@@ -205,7 +205,7 @@ const option = computed(() => ({
       clockwise: true,
       itemStyle: {
         borderWidth: props.borderWidth,
-        borderColor: props.gapColor,
+        borderColor: props.gapColor === 'transparent' ? 'rgba(237, 244, 255, 0.8)' : props.gapColor,
       },
       // 触摸/悬停的强调效果：恢复到较为克制的默认表现
       // - 不再自定义加粗边框与阴影

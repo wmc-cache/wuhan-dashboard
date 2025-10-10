@@ -54,7 +54,7 @@ const option = computed(() => {
   const axisColor = 'rgba(40,100,200,0.35)';
   const gridLine = 'rgba(67,127,255,0.20)';
   return {
-    grid: { left: 96, right: 124, top: 12, bottom: 36 },
+    grid: { left: 100, right: 140, top: 16, bottom: 40 },
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     xAxis: {
       type: 'value',
@@ -66,6 +66,7 @@ const option = computed(() => {
       splitLine: { lineStyle: { type: 'dashed', color: gridLine } },
       axisLabel: {
         color: '#2a6ff0',
+        fontWeight: 600,
         formatter: (val: number) => (val === props.max ? `${val}万人` : `${val}`)
       }
     },
@@ -75,38 +76,49 @@ const option = computed(() => {
       inverse: true,
       axisTick: { show: false },
       axisLine: { lineStyle: { color: axisColor } },
-      axisLabel: { color: '#2a6ff0', fontWeight: 800 }
+      axisLabel: {
+        color: '#4A90E2',
+        fontWeight: 600,
+        fontSize: 12
+      }
     },
     series: [
-      // 背景最大条
+      // 背景虚线条
       {
         type: 'bar',
         data: maxArr.value,
-        barWidth: 10,
-        itemStyle: { color: 'rgba(90,160,255,0.15)', borderRadius: [0, 8, 8, 0] },
+        barWidth: 12,
+        itemStyle: {
+          color: 'transparent',
+          borderColor: 'rgba(90,160,255,0.3)',
+          borderWidth: 1,
+          borderType: 'dashed',
+          borderRadius: [0, 6, 6, 0]
+        },
         barGap: '-100%',
         silent: true,
         tooltip: { show: false },
         z: 1
       },
-      // 实际值（经过映射）
+      // 实际值条形
       {
         type: 'bar',
         data: seriesData.value,
-        barWidth: 10,
+        barWidth: 12,
         itemStyle: {
           color: new (echarts as any).graphic.LinearGradient(0, 0, 1, 0, [
             { offset: 0, color: '#5AA0FF' },
-            { offset: 1, color: 'rgba(5,135,254,0.35)' }
+            { offset: 1, color: '#1A65FF' }
           ]),
-          borderRadius: [0, 8, 8, 0]
+          borderRadius: [0, 6, 6, 0]
         },
         label: {
           show: true,
           position: 'right',
-          distance: 10,
-          color: '#2a6ff0',
-          fontWeight: 700,
+          distance: 16,
+          color: '#333',
+          fontWeight: 600,
+          fontSize: 11,
           formatter: (p: any) => {
             const raw = Number(p.data?.raw ?? p.value);
             const pct = total.value ? Math.round((raw / total.value) * 100) : 0;

@@ -5,7 +5,7 @@
       :data="items"
       :center="seriesCenter"
       :radius="['48%', '72%']"
-      gap-color="rgba(242,247,255,0.95)"
+      gap-color="transparent"
       :border-width="6"
       :emphasis-scale="20"
       enable-pagination

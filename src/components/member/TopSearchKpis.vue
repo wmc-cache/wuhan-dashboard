@@ -78,7 +78,7 @@ function fmt(v?: number | string) {
 .member-top { display: grid; grid-template-rows: auto 1fr; row-gap: 12px; height: 100%; }
 
 /* 搜索条 */
-.search-bar { display: grid; grid-template-columns: 1fr 140px; column-gap: 16px; align-items: center; }
+.search-bar { display: grid; grid-template-columns: 600px 120px; column-gap: 16px; align-items: center; justify-self: center; }
 .input-wrap { position: relative; display: grid; }
 .icon-search { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; object-fit: contain; pointer-events: none; user-select: none; }
 .input { height: 44px; padding: 0 14px 0 44px; border-radius: 12px; border: 2px solid rgba(90,160,255,0.8); background: rgba(255,255,255,0.75); color: #2a6ff0; font-size: 16px; outline: none; }
