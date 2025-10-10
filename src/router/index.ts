@@ -24,6 +24,12 @@ const routes: RouteRecordRaw[] = [
     name: "member",
     component: () => import("../pages/Member.vue"),
   },
+  // 新版会员页面（试用）
+  {
+    path: "/member-v2",
+    name: "member-v2",
+    component: () => import("../pages/MemberV2.vue"),
+  },
   {
     path: "/laomo",
     name: "laomo",
