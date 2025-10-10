@@ -1,17 +1,6 @@
 <template>
   <div class="search-total">
-    <!-- 搜索条 -->
-    <div class="search-bar">
-      <div class="input-wrap">
-        <img class="icon-search" :src="search1x" :srcset="search2x + ' 2x'" alt="搜索" draggable="false" />
-        <input class="input" type="text" :placeholder="placeholder" :value="modelValue" @input="onInput"
-          @keyup.enter="onSearch" />
-      </div>
-      <button class="btn" @click="onSearch">搜索</button>
-    </div>
 
-    <!-- 标题 -->
-    <div class="title">截至今日会员总数为：</div>
 
     <!-- 数字翻牌（使用切图作为背景） -->
     <div class="digits" role="group" aria-label="今日会员总数">
