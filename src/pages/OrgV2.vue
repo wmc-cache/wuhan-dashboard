@@ -242,8 +242,7 @@ function percent(v: number, total: number | { value: number }) {
 <style scoped lang="scss">
 /* 三列布局，与现有 Org 页一致，便于快速替换 */
 .org2__grid {
-  height: 970px;
-    /* 1080 - header */
+  height: 950px;
   padding: 0 20px 20px;
   display: grid;
   grid-template-columns: 540px 1fr 540px;
