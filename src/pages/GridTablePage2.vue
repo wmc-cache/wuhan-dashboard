@@ -129,7 +129,7 @@ function to(p: number) { page.value = Math.min(pageCount.value, Math.max(1, p));
 </script>
 
 <style scoped lang="scss">
-.grid-page { height: 980px; padding: 0 20px 20px; display: grid; grid-template-rows: auto 1fr; gap: 12px; }
+.grid-page { height: 970px; padding: 0 20px 20px; display: grid; grid-template-rows: auto 1fr; gap: 12px; }
 .filters { border-radius: 10px; background: rgba(235,241,247,.74); box-shadow: inset 0 0 40px rgba(120,170,255,.08); padding: 6px 12px; position: relative; }
 .flt-wrap { position: relative; }
 .flt { display: flex; gap: 8px 12px; }
@@ -142,4 +142,3 @@ function to(p: number) { page.value = Math.min(pageCount.value, Math.max(1, p));
 .table-wrap { position: relative; border-radius: 10px; background: rgba(235,241,247,.74); box-shadow: inset 0 0 40px rgba(120,170,255,.08); padding: 12px; display: grid; grid-template-rows: 1fr auto; }
 .pager { display: flex; align-items: center; justify-content: flex-end; color: #2a6ff0; padding-top: 8px; }
 </style>
-

@@ -79,7 +79,7 @@ const seriesCenter = ref<[string, string]>(['38%', '52%']);
 }
 
 .num {
-  font-size: 42px;
+  font-size: 26px; /* 中心数字略调小，避免过分抢眼 */
   font-weight: 800;
   color: #3e74ff;
 }

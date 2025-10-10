@@ -21,7 +21,7 @@
     </section>
 
     <!-- 中列：上部大环图跨两行；底部表格 -->
-    <section class="mod" style="grid-column: 2; grid-row: 1 / span 2;">
+    <section class="mod mod--tall" style="grid-column: 2; grid-row: 1 / span 2;">
       <div class="mod__head">
         <div class="year-select">
           <NiceSelect v-model="year" :options="years" :width="122" :formatter="(y: number) => y + '年'" />
@@ -159,7 +159,7 @@ function onOpenDetail(payload: { x: number; y: number }) {
 
 <style scoped lang="scss">
 .refund__grid {
-  height: 980px;
+  height: 970px; /* 1080 - 110 */
   padding: 0 20px 16px; /* 底部余量更紧凑 */
   display: grid;
   grid-template-columns: 540px 1fr 540px;
@@ -169,19 +169,44 @@ function onOpenDetail(payload: { x: number; y: number }) {
     'tl tc tr'
     'ml mc mr'
     'bl bc br';
-  gap: 16px;
+  /* 模块间距统一为 10px */
+  gap: 10px;
 }
 
 .mod {
+  position: relative;
   border: none;
   border-radius: 10px;
-  background: rgba(235, 241, 247, .74);
-  box-shadow: inset 0 0 40px rgba(120, 170, 255, .08);
-  padding: 12px; /* 卡片内边距略收紧 */
-  display: grid;
-  grid-template-rows: auto 1fr;
-}
-
+  background: none;
+    padding: 18px;
+    display: grid;
+    grid-template-rows: auto 1fr;
+  }
+  
+  .mod::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    right: -8px;
+    top: -8px;
+    bottom: -8px;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    background-image: -webkit-image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x);
+    background-image: image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x);
+    pointer-events: none;
+    z-index: -1;
+  }
+  
+  .mod--tall::before {
+    background-image: -webkit-image-set(url('../images/module-broder-height/矩形.png') 1x, url('../images/module-broder-height/矩形@2x.png') 2x);
+    background-image: image-set(url('../images/module-broder-height/矩形.png') 1x, url('../images/module-broder-height/矩形@2x.png') 2x);
+  }
+  
+  .mod--wide::before {
+    background-image: -webkit-image-set(url('../images/module-broder-width/矩形.png') 1x, url('../images/module-broder-width/矩形@2x.png') 2x);
+    background-image: image-set(url('../images/module-broder-width/矩形.png') 1x, url('../images/module-broder-width/矩形@2x.png') 2x);
+  }
 .mod__title {
   margin: 0 0 10px;
   font-size: 16px;

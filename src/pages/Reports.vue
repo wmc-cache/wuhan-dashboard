@@ -25,8 +25,9 @@ const kpis = [
 </script>
 
 <style scoped lang="scss">
-.more__grid { height: 980px; padding: 0 20px 20px; display: grid; }
-.mod { border: none; border-radius: 10px; background: rgba(235,241,247,.74); box-shadow: inset 0 0 40px rgba(120,170,255,.08); padding: 14px; display: grid; grid-template-rows: auto 1fr; }
+.more__grid { height: 970px; padding: 0 20px 20px; display: grid; }
+.mod { position: relative; border: none; border-radius: 10px; background: none; padding: 18px; display: grid; grid-template-rows: auto 1fr; }
+.mod::before { content: ''; position: absolute; left: -8px; right: -8px; top: -8px; bottom: -8px; background-repeat: no-repeat; background-size: 100% 100%; background-image: -webkit-image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x); background-image: image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x); pointer-events: none; z-index: -1; }
 .mod__title { margin: 0 0 10px; font-size: 16px; font-weight: 800; letter-spacing: 1px; color: #2a6ff0; }
 .cards { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; }
 .card { background: rgba(255,255,255,.78); border: 1px solid rgba(120,170,255,.25); border-radius: 10px; padding: 16px; text-align: center; }

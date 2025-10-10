@@ -1,5 +1,5 @@
 <template>
-  <section class="mod">
+  <section class="mod mod--wide">
     <div class="content">
       <!-- 左：性别分布环图 -->
       <div class="left">
@@ -56,7 +56,10 @@ const female = props.female;
 </script>
 
 <style scoped lang="scss">
-.mod { border: none; border-radius: 10px; background: rgba(235,241,247,.74); box-shadow: inset 0 0 40px rgba(120,170,255,.08); padding: 14px; }
+.mod { position: relative; border: none; border-radius: 10px; background: none; padding: 18px; }
+.mod::before { content: ''; position: absolute; left: -8px; right: -8px; top: -8px; bottom: -8px; background-repeat: no-repeat; background-size: 100% 100%; background-image: -webkit-image-set(url('../../images/module-broder/矩形.png') 1x, url('../../images/module-broder/矩形@2x.png') 2x); background-image: image-set(url('../../images/module-broder/矩形.png') 1x, url('../../images/module-broder/矩形@2x.png') 2x); pointer-events: none; z-index: -1; }
+.mod--tall::before { background-image: -webkit-image-set(url('../../images/module-broder-height/矩形.png') 1x, url('../../images/module-broder-height/矩形@2x.png') 2x); background-image: image-set(url('../../images/module-broder-height/矩形.png') 1x, url('../../images/module-broder-height/矩形@2x.png') 2x); }
+.mod--wide::before { background-image: -webkit-image-set(url('../../images/module-broder-width/矩形.png') 1x, url('../../images/module-broder-width/矩形@2x.png') 2x); background-image: image-set(url('../../images/module-broder-width/矩形.png') 1x, url('../../images/module-broder-width/矩形@2x.png') 2x); }
 .content { display: grid; grid-template-columns: 1.05fr 1fr; column-gap: 16px; height: 100%; }
 .sub-title { display:none; }
 .title-img { display: inline-block; background-repeat: no-repeat; background-size: 100% 100%; margin: 0 0 10px; }

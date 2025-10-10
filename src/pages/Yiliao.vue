@@ -8,7 +8,7 @@
     </section>
 
     <!-- 中央大卡：合并原“总指标概览 + （预留）”两块，纵向跨两行 -->
-    <section class="mod metrics" style="grid-column: 2; grid-row: 1 / span 2;">
+    <section class="mod mod--tall metrics" style="grid-column: 2; grid-row: 1 / span 2;">
       <div></div>
       <div class="mod__body mod__body--full">
         <OverallOverview />
@@ -84,19 +84,14 @@ import OverallOverview from '../components/yiliao/OverallOverview.vue';
     'tl tc tr'
     'ml mc mr'
     'bl bc br';
-  gap: 20px;
+  /* 模块间距统一为 10px */
+  gap: 10px;
 }
 
-.mod {
-  position: relative;
-  border: none; /* 去掉虚线框 */
-  border-radius: 10px;
-  background: rgba(235, 241, 247, 0.74); /* 设计标注：#EBF1F7 74% */
-  box-shadow: inset 0 0 40px rgba(120, 170, 255, 0.08);
-  padding: 14px;
-  display: grid;
-  grid-template-rows: auto 1fr;
-}
+.mod { position: relative; border: none; border-radius: 10px; background: none; padding: 18px; display: grid; grid-template-rows: auto 1fr; }
+.mod::before { content: ''; position: absolute; left: -8px; right: -8px; top: -8px; bottom: -8px; background-repeat: no-repeat; background-size: 100% 100%; background-image: -webkit-image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x); background-image: image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x); pointer-events: none; z-index: -1; }
+.mod--tall::before { background-image: -webkit-image-set(url('../images/module-broder-height/矩形.png') 1x, url('../images/module-broder-height/矩形@2x.png') 2x); background-image: image-set(url('../images/module-broder-height/矩形.png') 1x, url('../images/module-broder-height/矩形@2x.png') 2x); }
+.mod--wide::before { background-image: -webkit-image-set(url('../images/module-broder-width/矩形.png') 1x, url('../images/module-broder-width/矩形@2x.png') 2x); background-image: image-set(url('../images/module-broder-width/矩形.png') 1x, url('../images/module-broder-width/矩形@2x.png') 2x); }
 
 .mod__title {
   margin: 0 0 10px;

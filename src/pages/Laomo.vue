@@ -10,7 +10,6 @@
     </section>
 
     <section style="grid-area: tc;">
-
       <div class="mod__body" style="place-items: stretch;">
         <LaomoFourStats />
       </div>
@@ -56,7 +55,7 @@
       </div>
     </section>
 
-    <section class="mod" style="grid-area: br;">
+    <section class="mod mod--wide" style="grid-area: br;">
       <!-- 图片标题：劳模区域分布（6/7） -->
       <span class="title-img title-img--laomo-7" aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
@@ -79,7 +78,7 @@ import LaomoGenderDistribution from '../components/laomo/GenderDistribution.vue'
 
 <style scoped lang="scss">
 .laomo__grid {
-  height: 980px;
+  height: 970px; /* 1080 - 110 */
   padding: 0 20px 20px;
   display: grid;
   grid-template-columns: 540px 1fr 540px;
@@ -88,18 +87,43 @@ import LaomoGenderDistribution from '../components/laomo/GenderDistribution.vue'
     'tl tc tr'
     'ml mc mr'
     'bl br br';
-  gap: 20px;
+  /* 模块间距统一为 10px */
+  gap: 10px;
 }
 
 .mod {
   position: relative;
-  border: none; /* 去掉虚线框 */
+  border: none;
   border-radius: 10px;
-  background: rgba(235, 241, 247, 0.74); /* 设计标注：#EBF1F7 74% */
-  box-shadow: inset 0 0 40px rgba(120, 170, 255, 0.08);
-  padding: 14px;
+  background: none;
+  padding: 18px;
   display: grid;
   grid-template-rows: auto 1fr;
+}
+
+.mod::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  right: -8px;
+  top: -8px;
+  bottom: -8px;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-image: -webkit-image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x);
+  background-image: image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.mod--tall::before {
+  background-image: -webkit-image-set(url('../images/module-broder-height/矩形.png') 1x, url('../images/module-broder-height/矩形@2x.png') 2x);
+  background-image: image-set(url('../images/module-broder-height/矩形.png') 1x, url('../images/module-broder-height/矩形@2x.png') 2x);
+}
+
+.mod--wide::before {
+  background-image: -webkit-image-set(url('../images/module-broder-width/矩形.png') 1x, url('../images/module-broder-width/矩形@2x.png') 2x);
+  background-image: image-set(url('../images/module-broder-width/矩形.png') 1x, url('../images/module-broder-width/矩形@2x.png') 2x);
 }
 
 .mod__title {

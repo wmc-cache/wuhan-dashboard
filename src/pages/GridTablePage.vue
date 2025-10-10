@@ -129,7 +129,7 @@ function onCellClick(payload: { row: Row }) {
 
 <style scoped lang="scss">
 .grid-page {
-  height: 980px;
+  height: 970px;
   padding: 0 20px 20px;
   display: grid;
   grid-template-rows: auto 1fr;

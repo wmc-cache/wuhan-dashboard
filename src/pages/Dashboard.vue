@@ -52,13 +52,16 @@ import MemberNew from '../components/dashboard/MemberNew.vue';
 .dash__main {
   display: grid;
   grid-template-columns: 540px 1fr 540px; /* 左右固定，中间地图自适应 */
-  gap: 20px;
+  /* 模块间距统一为 10px */
+  gap: 10px;
   padding: 0 20px 20px;
-  height: 980px;
+  /* 页面总高 = 1080 - 头部 110 = 970 */
+  height: 970px;
 }
 .col {
   display: grid;
-  gap: 20px;
+  /* 与主栅格一致 */
+  gap: 10px;
 }
 
 .col--left {
@@ -77,7 +80,8 @@ import MemberNew from '../components/dashboard/MemberNew.vue';
     border: none;
     border-radius: 0;
     box-shadow: none;
-    padding: 16px;
+    /* 内边距统一为 18px */
+    padding: 18px;
   }
   
   .panel--map {

@@ -9,7 +9,7 @@
       </div>
     </section>
 
-    <section class="mod" style="grid-area: tc;">
+    <section  style="grid-area: tc;">
       <div class="mod__body">
         <SearchTodayTotal />
       </div>
@@ -49,7 +49,7 @@
     </section>
 
     <!-- 底部：左通栏 + 右表格 -->
-    <section class="mod" style="grid-area: bl;">
+    <section class="mod mod--wide" style="grid-area: bl;">
       <!-- 图片标题：会员区域分布（7/7） -->
       <span class="title-img title-img--member-5" aria-hidden="true"></span>
       <div class="mod__body">
@@ -80,7 +80,7 @@ import SearchTodayTotal from '../components/member/SearchTodayTotal.vue';
 <style scoped lang="scss">
 /* 页面 3 列栅格：左右 540，中间自适应；行高对齐原型 */
 .member__grid {
-  height: 980px;
+  height: 970px; /* 1080 - 110 */
   padding: 0 20px 20px;
   display: grid;
   grid-template-columns: 540px 1fr 540px;
@@ -90,20 +90,15 @@ import SearchTodayTotal from '../components/member/SearchTodayTotal.vue';
     'tl tc tr'
     'ml mc mr'
     'bl bl br';
-  gap: 20px;
+  /* 模块间距统一为 10px */
+  gap: 10px;
 }
 
 /* 模块通用外观：去掉虚线框，保留圆角与背景 */
-.mod {
-  position: relative;
-  border: none;
-  border-radius: 10px;
-  background: rgba(235, 241, 247, 0.74); /* 设计标注：#EBF1F7 74% */
-  box-shadow: inset 0 0 40px rgba(120, 170, 255, 0.08);
-  padding: 14px;
-  display: grid;
-  grid-template-rows: auto 1fr;
-}
+.mod { position: relative; border: none; border-radius: 10px; background: none; padding: 18px; display: grid; grid-template-rows: auto 1fr; }
+.mod::before { content: ''; position: absolute; left: -8px; right: -8px; top: -8px; bottom: -8px; background-repeat: no-repeat; background-size: 100% 100%; background-image: -webkit-image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x); background-image: image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x); pointer-events: none; z-index: -1; }
+.mod--tall::before { background-image: -webkit-image-set(url('../images/module-broder-height/矩形.png') 1x, url('../images/module-broder-height/矩形@2x.png') 2x); background-image: image-set(url('../images/module-broder-height/矩形.png') 1x, url('../images/module-broder-height/矩形@2x.png') 2x); }
+.mod--wide::before { background-image: -webkit-image-set(url('../images/module-broder-width/矩形.png') 1x, url('../images/module-broder-width/矩形@2x.png') 2x); background-image: image-set(url('../images/module-broder-width/矩形.png') 1x, url('../images/module-broder-width/矩形@2x.png') 2x); }
 
 .mod__title {
   margin: 0 0 10px;

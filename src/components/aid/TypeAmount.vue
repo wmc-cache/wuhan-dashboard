@@ -32,15 +32,10 @@ const { title, categories, values, yMax } = props;
 </script>
 
 <style scoped lang="scss">
-.mod {
-  border: none;
-  border-radius: 10px;
-  background: rgba(235, 241, 247, .74);
-  box-shadow: inset 0 0 40px rgba(120, 170, 255, .08);
-  padding: 14px;
-  display: grid;
-  grid-template-rows: auto 1fr;
-}
+.mod { position: relative; border: none; border-radius: 10px; background: none; padding: 18px; display: grid; grid-template-rows: auto 1fr; }
+.mod::before { content: ''; position: absolute; left: -8px; right: -8px; top: -8px; bottom: -8px; background-repeat: no-repeat; background-size: 100% 100%; background-image: -webkit-image-set(url('../../images/module-broder/矩形.png') 1x, url('../../images/module-broder/矩形@2x.png') 2x); background-image: image-set(url('../../images/module-broder/矩形.png') 1x, url('../../images/module-broder/矩形@2x.png') 2x); pointer-events: none; z-index: -1; }
+.mod--tall::before { background-image: -webkit-image-set(url('../../images/module-broder-height/矩形.png') 1x, url('../../images/module-broder-height/矩形@2x.png') 2x); background-image: image-set(url('../../images/module-broder-height/矩形.png') 1x, url('../../images/module-broder-height/矩形@2x.png') 2x); }
+.mod--wide::before { background-image: -webkit-image-set(url('../../images/module-broder-width/矩形.png') 1x, url('../../images/module-broder-width/矩形@2x.png') 2x); background-image: image-set(url('../../images/module-broder-width/矩形.png') 1x, url('../../images/module-broder-width/矩形@2x.png') 2x); }
 
 .mod__title {
   margin: 0 0 10px;

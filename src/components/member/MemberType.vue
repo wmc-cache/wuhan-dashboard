@@ -64,6 +64,10 @@ const seriesCenter = ref<[string, string]>(['38%', '48%']);
   height: 100%;
 }
 
-.num { font-size: 42px; font-weight: 800; color: #3e74ff; }
+.num {
+  font-size: 22px;
+  font-weight: 800;
+  color: #3e74ff;
+}
 .name { font-size: 16px; color: #2a6ff0; font-weight: 700; }
 </style>

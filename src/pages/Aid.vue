@@ -20,7 +20,7 @@ import AidRecentList from '../components/aid/RecentList.vue';
 
 <style scoped lang="scss">
 .aid__grid {
-  height: 980px;
+  height: 970px; /* 1080 - 110 */
   padding: 0 20px 20px;
   display: grid;
   /* 让左、中两列等宽，右列保持 540px（与右侧榜单一致） */
@@ -30,6 +30,7 @@ import AidRecentList from '../components/aid/RecentList.vue';
     'kpi kpi kpi'
     'ml mc mr'
     'bl bc br';
-  gap: 20px;
+  /* 模块间距统一为 10px */
+  gap: 10px;
 }
 </style>
