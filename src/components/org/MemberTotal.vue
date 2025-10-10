@@ -45,10 +45,9 @@ const props = withDefaults(defineProps<Props>(), {
   leftImg2x: cube2x
 });
 
-const regionCount = props.regionCount;
-const industryCount = props.industryCount;
-const leftImg1x = props.leftImg1x;
-const leftImg2x = props.leftImg2x;
+
+import { toRefs } from 'vue';
+const { regionCount, industryCount, leftImg1x, leftImg2x } = toRefs(props);
 
 function fmt(n?: number) { return (n ?? 0).toLocaleString('zh-CN'); }
 </script>
@@ -72,7 +71,10 @@ function fmt(n?: number) { return (n ?? 0).toLocaleString('zh-CN'); }
 .item { display: grid; grid-template-rows: auto auto auto; align-items: center; justify-items: center; row-gap: 8px; }
 
 .num {
-  font-size: 49px; font-weight: 900; line-height: 1; letter-spacing: 1px;
+  font-size: 29px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 1px;
   background: linear-gradient(180deg, #6FA7FF 0%, #1A65FF 90%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
   text-shadow: 0 4px 9px rgba(30, 100, 220, 0.18);
