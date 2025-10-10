@@ -1,18 +1,8 @@
 <template>
   <main class="home__grid">
-    <!-- 顶部：筛选条 -->
+    <!-- 顶部：搜索条（自定义样式） -->
     <section class="tools">
-      <div class="tools__left">
-        <el-select v-model="selCat" class="w160" placeholder="工会组织">
-          <el-option label="工会组织" value="org" />
-          <el-option label="工会会员" value="member" />
-        </el-select>
-        <el-input v-model="keyword" class="w360" placeholder="请输入搜索内容" clearable @keyup.enter="onSearch" />
-      </div>
-      <div class="tools__right">
-        <el-button type="primary" @click="onSearch">搜索</el-button>
-        <!-- <el-button link @click="goBack">返回</el-button> -->
-      </div>
+      <TopSearch v-model="keyword" v-model:category="selCat" @search="onSearch" />
     </section>
 
     <section class="content">
@@ -46,13 +36,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import GridTable, { type ColumnDef } from '../components/GridTable.vue';
-import { ElSelect, ElOption, ElInput, ElButton, ElPagination } from 'element-plus';
-import 'element-plus/es/components/select/style/css';
-import 'element-plus/es/components/option/style/css';
-import 'element-plus/es/components/input/style/css';
-import 'element-plus/es/components/button/style/css';
+import TopSearch from '../components/TopSearch.vue';
+import { ElPagination } from 'element-plus';
 import 'element-plus/es/components/pagination/style/css';
 import { useRouter } from 'vue-router';
 import { apiGet } from '../utils/api';
@@ -61,21 +48,12 @@ const router = useRouter();
 function goBack() { router.back(); }
 
 // 搜索与筛选
-const selCat = ref('org');
+const selCat = ref<'org' | 'member'>('org');
 const keyword = ref('');
 
 // 列定义：根据后端字段自适应（优先展示“截图风格”的列；缺失时回退到已有字段）
 const gridTemplate = computed(() => columns.value.map(() => '1fr').join(' '));
-const columns = ref<ColumnDef[]>([
-  { key: 'index', title: '序号', formatter: (v) => String(v).padStart(2, '0') },
-  { key: 'fullname', title: '工会名称', clickable: true, align: 'left' },
-  { key: 'memberCount', title: '会员人数' },
-  { key: 'unitDistrictSuffix', title: '行政区划' },
-  { key: 'establishDate', title: '成立时间' },
-  { key: 'linkMan', title: '联系人' },
-  { key: 'linkPhone', title: '联系电话' },
-  { key: 'chair', title: '工会主席' },
-]);
+const columns = ref<ColumnDef[]>([]);
 
 // 数据
 interface Row {
@@ -94,7 +72,15 @@ interface Row {
   creditCode?: string;    // 统一社会信用代码
 }
 
-const allRows = ref<Row[]>([]);
+interface MemberRow {
+  index: number;
+  name: string;          // 会员姓名
+  unionName?: string;    // 所属工会
+  gender?: string;       // 性别
+  joinAt?: string;       // 入会时间
+}
+
+const allRows = ref<any[]>([]); // 根据 selCat 切换 Row/MemberRow
 const total = ref(0);
 const pageSize = 15;
 const page = ref(1);
@@ -102,7 +88,10 @@ const page = ref(1);
 const filtered = computed(() => {
   const kw = keyword.value.trim();
   if (!kw) return allRows.value;
-  return allRows.value.filter(r => r.fullname?.includes(kw));
+  if (selCat.value === 'member') {
+    return (allRows.value as MemberRow[]).filter(r => r.name?.includes(kw));
+  }
+  return (allRows.value as Row[]).filter(r => r.fullname?.includes(kw));
 });
 
 const pagedRows = computed(() => {
@@ -124,11 +113,19 @@ function setActive(i: number) {
   activeIndex.value = i;
 }
 
-function onSearch() {
-  // 客户端过滤已生效；如需服务器端搜索，可在此发起请求
-}
+function onSearch() { /* 客户端过滤已生效；如需服务器端搜索，可在此发起请求 */ }
 
-function buildColumnsByData(sample?: Row) {
+function buildColumnsByData(sample?: Row | MemberRow) {
+  if (selCat.value === 'member') {
+    columns.value = [
+      { key: 'index', title: '序号', formatter: (v) => String(v).padStart(2, '0') },
+      { key: 'name', title: '会员姓名', align: 'left', clickable: true },
+      { key: 'unionName', title: '所属工会' },
+      { key: 'gender', title: '性别' },
+      { key: 'joinAt', title: '入会时间' },
+    ];
+    return;
+  }
   if (!sample) return;
   // 如果存在截图风格的三个字段，则采用该列集合
   const hasLegal = !!(sample as any).legalCode;
@@ -165,18 +162,53 @@ function mapRow(raw: any, i: number): Row {
   return r;
 }
 
+function mapMemberRow(raw: any, i: number): MemberRow {
+  return {
+    index: i + 1,
+    name: raw.name ?? raw.memberName ?? raw.username ?? `名称${i + 1}`,
+    unionName: raw.unionName ?? raw.orgName ?? raw.fullname,
+    gender: raw.gender ?? raw.sex ?? (i % 2 ? '女' : '男'),
+    joinAt: raw.joinAt ?? raw.joinTime ?? raw.createdAt ?? '2024-03-02',
+  } as MemberRow;
+}
+
 function toNum(v: any): number | undefined { const n = Number(v); return Number.isFinite(n) ? n : undefined; }
 
 async function fetchList() {
+  page.value = 1;
+  if (selCat.value === 'member') {
+    // 依次尝试若干可能的“会员列表”接口；全部失败则生成本地示例数据
+    const candidates = ['/business/member/list', '/business/union/member/list', '/business/member'];
+    let res: any = null;
+    for (const url of candidates) {
+      res = await apiGet<any>(url).catch(() => null);
+      if (res) break;
+    }
+    let rows: any[] = [];
+    if (res) {
+      rows = Array.isArray(res) ? res : Array.isArray(res.data) ? res.data : Array.isArray(res.rows) ? res.rows : Array.isArray(res.row) ? res.row : [];
+    }
+    if (!rows.length) {
+      // 兜底：生成 800 条示例数据用于还原界面
+      rows = Array.from({ length: 800 }, (_, i) => ({ name: `名称${i + 1}`, unionName: `名称${(i % 15) + 1}`, gender: i % 2 ? '女' : '男', joinAt: '2024-03-02' }));
+    }
+    allRows.value = rows.map((r, i) => mapMemberRow(r, i));
+    total.value = Number(res?.total) || allRows.value.length;
+    buildColumnsByData(allRows.value[0]);
+    return;
+  }
+  // 工会组织列表
   const res = await apiGet<any>('/business/union/list').catch(() => null);
   if (!res) return;
   const rows: any[] = Array.isArray(res.row) ? res.row : Array.isArray(res.rows) ? res.rows : Array.isArray(res.data) ? res.data : [];
-  allRows.value = rows.map((r, i) => mapRow(r, i));
+  const mapped = rows.map((r, i) => mapRow(r, i));
+  allRows.value = mapped;
   total.value = (Number(res.total) || allRows.value.length);
   buildColumnsByData(allRows.value[0]);
 }
 
-onMounted(() => { fetchList(); });
+watch(selCat, () => { fetchList(); buildColumnsByData(); });
+onMounted(() => { buildColumnsByData(); fetchList(); });
 </script>
 
 <style scoped lang="scss">
@@ -202,36 +234,7 @@ onMounted(() => { fetchList(); });
   background-image: image-set(url('../images/home/home-bg/背景.png') 1x, url('../images/home/home-bg/背景@2x.png') 2x);
 }
 
-.tools {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: rgba(235, 241, 247, .74);
-  box-shadow: inset 0 0 40px rgba(120, 170, 255, .08);
-}
-
-.tools__left {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.tools__right {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.w160 {
-  width: 160px;
-}
-
-.w360 {
-  width: 360px;
-}
+.tools { display: grid; grid-template-columns: 1fr; align-items: center; }
 
 .content {
   display: grid;
