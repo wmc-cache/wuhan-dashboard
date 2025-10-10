@@ -5,6 +5,8 @@ const routes: RouteRecordRaw[] = [
   // 保留旧版大屏首页，作为独立路由
   { path: '/dashboard', name: 'dashboard', component: () => import('../pages/Dashboard.vue') },
   { path: '/org', name: 'org', component: () => import('../pages/Org.vue') },
+  // 新版工会组织（不影响旧版，单独路由查看）
+  { path: '/org-v2', name: 'org-v2', component: () => import('../pages/OrgV2.vue') },
   { path: '/member', name: 'member', component: () => import('../pages/Member.vue') },
   { path: '/laomo', name: 'laomo', component: () => import('../pages/Laomo.vue') },
   { path: '/yiliao', name: 'yiliao', component: () => import('../pages/Yiliao.vue') },

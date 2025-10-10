@@ -82,6 +82,7 @@ function fmt(v: number | string) { const n = Number(v); return Number.isFinite(n
   justify-items: center;
   align-items: end;
   column-gap: 14px;
+  margin-top: 12px;
 }
 .kpi-card { display: grid; grid-template-rows: auto 1fr auto; justify-items: center; row-gap: 8px; }
 .num {
@@ -96,8 +97,8 @@ function fmt(v: number | string) { const n = Number(v); return Number.isFinite(n
 }
 
 .card-bg {
-  width: 182px;
-  height: 175px;
+  width: 183px;
+    height: 200px;
   background-image: -webkit-image-set(url('../../images/org/bg/编组 8.png') 1x, url('../../images/org/bg/编组 8@2x.png') 2x);
   background-image: image-set(url('../../images/org/bg/编组 8.png') 1x, url('../../images/org/bg/编组 8@2x.png') 2x);
   background-size: 100% 100%;
