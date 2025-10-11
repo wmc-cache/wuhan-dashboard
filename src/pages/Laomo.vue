@@ -75,6 +75,7 @@ import LaomoHonorDistribution from '../components/laomo/HonorClassification.vue'
 import LaomoIncomeDistribution from '../components/laomo/IncomeDistribution.vue';
 import LaomoFourStats from '../components/laomo/FourStats.vue';
 import LaomoGenderDistribution from '../components/laomo/GenderDistribution.vue';
+// 中间顶栏不再放搜索（已移至首页地图上方）
 </script>
 
 <style scoped lang="scss">
@@ -167,4 +168,8 @@ import LaomoGenderDistribution from '../components/laomo/GenderDistribution.vue'
 .title-img--laomo-7 { width: 152px; height: 35px; background-image: -webkit-image-set(url('../images/laomo/font-title/7/编组 21.png') 1x, url('../images/laomo/font-title/7/编组 21@2x.png') 2x); background-image: image-set(url('../images/laomo/font-title/7/编组 21.png') 1x, url('../images/laomo/font-title/7/编组 21@2x.png') 2x); }
 
 .title-img--laomo-8 { width: 253px; height: 35px; background-image: -webkit-image-set(url('../images/laomo/font-title/8/编组 21.png') 1x, url('../images/laomo/font-title/8/编组 21@2x.png') 2x); background-image: image-set(url('../images/laomo/font-title/8/编组 21.png') 1x, url('../images/laomo/font-title/8/编组 21@2x.png') 2x); }
+
+/* 顶部搜索条容器（跟 Home 页面保持一致宽度与居中视觉） */
+.tools { max-width: 760px; margin: 0 auto 10px; width: 100%; }
+.kpi-wrap { margin-top: 6px; }
 </style>

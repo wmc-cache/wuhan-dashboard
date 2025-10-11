@@ -16,6 +16,10 @@
 
     <section class="col col--center">
       <div class="panel panel--map h860">
+        <!-- 中央搜索：放在地图上方，点击跳到 Home 页面（复用 TopSearch） -->
+        <div class="map-tools">
+          <TopSearch v-model="keyword" v-model:category="selCat" @search="goToHome" />
+        </div>
         <WuhanMap :show-network="false" />
       </div>
     </section>
@@ -45,6 +49,13 @@ import WuhanMap from '../components/dashboard/WuhanMap.vue';
 import MemberTotal from '../components/dashboard/MemberTotal.vue';
 import MemberNewBiz from '../components/dashboard/MemberNewBiz.vue';
 import MemberNew from '../components/dashboard/MemberNew.vue';
+import TopSearch from '../components/TopSearch.vue';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+const router = useRouter();
+const selCat = ref<'org' | 'member'>('org');
+const keyword = ref('');
+function goToHome() { router.push({ path: '/home', query: { kw: keyword.value || '', cat: selCat.value } }); }
 // GridTable 的“查看更多”已在组件内部处理跳转
 </script>
 
@@ -86,6 +97,9 @@ import MemberNew from '../components/dashboard/MemberNew.vue';
   
   .panel--map {
     background: none;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    align-items: start;
   }
 .panel > .title-img { display: inline-block; margin-bottom: 8px; }
 .h180 { height: 180px; }
@@ -107,4 +121,7 @@ import MemberNew from '../components/dashboard/MemberNew.vue';
 .title-img--member-xinyetai { width: 212px; height: 35px; background-image: -webkit-image-set(url('../images/home-title/公会会员新业态分布/编组 22.png') 1x, url('../images/home-title/公会会员新业态分布/编组 22@2x.png') 2x); background-image: image-set(url('../images/home-title/公会会员新业态分布/编组 22.png') 1x, url('../images/home-title/公会会员新业态分布/编组 22@2x.png') 2x); }
 /* 右列：新增会员 110x35 */
 .title-img--member-new { width: 110px; height: 35px; background-image: -webkit-image-set(url('../images/home-title/新增会员/编组 25.png') 1x, url('../images/home-title/新增会员/编组 25@2x.png') 2x); background-image: image-set(url('../images/home-title/新增会员/编组 25.png') 1x, url('../images/home-title/新增会员/编组 25@2x.png') 2x); }
+
+/* 中央搜索条容器：宽度与 Home 页相似并居中 */
+.map-tools { max-width: 760px; margin: 0 auto 10px; width: 100%; }
 </style>

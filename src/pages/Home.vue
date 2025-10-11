@@ -41,10 +41,11 @@ import GridTable, { type ColumnDef } from '../components/GridTable.vue';
 import TopSearch from '../components/TopSearch.vue';
 import { ElPagination } from 'element-plus';
 import 'element-plus/es/components/pagination/style/css';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { apiGet } from '../utils/api';
 
 const router = useRouter();
+const route = useRoute();
 function goBack() { router.back(); }
 
 // 搜索与筛选
@@ -208,7 +209,15 @@ async function fetchList() {
 }
 
 watch(selCat, () => { fetchList(); buildColumnsByData(); });
-onMounted(() => { buildColumnsByData(); fetchList(); });
+onMounted(() => {
+  // 读取来自其他页面的查询参数：kw/cat
+  const qKw = String(route.query.kw ?? '').trim();
+  const qCat = String(route.query.cat ?? '');
+  if (qKw) keyword.value = qKw;
+  if (qCat === 'org' || qCat === 'member') selCat.value = qCat as any;
+  buildColumnsByData();
+  fetchList();
+});
 </script>
 
 <style scoped lang="scss">
