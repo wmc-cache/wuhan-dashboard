@@ -1,13 +1,12 @@
 import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router';
 
 const routes: RouteRecordRaw[] = [
-  { path: "/", name: "home", component: () => import("../pages/Home.vue") },
-  // 保留旧版大屏首页，作为独立路由
   {
-    path: "/dashboard",
+    path: "/",
     name: "dashboard",
     component: () => import("../pages/Dashboard.vue"),
   },
+  { path: "/home", name: "home", component: () => import("../pages/Home.vue") },
   {
     path: "/org-old",
     name: "org-old",

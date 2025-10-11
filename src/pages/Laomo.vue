@@ -24,10 +24,10 @@
 
     <!-- 中部三块 -->
     <section class="mod" style="grid-area: ml;">
-      <!-- 图片标题：劳模民族分布统计（1/7） -->
-      <span class="title-img title-img--laomo-1" aria-hidden="true"></span>
+      <!-- 标题替换为第 8 号切图；内容改为排行列表样式 -->
+      <span class="title-img title-img--laomo-8" aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
-        <LaomoEthnicDistribution />
+        <LaomoSubsidyStatsList />
       </div>
 
     </section>
@@ -67,7 +67,8 @@
 
 <script setup lang="ts">
 import LaomoMemberNew from '../components/laomo/MemberNew.vue';
-import LaomoEthnicDistribution from '../components/laomo/EthnicDistribution.vue';
+// 民族模块改为排行列表
+import LaomoSubsidyStatsList from '../components/laomo/SubsidyStatsList.vue';
 import LaomoAgeDistribution from '../components/laomo/AgeDistribution.vue';
 import LaomoRegionDistribution from '../components/laomo/RegionDistribution.vue';
 import LaomoHonorDistribution from '../components/laomo/HonorClassification.vue';
@@ -164,4 +165,6 @@ import LaomoGenderDistribution from '../components/laomo/GenderDistribution.vue'
 .title-img--laomo-6 { width: 111px; height: 35px; background-image: -webkit-image-set(url('../images/laomo/font-title/6/编组 21.png') 1x, url('../images/laomo/font-title/6/编组 21@2x.png') 2x); background-image: image-set(url('../images/laomo/font-title/6/编组 21.png') 1x, url('../images/laomo/font-title/6/编组 21@2x.png') 2x); }
 
 .title-img--laomo-7 { width: 152px; height: 35px; background-image: -webkit-image-set(url('../images/laomo/font-title/7/编组 21.png') 1x, url('../images/laomo/font-title/7/编组 21@2x.png') 2x); background-image: image-set(url('../images/laomo/font-title/7/编组 21.png') 1x, url('../images/laomo/font-title/7/编组 21@2x.png') 2x); }
+/* 新增 8 号标题，用于民族排行列表 253x35 */
+.title-img--laomo-8 { width: 253px; height: 35px; background-image: -webkit-image-set(url('../images/laomo/font-title/8/编组 21.png') 1x, url('../images/laomo/font-title/8/编组 21@2x.png') 2x); background-image: image-set(url('../images/laomo/font-title/8/编组 21.png') 1x, url('../images/laomo/font-title/8/编组 21@2x.png') 2x); }
 </style>

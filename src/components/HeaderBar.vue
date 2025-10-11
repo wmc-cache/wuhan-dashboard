@@ -2,13 +2,16 @@
   <header class="hd">
     <!-- 左侧分组（文字替换为图片） -->
     <nav class="nav nav--left">
-      <RouterLink class="tab" :class="{ 'tab--active': activeTab === 'home' }" aria-label="首页" :aria-current="activeTab === 'home' ? 'page' : undefined" :to="{ name: 'home' }">
+      <RouterLink class="tab" :class="{ 'tab--active': activeTab === 'dashboard' }" aria-label="首页"
+        :aria-current="activeTab === 'dashboard' ? 'page' : undefined" :to="{ name: 'dashboard' }">
         <span class="tab__img tab__img--home" aria-hidden="true"></span>
       </RouterLink>
-      <RouterLink class="tab" :class="{ 'tab--active': activeTab === 'org' }" aria-label="工会组织" :aria-current="activeTab === 'org' ? 'page' : undefined" :to="{ name: 'org' }">
+      <RouterLink class="tab" :class="{ 'tab--active': activeTab === 'org' }" aria-label="工会组织"
+        :aria-current="activeTab === 'org' ? 'page' : undefined" :to="{ name: 'org' }">
         <span class="tab__img tab__img--org" aria-hidden="true"></span>
       </RouterLink>
-      <RouterLink class="tab" :class="{ 'tab--active': activeTab === 'member' }" aria-label="工会会员" :aria-current="activeTab === 'member' ? 'page' : undefined" :to="{ name: 'member' }">
+      <RouterLink class="tab" :class="{ 'tab--active': activeTab === 'member' }" aria-label="工会会员"
+        :aria-current="activeTab === 'member' ? 'page' : undefined" :to="{ name: 'member' }">
         <span class="tab__img tab__img--member" aria-hidden="true"></span>
       </RouterLink>
     </nav>
@@ -23,13 +26,16 @@
 
     <!-- 右侧分组（文字替换为图片） -->
     <nav class="nav nav--right">
-      <RouterLink class="tab" :class="{ 'tab--active': activeTab === 'laomo' }" aria-label="劳模信息" :aria-current="activeTab === 'laomo' ? 'page' : undefined" :to="{ name: 'laomo' }">
+      <RouterLink class="tab" :class="{ 'tab--active': activeTab === 'laomo' }" aria-label="劳模信息"
+        :aria-current="activeTab === 'laomo' ? 'page' : undefined" :to="{ name: 'laomo' }">
         <span class="tab__img tab__img--laomo" aria-hidden="true"></span>
       </RouterLink>
-      <RouterLink class="tab" :class="{ 'tab--active': activeTab === 'yiliao' }" aria-label="医疗互助" :aria-current="activeTab === 'yiliao' ? 'page' : undefined" :to="{ name: 'yiliao' }">
+      <RouterLink class="tab" :class="{ 'tab--active': activeTab === 'yiliao' }" aria-label="医疗互助"
+        :aria-current="activeTab === 'yiliao' ? 'page' : undefined" :to="{ name: 'yiliao' }">
         <span class="tab__img tab__img--yiliao" aria-hidden="true"></span>
       </RouterLink>
-      <a class="tab tab--more" aria-label="更多" :class="{ 'tab--active': isMoreActive }" :aria-expanded="moreOpen ? 'true' : 'false'" @click.prevent="toggleMore">
+      <a class="tab tab--more" aria-label="更多" :class="{ 'tab--active': isMoreActive }"
+        :aria-expanded="moreOpen ? 'true' : 'false'" @click.prevent="toggleMore">
         <span v-if="moreDisplayLabel === '更多'" class="tab__img tab__img--more" aria-hidden="true"></span>
         <!-- 当选择“更多”中的某一项后，使用对应的图片文案替换文字 -->
         <span v-else class="tab__img" :class="moreImgClass" aria-hidden="true"></span>
@@ -37,8 +43,8 @@
       </a>
       <!-- 下拉菜单：模拟数据，点击切换不同页面 -->
       <div v-if="moreOpen" class="more-menu" role="menu">
-        <RouterLink v-for="m in moreMenus" :key="m.name" class="more-item" role="menuitem"
-          :to="{ name: m.name }" @click="closeMore">{{ m.label }}</RouterLink>
+        <RouterLink v-for="m in moreMenus" :key="m.name" class="more-item" role="menuitem" :to="{ name: m.name }"
+          @click="closeMore">{{ m.label }}</RouterLink>
       </div>
     </nav>
   </header>
@@ -48,9 +54,9 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
-type TabId = 'home' | 'org' | 'member' | 'laomo' | 'yiliao';
+type TabId = 'dashboard' | 'org' | 'member' | 'laomo' | 'yiliao';
 const route = useRoute();
-const activeTab = computed<TabId>(() => (route.name as TabId) || 'home');
+const activeTab = computed<TabId>(() => (route.name as TabId) || 'dashboard');
 
 // “更多”下拉的真实条目
 // 仅包含：困难救助、经费返还
