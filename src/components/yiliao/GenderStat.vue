@@ -73,7 +73,7 @@ const femaleCount = props.femaleCount;
   grid-template-columns: 1fr 1fr;
   align-items: center;
   justify-items: center;
-  margin-top: 60px;
+  margin-top: 100px;
 }
 
 .item { display: grid; grid-template-columns: 110px auto; align-items: center; column-gap: 16px; }

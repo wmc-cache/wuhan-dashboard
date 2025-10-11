@@ -88,7 +88,7 @@ import LaomoGenderDistribution from '../components/laomo/GenderDistribution.vue'
     'tl tc tr'
     'ml mc mr'
     'bl br br';
-  gap: 1px;
+  gap: 0px;
 }
 
 .mod {
@@ -165,6 +165,6 @@ import LaomoGenderDistribution from '../components/laomo/GenderDistribution.vue'
 .title-img--laomo-6 { width: 111px; height: 35px; background-image: -webkit-image-set(url('../images/laomo/font-title/6/编组 21.png') 1x, url('../images/laomo/font-title/6/编组 21@2x.png') 2x); background-image: image-set(url('../images/laomo/font-title/6/编组 21.png') 1x, url('../images/laomo/font-title/6/编组 21@2x.png') 2x); }
 
 .title-img--laomo-7 { width: 152px; height: 35px; background-image: -webkit-image-set(url('../images/laomo/font-title/7/编组 21.png') 1x, url('../images/laomo/font-title/7/编组 21@2x.png') 2x); background-image: image-set(url('../images/laomo/font-title/7/编组 21.png') 1x, url('../images/laomo/font-title/7/编组 21@2x.png') 2x); }
-/* 新增 8 号标题，用于民族排行列表 253x35 */
+
 .title-img--laomo-8 { width: 253px; height: 35px; background-image: -webkit-image-set(url('../images/laomo/font-title/8/编组 21.png') 1x, url('../images/laomo/font-title/8/编组 21@2x.png') 2x); background-image: image-set(url('../images/laomo/font-title/8/编组 21.png') 1x, url('../images/laomo/font-title/8/编组 21@2x.png') 2x); }
 </style>

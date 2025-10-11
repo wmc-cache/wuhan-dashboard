@@ -62,7 +62,14 @@ function pretty(n?: number) {
 .title-img { position: absolute; left: 12px; top: 10px; }
 .title-img img { display: block; width: 150px; height: auto; }
 
-.content { position: absolute; inset: 34px 12px 12px 12px; display: grid; grid-template-columns: 1fr 1fr; align-items: center; }
+.content {
+  position: absolute;
+  inset: 34px 12px 12px 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  margin-top: 40px;
+}
 .item {
   display: grid;
   grid-template-columns: 150px auto;
