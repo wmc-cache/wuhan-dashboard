@@ -61,9 +61,9 @@ import RingPie from '../RingPie.vue';
 import legend1x from '../../images/distribution-legend/位图.png';
 import legend2x from '../../images/distribution-legend/位图@2x.png';
 
-// 右侧概览处的小图标（复用现有素材）
-import summaryIcon1x from '../../images/member-v2/2/编组 40.png';
-import summaryIcon2x from '../../images/member-v2/2/编组 40@2x.png';
+// 右侧概览处的小图标（替换为 member-v2/icon 目录下的新图标）
+import summaryIcon1x from '../../images/member-v2/icon/位图.png';
+import summaryIcon2x from '../../images/member-v2/icon/位图@2x.png';
 
 interface Item { name: string; value: number; color?: string }
 

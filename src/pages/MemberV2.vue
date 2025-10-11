@@ -38,7 +38,7 @@
     </section>
 
     <section class="mod mod--tall" style="grid-area: mr;">
-      <span class="title-img title-img--member-6" aria-hidden="true"></span>
+      <span class="title-img title-img--member-b1" aria-hidden="true"></span>
       <div class="mod__body">
         <div class="split-vert">
           <PoliticsList />
@@ -51,9 +51,13 @@
     <section class="mod mod--wide" style="grid-area: bl;">
       <div class="mod__body">
         <div class="bottom-row">
-          <SearchTodayTotal style="margin-top: 50px;" :today-total="111121" :weekly-increase="10" :progress="64" />
+          <div class="bottom-col">
+            <span class="title-img title-img--member-b2" aria-hidden="true"></span>
+            <SearchTodayTotal :today-total="111121" :weekly-increase="10" :progress="64" />
+          </div>
           <StripedBarChart :categories="industryCats" :values="industryVals" y-unit="人" :y-max="1200" :grid-left="64"
             :grid-right="20" :grid-bottom="56" :x-label-rotate="25" />
+
         </div>
       </div>
     </section>
@@ -143,7 +147,12 @@ const industryVals = [420, 360, 280, 340, 300, 360, 320];
 }
 
 /* 底部宽模块：左数字 + 右条形图 */
-.bottom-row { display: grid; grid-template-columns: 520px 1fr; column-gap: 24px; align-items: stretch; }
+.bottom-row {
+  display: grid;
+  grid-template-columns: 520px 1fr;
+  column-gap: 24px;
+  align-items: start;
+}
 
 .title-img {
   display: inline-block;
@@ -169,15 +178,38 @@ const industryVals = [420, 360, 280, 340, 300, 360, 320];
 .title-img--member-3 {
   width: 151px;
   height: 35px;
-  background-image: -webkit-image-set(url('../images/member/font-title/4/编组 21.png') 1x, url('../images/member/font-title/4/编组 21@2x.png') 2x);
-  background-image: image-set(url('../images/member/font-title/4/编组 21.png') 1x, url('../images/member/font-title/4/编组 21@2x.png') 2x);
-}
-
-.title-img--member-5 {
-  width: 151px;
-  height: 35px;
-  background-image: -webkit-image-set(url('../images/member/font-title/5/编组 21.png') 1x, url('../images/member/font-title/5/编组 21@2x.png') 2x);
-  background-image: image-set(url('../images/member/font-title/5/编组 21.png') 1x, url('../images/member/font-title/5/编组 21@2x.png') 2x);
+  /* 中行左模块：使用 member-v2/title/1 */
+    background-image: -webkit-image-set(url('../images/member-v2/title/1/编组 21.png') 1x, url('../images/member-v2/title/1/编组 21@2x.png') 2x);
+    background-image: image-set(url('../images/member-v2/title/1/编组 21.png') 1x, url('../images/member-v2/title/1/编组 21@2x.png') 2x);
+  }
+  
+  .title-img--member-5 {
+    width: 212px;
+      /* 新图宽度 212 */
+      height: 35px;
+      /* 中行中模块：使用 member-v2/title/2 */
+      background-image: -webkit-image-set(url('../images/member-v2/title/2/编组 21.png') 1x, url('../images/member-v2/title/2/编组 21@2x.png') 2x);
+      background-image: image-set(url('../images/member-v2/title/2/编组 21.png') 1x, url('../images/member-v2/title/2/编组 21@2x.png') 2x);
+    }
+    
+    /* 底部两个子模块的标题（左→右） */
+    .bottom-col {
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+    
+    .title-img--member-b1 {
+      width: 191px;
+      height: 35px;
+      background-image: -webkit-image-set(url('../images/member-v2/title/3/编组 21.png') 1x, url('../images/member-v2/title/3/编组 21@2x.png') 2x);
+      background-image: image-set(url('../images/member-v2/title/3/编组 21.png') 1x, url('../images/member-v2/title/3/编组 21@2x.png') 2x);
+    }
+    
+    .title-img--member-b2 {
+      width: 212px;
+      height: 35px;
+      background-image: -webkit-image-set(url('../images/member-v2/title/4/编组 21.png') 1x, url('../images/member-v2/title/4/编组 21@2x.png') 2x);
+      background-image: image-set(url('../images/member-v2/title/4/编组 21.png') 1x, url('../images/member-v2/title/4/编组 21@2x.png') 2x);
 }
 
 .title-img--member-6 {
