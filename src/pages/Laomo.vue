@@ -2,15 +2,14 @@
   <main class="laomo__grid">
     <!-- 顶部三块 -->
     <section class="mod" style="grid-area: tl;">
-      <!-- 图片标题：劳模民族分布统计（1/7） -->
-      <span class="title-img title-img--laomo-1" aria-hidden="true"></span>
+      <span class="title-img title-img--laomo-3" aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
-        <LaomoEthnicDistribution />
+        <LaomoHonorDistribution />
       </div>
     </section>
 
     <section style="grid-area: tc;">
-      <div class="mod__body" style="place-items: stretch;">
+      <div class="mod__body" style="place-items: stretch;margin-top: 50px;">
         <LaomoFourStats />
       </div>
     </section>
@@ -25,11 +24,12 @@
 
     <!-- 中部三块 -->
     <section class="mod" style="grid-area: ml;">
-      <!-- 图片标题：荣誉分类统计（3/7） -->
-      <span class="title-img title-img--laomo-3" aria-hidden="true"></span>
+      <!-- 图片标题：劳模民族分布统计（1/7） -->
+      <span class="title-img title-img--laomo-1" aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
-        <LaomoHonorDistribution />
+        <LaomoEthnicDistribution />
       </div>
+
     </section>
 
     <section class="mod" style="grid-area: mc;">
@@ -41,22 +41,22 @@
     </section>
 
     <section class="mod" style="grid-area: mr;">
-      <!-- 图片标题：劳模年龄分布统计（5/7） -->
+
       <span class="title-img title-img--laomo-5" aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
         <LaomoAgeDistribution />
       </div>
     </section>
 
-    <!-- 底部：左表格 + 右通栏图 -->
-    <section class="mod" style="grid-area: bl;">
+    <section class="mod " style="grid-area: bl;">
+      <span aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
         <LaomoMemberNew />
       </div>
     </section>
 
     <section class="mod mod--wide" style="grid-area: br;">
-      <!-- 图片标题：劳模区域分布（6/7） -->
+
       <span class="title-img title-img--laomo-7" aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
         <LaomoRegionDistribution />
@@ -78,17 +78,16 @@ import LaomoGenderDistribution from '../components/laomo/GenderDistribution.vue'
 
 <style scoped lang="scss">
 .laomo__grid {
-  height: 970px; /* 1080 - 110 */
+  height: 970px;
   padding: 0 20px 20px;
   display: grid;
   grid-template-columns: 540px 1fr 540px;
-  grid-template-rows: 220px 360px 1fr;
+  grid-template-rows: 320px 320px 1fr;
   grid-template-areas:
     'tl tc tr'
     'ml mc mr'
     'bl br br';
-  /* 模块间距统一为 10px */
-  gap: 10px;
+  gap: 1px;
 }
 
 .mod {
@@ -104,10 +103,10 @@ import LaomoGenderDistribution from '../components/laomo/GenderDistribution.vue'
 .mod::before {
   content: '';
   position: absolute;
-  left: -8px;
-  right: -8px;
-  top: -8px;
-  bottom: -8px;
+  left: -4px;
+    right: -4px;
+    top: -4px;
+    bottom: -4px;
   background-repeat: no-repeat;
   background-size: 100% 100%;
   background-image: -webkit-image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x);
@@ -122,6 +121,12 @@ import LaomoGenderDistribution from '../components/laomo/GenderDistribution.vue'
 }
 
 .mod--wide::before {
+  content: '';
+    position: absolute;
+    left: 0px;
+    right: -4px;
+    top: 0px;
+    bottom: 0px;
   background-image: -webkit-image-set(url('../images/module-broder-width/矩形.png') 1x, url('../images/module-broder-width/矩形@2x.png') 2x);
   background-image: image-set(url('../images/module-broder-width/矩形.png') 1x, url('../images/module-broder-width/矩形@2x.png') 2x);
 }

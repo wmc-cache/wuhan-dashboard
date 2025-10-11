@@ -168,12 +168,12 @@ const option = computed(() => {
         alignTo: 'edge', edgeDistance: 10,
         color: '#2a6ff0', fontSize: 12, width: 72, lineHeight: 16, overflow: 'break'
       },
-      labelLine: { show: true, length: 16, length2: 10, lineStyle: { color: data[idx].color, width: 1.5 } }
+      labelLine: { show: true, length: 8, length2: 6, lineStyle: { color: data[idx].color, width: 1.5 } }
     });
     solidData.push({ value: gapValue, name: `gap-s-${i}`, itemStyle: { color: 'rgba(0,0,0,0)' }, tooltip: { show: false }, label: { show: false }, labelLine: { show: false } });
   });
-  const underRing = { name: 'under', type: 'pie' as const, hoverAnimation: false, legendHoverLink: false, radius: ['47%', '60%'], center, startAngle: props.baseStart, label: { show: false }, labelLine: { show: false }, tooltip: { show: false }, data: underData };
-  const solidRing = { name: 'solid', type: 'pie' as const, hoverAnimation: false, legendHoverLink: false, radius: ['55%', '60%'], center, startAngle: props.baseStart, label: { show: false }, labelLine: { show: false }, data: solidData };
+  const underRing = { name: 'under', type: 'pie' as const, hoverAnimation: false, legendHoverLink: false, radius: ['52%', '70%'], center, startAngle: props.baseStart, label: { show: false }, labelLine: { show: false }, tooltip: { show: false }, data: underData };
+  const solidRing = { name: 'solid', type: 'pie' as const, hoverAnimation: false, legendHoverLink: false, radius: ['60%', '70%'], center, startAngle: props.baseStart, label: { show: false }, labelLine: { show: false }, data: solidData };
 
   // 内环虚线刻度
   const tickRing: echarts.EChartsOption['series'] = {
