@@ -10,7 +10,7 @@
         <OrgTotal />
       </div>
       <div class="panel h300">
-        <OrgNew />
+
       </div>
     </section>
 
@@ -34,8 +34,8 @@
         <MemberNewBiz />
       </div>
       <div class="panel h300">
-        <!-- <span class="title-img title-img--member-new" aria-hidden="true"></span> -->
-        <MemberNew />
+        <span class="title-img title-img--member-new" aria-hidden="true"></span>
+
       </div>
     </section>
   </main>
