@@ -1,14 +1,12 @@
 <template>
   <div class="search-total">
-    <!-- 内部标题（贴图背景） -->
-    <div class="inner-title">
-      <span class="inner-title__text">{{ title }}</span>
-    </div>
-
-    <!-- 数字翻牌（使用切图作为背景） -->
-    <div class="digits" role="group" aria-label="今日会员总数">
-      <div v-for="(d, i) in paddedDigits" :key="i" class="digit">
-        <span class="text">{{ d }}</span>
+    <!-- 数字区整体底图（含标题+左右装饰） -->
+    <div class="num-bg">
+      <!-- 数字翻牌（覆盖在底图之上） -->
+      <div class="digits" role="group" aria-label="今日会员总数">
+        <div v-for="(d, i) in paddedDigits" :key="i" class="digit">
+          <span class="text">{{ d }}</span>
+        </div>
       </div>
     </div>
 
@@ -139,17 +137,23 @@ function onInput(e: Event) {
   letter-spacing: 2px;
 }
 
-/* 内部标题：使用切图作为背景，文字置中 */
-.inner-title {
-  height: 44px;
+/* 数字区整体底图（含标题与左右装饰） */
+.num-bg {
+  height: 110px; /* 视觉高度，非比例缩放，便于与下方元素贴合 */
   display: grid;
   place-items: center;
-  background-image: -webkit-image-set(url('../../images/member/title2/编组 44.png') 1x, url('../../images/member/title2/编组 44@2x.png') 2x);
-  background-image: image-set(url('../../images/member/title2/编组 44.png') 1x, url('../../images/member/title2/编组 44@2x.png') 2x);
+  background-image: -webkit-image-set(
+    url('../../images/member-v2/num-bg/bg.png') 1x,
+    url('../../images/member-v2/num-bg/bg@2x.png') 2x
+  );
+  background-image: image-set(
+    url('../../images/member-v2/num-bg/bg.png') 1x,
+    url('../../images/member-v2/num-bg/bg@2x.png') 2x
+  );
   background-size: 100% 100%;
+  background-repeat: no-repeat;
   filter: drop-shadow(0 6px 16px rgba(45,110,255,0.10));
 }
-.inner-title__text { font-size: 18px; font-weight: 900; color: #2a6ff0; letter-spacing: 2px; }
 
 /* 数字翻牌 */
 .digits {
@@ -157,8 +161,8 @@ function onInput(e: Event) {
   align-items: flex-end;
   justify-content: center;
   gap: 15px;
-  /* 更紧凑 */
-  padding: 2px 0 0;
+  /* 视觉微调：整体向下偏移几像素，让数字落在底图中线偏下 */
+  transform: translateY(10px);
 }
   
   .digit {
@@ -167,10 +171,11 @@ function onInput(e: Event) {
       height: 74px;
       display: grid;
       place-items: center;
-      background-image: -webkit-image-set(url('../../images/member/font-bg/ico／数字bg备份 6.png') 1x,
-            url('../../images/member/font-bg/ico／数字bg备份 6@2x.png') 2x);
-        background-image: image-set(url('../../images/member/font-bg/ico／数字bg备份 6.png') 1x,
-            url('../../images/member/font-bg/ico／数字bg备份 6@2x.png') 2x);
+      /* 使用 member-v2/num 目录中的新版数字底图 */
+      background-image: -webkit-image-set(url('../../images/member-v2/num/ico／数字bg备份 6.png') 1x,
+            url('../../images/member-v2/num/ico／数字bg备份 6@2x.png') 2x);
+        background-image: image-set(url('../../images/member-v2/num/ico／数字bg备份 6.png') 1x,
+            url('../../images/member-v2/num/ico／数字bg备份 6@2x.png') 2x);
         background-size: 100% 100%;
         border-radius: 8px;
         box-shadow: 0 6px 14px rgba(45, 110, 255, 0.10);

@@ -1,16 +1,7 @@
 <template>
   <div class="education-bar">
-    <StripedBarChart
-      y-unit="万人"
-      :categories="categories"
-      :values="values"
-      :yMax="yMax"
-      :gridLeft="64"
-      :gridRight="20"
-      :gridTop="20"
-      :gridBottom="54"
-      :xLabelInterval="0"
-    />
+    <StripedBarChart y-unit="万人" :categories="categories" :values="values" :yMax="yMax" :gridLeft="64" :gridRight="20"
+      :gridTop="25" :gridBottom="54" :xLabelInterval="0" />
   </div>
 </template>
 

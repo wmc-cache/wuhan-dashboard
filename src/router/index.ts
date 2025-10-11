@@ -13,21 +13,19 @@ const routes: RouteRecordRaw[] = [
     name: "org-old",
     component: () => import("../pages/Org.vue"),
   },
-  // 新版工会组织（不影响旧版，单独路由查看）
   {
     path: "/org",
     name: "org",
     component: () => import("../pages/OrgV2.vue"),
   },
   {
-    path: "/member",
-    name: "member",
+    path: "/member-old",
+    name: "member-old",
     component: () => import("../pages/Member.vue"),
   },
-  // 新版会员页面（试用）
   {
-    path: "/member-v2",
-    name: "member-v2",
+    path: "/member",
+    name: "member",
     component: () => import("../pages/MemberV2.vue"),
   },
   {

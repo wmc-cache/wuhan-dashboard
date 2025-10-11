@@ -1,18 +1,7 @@
 <template>
   <div class="month-trend">
-    <StripedBarChart
-      y-unit="人"
-      :categories="months"
-      :values="values"
-      :yMax="yMax"
-      :gridLeft="56"
-      :gridRight="16"
-      :gridTop="24"
-      :gridBottom="52"
-      :xLabelInterval="0"
-      stripeColor="#FE870B"
-      :showLabels="false"
-    />
+    <StripedBarChart y-unit="人" :categories="months" :values="values" :yMax="yMax" :gridLeft="56" :gridRight="16"
+      :gridTop="27" :gridBottom="52" :xLabelInterval="0" stripeColor="#FE870B" :showLabels="false" />
   </div>
 </template>
 

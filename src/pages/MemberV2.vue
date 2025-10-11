@@ -51,17 +51,9 @@
     <section class="mod mod--wide" style="grid-area: bl;">
       <div class="mod__body">
         <div class="bottom-row">
-          <SearchTodayTotal :today-total="111121" :weekly-increase="10" :progress="64" />
-          <StripedBarChart
-            :categories="industryCats"
-            :values="industryVals"
-            y-unit="人"
-            :y-max="1200"
-            :grid-left="64"
-            :grid-right="20"
-            :grid-bottom="56"
-            :x-label-rotate="25"
-          />
+          <SearchTodayTotal style="margin-top: 50px;" :today-total="111121" :weekly-increase="10" :progress="64" />
+          <StripedBarChart :categories="industryCats" :values="industryVals" y-unit="人" :y-max="1200" :grid-left="64"
+            :grid-right="20" :grid-bottom="56" :x-label-rotate="25" />
         </div>
       </div>
     </section>
