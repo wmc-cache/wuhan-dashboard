@@ -23,8 +23,16 @@
 
       <!-- 右：表格与分页 -->
       <section class="table-area">
-        <GridTable :columns="columns" :rows="pagedRows" :grid-template="gridTemplate" :visible-rows="15"
-          :row-height="44" :show-header="false" :fill-placeholder="true" />
+        <GridTable
+          :columns="columns"
+          :rows="pagedRows"
+          :grid-template="gridTemplate"
+          :visible-rows="15"
+          :row-height="44"
+          :show-header="false"
+          :fill-placeholder="true"
+          @cell-click="onCellClick"
+        />
 
         <div class="pager">
           <el-pagination v-model:current-page="page" :page-size="pageSize" :total="total" background
@@ -32,6 +40,9 @@
         </div>
       </section>
     </section>
+    <!-- Teleport 到 body，不占布局 -->
+    <UnionDetailDialog v-model="showUnion" :data="unionData" title="工会详情" :width="1080" />
+    <MemberDetailDialog v-model="showMember" :data="memberData" title="会员详情" :width="1080" />
   </main>
 </template>
 
@@ -42,7 +53,8 @@ import TopSearch from '../components/TopSearch.vue';
 import { ElPagination } from 'element-plus';
 import 'element-plus/es/components/pagination/style/css';
 import { useRouter, useRoute } from 'vue-router';
-import { apiGet } from '../utils/api';
+import UnionDetailDialog, { type UnionDetail } from '../components/UnionDetailDialog.vue';
+import MemberDetailDialog, { type MemberDetail } from '../components/MemberDetailDialog.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -116,6 +128,60 @@ function setActive(i: number) {
 
 function onSearch() { /* 客户端过滤已生效；如需服务器端搜索，可在此发起请求 */ }
 
+// 弹框：工会详情/会员详情
+const showUnion = ref(false);
+const unionData = ref<UnionDetail | undefined>(undefined);
+const showMember = ref(false);
+const memberData = ref<MemberDetail | undefined>(undefined);
+function onCellClick(payload: { row: any; column: ColumnDef }) {
+  const r = payload.row as any;
+  if (selCat.value === 'org' && payload.column.key === 'fullname') {
+    unionData.value = {
+      fullname: r.fullname,
+      unitDistrictSuffix: r.unitDistrictSuffix,
+      unitIndustry: r.unitIndustry || '-',
+      establishDate: r.establishDate,
+      memberCount: r.memberCount ?? Math.floor(100 + Math.random() * 500),
+      linkMan: r.linkMan || (Math.random() > 0.5 ? '刘丽' : '王勇'),
+      linkPhone: r.linkPhone || `18${Math.floor(1000 + Math.random() * 9000)}${Math.floor(1000 + Math.random() * 9000)}`,
+      chair: r.chair || '李厉程',
+      viceChair: r.viceChair || '王刚',
+      parentUnionName: r.parentUnionName || '湖北省总工会',
+      legalDuty: r.legalDuty || '工会主席',
+      isOpenSystem: typeof r.isOpenSystem === 'boolean' ? r.isOpenSystem : true,
+      isWorkerCongress: typeof r.isWorkerCongress === 'boolean' ? r.isWorkerCongress : false,
+      childOrgCount: r.childOrgCount ?? 3210,
+    } as UnionDetail;
+    showUnion.value = true;
+  } else if (selCat.value === 'member' && payload.column.key === 'name') {
+    memberData.value = {
+      name: r.name,
+      gender: r.gender || (Math.random() > 0.5 ? '女' : '男'),
+      joinAt: r.joinAt || '2024-02-02',
+      duty: r.duty || '职务名称',
+      politics: r.politics || '群众',
+      union: r.unionName || '武汉市某某工会',
+      age: r.age || 32,
+      company: r.company || '单位名称',
+      phone: r.phone || `18${Math.floor(1000 + Math.random() * 9000)}${Math.floor(1000 + Math.random() * 9000)}`,
+      education: r.education || '本科',
+      medInfo: { agency: '武钢集团有限公司工会', company: '武汉钢铁集团物流有限公司', startAt: '2024/01/01', endAt: '2024/12/31' },
+      medPlans: [
+        { type: '住院', count: '1份', money: '2,000元' },
+        { type: '综合', count: '1份', money: '2,000元' },
+        { type: '重疾', count: '1份', money: '2,000元' },
+      ],
+      medClaims: [
+        { payType: '综合', disease: '佔位', startAt: '2024/01/02', endAt: '2024/01/02', fee: '2,000元' },
+        { payType: '综合', disease: '佔位', startAt: '2024/01/02', endAt: '2024/01/02', fee: '2,000元' },
+        { payType: '重疾', disease: '佔位', startAt: '2024/01/02', endAt: '2024/01/02', fee: '2,000元' },
+      ],
+      years: [2024, 2023, 2022, 2021]
+    } as MemberDetail;
+    showMember.value = true;
+  }
+}
+
 function buildColumnsByData(sample?: Row | MemberRow) {
   if (selCat.value === 'member') {
     columns.value = [
@@ -175,36 +241,32 @@ function mapMemberRow(raw: any, i: number): MemberRow {
 
 function toNum(v: any): number | undefined { const n = Number(v); return Number.isFinite(n) ? n : undefined; }
 
-async function fetchList() {
+// 不调接口，使用本地模拟数据
+function fetchList() {
   page.value = 1;
   if (selCat.value === 'member') {
-    // 依次尝试若干可能的“会员列表”接口；全部失败则生成本地示例数据
-    const candidates = ['/business/member/list', '/business/union/member/list', '/business/member'];
-    let res: any = null;
-    for (const url of candidates) {
-      res = await apiGet<any>(url).catch(() => null);
-      if (res) break;
-    }
-    let rows: any[] = [];
-    if (res) {
-      rows = Array.isArray(res) ? res : Array.isArray(res.data) ? res.data : Array.isArray(res.rows) ? res.rows : Array.isArray(res.row) ? res.row : [];
-    }
-    if (!rows.length) {
-      // 兜底：生成 800 条示例数据用于还原界面
-      rows = Array.from({ length: 800 }, (_, i) => ({ name: `名称${i + 1}`, unionName: `名称${(i % 15) + 1}`, gender: i % 2 ? '女' : '男', joinAt: '2024-03-02' }));
-    }
+    const rows = Array.from({ length: 800 }, (_, i) => ({
+      name: `名称${i + 1}`,
+      unionName: `工会${(i % 20) + 1}`,
+      gender: i % 2 ? '女' : '男',
+      joinAt: `2024-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 27) + 1).padStart(2, '0')}`,
+    }));
     allRows.value = rows.map((r, i) => mapMemberRow(r, i));
-    total.value = Number(res?.total) || allRows.value.length;
+    total.value = allRows.value.length;
     buildColumnsByData(allRows.value[0]);
     return;
   }
-  // 工会组织列表
-  const res = await apiGet<any>('/business/union/list').catch(() => null);
-  if (!res) return;
-  const rows: any[] = Array.isArray(res.row) ? res.row : Array.isArray(res.rows) ? res.rows : Array.isArray(res.data) ? res.data : [];
-  const mapped = rows.map((r, i) => mapRow(r, i));
-  allRows.value = mapped;
-  total.value = (Number(res.total) || allRows.value.length);
+  const rows = Array.from({ length: 800 }, (_, i) => ({
+    fullname: `武汉市某某工会 ${i + 1}`,
+    legalCode: `4201${String(100000 + i)}`,
+    unitName: `某某单位 ${i + 1}`,
+    creditCode: `91420100${String(100000 + i)}`,
+    unitDistrictSuffix: ['江岸区', '江汉区', '硚口区', '汉阳区', '武昌区', '青山区'][i % 6],
+    establishDate: `20${10 + (i % 15)}-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 27) + 1).padStart(2, '0')}`,
+    memberCount: 100 + (i % 500),
+  }));
+  allRows.value = rows.map((r, i) => mapRow(r, i));
+  total.value = allRows.value.length;
   buildColumnsByData(allRows.value[0]);
 }
 
@@ -377,4 +439,6 @@ onMounted(() => {
 }
 
 .pager { display: flex; align-items: center; justify-content: flex-end; color: #2a6ff0; padding-top: 8px; }
+
+/* Teleport 弹框挂在 body；组件在模板中挂载，这里无需额外处理 */
 </style>
