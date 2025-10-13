@@ -1,12 +1,12 @@
 <template>
   <div class="kpi-pair">
-    <div class="card card--left">
+    <div class="card card--left" :class="leftBgClass">
       <div class="num" :class="leftGradient">
         {{ fmt(items[0]?.value) }}<span v-if="items[0]?.unit" class="unit">{{ items[0]?.unit }}</span>
       </div>
       <div class="label">{{ items[0]?.title }}</div>
     </div>
-    <div class="card card--right">
+    <div class="card card--right" :class="rightBgClass">
       <div class="num" :class="rightGradient">
         {{ fmt(items[1]?.value) }}<span v-if="items[1]?.unit" class="unit">{{ items[1]?.unit }}</span>
       </div>
@@ -16,14 +16,18 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 // 首页顶部双 KPI 卡片（与 Member/TopSearchKpis 的卡面视觉一致，不含搜索）
 interface KItem { title: string; value: number | string; unit?: string }
-interface Props { items?: [KItem, KItem] }
+type BgKey = 'member-1' | 'member-2' | 'top-1' | 'top-2' | 'top-3' | 'top-4'
+interface Props { items?: [KItem, KItem]; leftBg?: BgKey; rightBg?: BgKey }
 const props = withDefaults(defineProps<Props>(), {
   items: () => ([
     { title: '工会总数(个)', value: 18897, unit: '' },
     { title: '本年度新增工会(个)', value: 12597, unit: '' }
-  ])
+  ]),
+  leftBg: 'member-1',
+  rightBg: 'member-2',
 });
 
 function fmt(v?: number | string) {
@@ -34,6 +38,9 @@ function fmt(v?: number | string) {
 // 渐变类名，便于左右分别控制颜色（蓝/橙）
 const leftGradient = 'num--blue';
 const rightGradient = 'num--orange';
+
+const leftBgClass = computed(() => `bg-${props.leftBg}`);
+const rightBgClass = computed(() => `bg-${props.rightBg}`);
 </script>
 
 .style-debug { outline: 1px dashed transparent; }
@@ -55,15 +62,30 @@ const rightGradient = 'num--orange';
   background-repeat: no-repeat;
   padding-left: 120px; /* 数字与标题整体右移 */
 }
-.card--left {
+/* 背景切图主题：默认 member-v2，也支持 dashboard/top 的四张（从左到右：1-4） */
+.bg-member-1 {
   background-image: -webkit-image-set(url('../../images/member-v2/1/编组 33.png') 1x, url('../../images/member-v2/1/编组 33@2x.png') 2x);
   background-image: image-set(url('../../images/member-v2/1/编组 33.png') 1x, url('../../images/member-v2/1/编组 33@2x.png') 2x);
-  
 }
-.card--right {
+.bg-member-2 {
   background-image: -webkit-image-set(url('../../images/member-v2/2/编组 40.png') 1x, url('../../images/member-v2/2/编组 40@2x.png') 2x);
   background-image: image-set(url('../../images/member-v2/2/编组 40.png') 1x, url('../../images/member-v2/2/编组 40@2x.png') 2x);
- 
+}
+.bg-top-1 {
+  background-image: -webkit-image-set(url('../../images/dashboard/top/1/编组 33.png') 1x, url('../../images/dashboard/top/1/编组 33@2x.png') 2x);
+  background-image: image-set(url('../../images/dashboard/top/1/编组 33.png') 1x, url('../../images/dashboard/top/1/编组 33@2x.png') 2x);
+}
+.bg-top-2 {
+  background-image: -webkit-image-set(url('../../images/dashboard/top/2/编组 38.png') 1x, url('../../images/dashboard/top/2/编组 38@2x.png') 2x);
+  background-image: image-set(url('../../images/dashboard/top/2/编组 38.png') 1x, url('../../images/dashboard/top/2/编组 38@2x.png') 2x);
+}
+.bg-top-3 {
+  background-image: -webkit-image-set(url('../../images/dashboard/top/3/编组 40.png') 1x, url('../../images/dashboard/top/3/编组 40@2x.png') 2x);
+  background-image: image-set(url('../../images/dashboard/top/3/编组 40.png') 1x, url('../../images/dashboard/top/3/编组 40@2x.png') 2x);
+}
+.bg-top-4 {
+  background-image: -webkit-image-set(url('../../images/dashboard/top/4/编组 39.png') 1x, url('../../images/dashboard/top/4/编组 39@2x.png') 2x);
+  background-image: image-set(url('../../images/dashboard/top/4/编组 39.png') 1x, url('../../images/dashboard/top/4/编组 39@2x.png') 2x);
 }
 
 .num { position: relative; z-index: 1; font-size: 36px; font-weight: 900; letter-spacing: 1px; line-height: 1; text-shadow: 0 6px 14px rgba(45,110,255,0.12); white-space: nowrap;

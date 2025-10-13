@@ -1,5 +1,5 @@
 <template>
-  <div class="subsidy-stats">
+  <div class="subsidy-stats" :style="rootVars">
     <ul class="list" role="list">
       <li v-for="(it, i) in rows" :key="it.name + i" class="row">
         <span class="no" :class="noClass(i)">{{ i + 1 }}</span>
@@ -17,7 +17,7 @@
 import { computed } from 'vue';
 
 interface Item { name: string; people: number; amount: number }
-interface Props { items?: Item[]; maxRows?: number }
+interface Props { items?: Item[]; maxRows?: number; rowHeight?: number }
 
 const props = withDefaults(defineProps<Props>(), {
   items: () => ([
@@ -26,10 +26,12 @@ const props = withDefaults(defineProps<Props>(), {
     { name: '去世慰问',     people: 32134, amount: 6189873.092 },
     { name: '医疗互助',     people: 32134, amount: 6189873.092 },
   ]),
-  maxRows: 4
+  maxRows: 4,
+  rowHeight: 44,
 });
 
 const rows = computed(() => props.items.slice(0, props.maxRows));
+const rootVars = computed(() => ({ ['--row-h' as any]: (props.rowHeight || 44) + 'px' }));
 
 function people(v: number) {
   return Number(v).toLocaleString('zh-CN') + '人';
@@ -51,7 +53,7 @@ function noClass(i: number) {
    display: grid;
    grid-template-rows: 1fr; }
 
-.list { list-style: none; margin: 0; padding: 4px 6px 10px 2px; display: grid; row-gap: 22px; 
+.list { list-style: none; margin: 0; padding: 4px 6px 10px 2px; display: grid; row-gap: 0px; 
  
 }
 
@@ -62,6 +64,8 @@ function noClass(i: number) {
   grid-template-columns: 28px 1.6fr 1fr 1.2fr; /* 序号/名称/人数/金额 */
   align-items: center;
   column-gap: 0px;
+  min-height: var(--row-h, 44px);
+  height: var(--row-h, auto);
   padding: 8px 8px 8px 8px; /* 底部空间留给横线 */
 }
 
@@ -80,4 +84,3 @@ function noClass(i: number) {
 /* 蓝色粗横线（与退款 RankType1 相同切图） */
 .underline { position: absolute; left: 0; right: 0; bottom: 0; height: 10px; background-repeat: no-repeat; background-size: 100% 100%; background-image: -webkit-image-set(url('../../images/refund/line/编组 14.png') 1x, url('../../images/refund/line/编组 14@2x.png') 2x); background-image: image-set(url('../../images/refund/line/编组 14.png') 1x, url('../../images/refund/line/编组 14@2x.png') 2x); pointer-events: none; }
 </style>
-

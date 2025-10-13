@@ -1,9 +1,9 @@
 <template>
-  <div class="rank-type2">
+  <div class="rank-type2" :style="rootVars">
     <div class="header">
-      <i class="title-img" :style="{ backgroundImage: `url(${props.titleImg1x})` }" :src="props.titleImg1x"
+      <i class="title-img" v-if="isShowTitleImg" :style="titleStyle" :src="props.titleImg1x"
         aria-hidden="true" />
-      <i class="more-img" role="button" aria-label="查看更多" @click="$emit('more')" />
+      <i v-if="showMore" class="more-img" role="button" aria-label="查看更多" @click="$emit('more')" />
     </div>
 
     <ul class="list">
@@ -33,6 +33,12 @@ interface Props {
   barColor?: string;
   titleImg1x?: string;
   titleImg2x?: string;
+  imgWidth?: number;     // 标题图片宽度（px），默认 293
+  rowHeight?: number;   // 行高（像素），控制列表每行高度
+  showMore?: boolean;   // 是否显示“查看更多”按钮
+  widthPercent?: number; // 容器宽度（百分比），默认 90
+  center?: boolean;      // 是否水平居中
+  isShowTitleImg?: boolean; // 是否显示标题图片
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -40,7 +46,13 @@ const props = withDefaults(defineProps<Props>(), {
   maxRows: 5,
   barColor: '#F59E0B',
   titleImg1x,
-  titleImg2x
+  titleImg2x,
+  imgWidth: 151,
+  rowHeight: 46,
+  showMore: true,
+  widthPercent: 100,
+  center: true,
+  isShowTitleImg: true,
 });
 
 const rows = computed(() => props.items.slice(0, props.maxRows));
@@ -48,6 +60,24 @@ const maxV = computed(() => Math.max(1, ...rows.value.map(r => r.value || 0)));
 const barWidth = 70; // 留出右侧“名称”列空间
 function percent(v: number) { return Math.max(0, Math.min(1, v / maxV.value)); }
 function money(v: number) { return Number(v).toLocaleString('zh-CN', { maximumFractionDigits: 3, useGrouping: false }) + '万元'; }
+
+// 根节点样式：行高 + 宽度 + 居中
+const rootVars = computed(() => {
+  const st: Record<string, string> = { ['--row-h']: (props.rowHeight || 46) + 'px' } as any;
+  if (props.widthPercent && props.widthPercent > 0) st.width = props.widthPercent + '%';
+  if (props.center) st.margin = '0 auto';
+  return st as any;
+});
+const showMore = computed(() => !!props.showMore);
+
+// 标题切图 + 可配置宽度
+const titleStyle = computed(() => {
+  if (props.titleImg2x) {
+    const v = `-webkit-image-set(url(${props.titleImg1x}) 1x, url(${props.titleImg2x}) 2x)`;
+    return { backgroundImage: v as unknown as string, width: props.imgWidth + 'px' };
+  }
+  return { backgroundImage: `url(${props.titleImg1x})`, width: props.imgWidth + 'px' } as any;
+});
 </script>
 
 <style scoped lang="scss">
@@ -72,7 +102,7 @@ function money(v: number) { return Number(v).toLocaleString('zh-CN', { maximumFr
 }
 
 .title-img {
-  width: 155px;
+  width: 151px;
   height: 35px;
   background-image: -webkit-image-set(url('../../images/refund/title4/编组 21.png') 1x, url('../../images/refund/title4/编组 21@2x.png') 2x);
   background-image: image-set(url('../../images/refund/title4/编组 21.png') 1x, url('../../images/refund/title4/编组 21@2x.png') 2x);
@@ -91,7 +121,7 @@ function money(v: number) { return Number(v).toLocaleString('zh-CN', { maximumFr
   margin: 0;
   padding: 2px 6px 2px 2px;
   display: grid;
-  row-gap: 10px;
+  row-gap: 5px;
 }
 
 .row {
@@ -100,7 +130,8 @@ function money(v: number) { return Number(v).toLocaleString('zh-CN', { maximumFr
   grid-template-columns: 34px 1.2fr auto 1fr auto;
   align-items: center;
   column-gap: 12px;
-  min-height: 18px;
+  min-height: var(--row-h, 46px);
+  height: var(--row-h, auto);
   background: rgba(174, 203, 255, 0.23);
   border: 1px solid #6DA1FB;
   padding: 5px 10px;

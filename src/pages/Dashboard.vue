@@ -3,7 +3,7 @@
     <section class="col col--left">
       <div class="panel h214">
         <!-- 顶部左侧双 KPI 卡（工会总数/今年新增） -->
-        <KpiPair :items="leftKpis" />
+        <KpiPair :items="leftKpis" left-bg="top-1" right-bg="top-2" />
       </div>
       <!-- 新增：工会概况（三项）占位，位于左列第 1 与第 2 模块之间 -->
       <div class="panel h180">
@@ -17,7 +17,7 @@
       <!-- 红框（左下）：劳模补助人数/金额列表，复用 laomo/SubsidyStatsList -->
       <div class="panel h300">
         <span class="title-img title-img--dash-5" aria-hidden="true"></span>
-        <LaomoSubsidyStatsList />
+        <LaomoSubsidyStatsList :row-height="35" />
       </div>
     </section>
 
@@ -34,7 +34,7 @@
     <section class="col col--right">
       <div class="panel h180">
         <!-- 顶部右侧双 KPI 卡（会员总数/省总金额合计） -->
-        <KpiPair :items="rightKpis" />
+        <KpiPair :items="rightKpis" left-bg="top-3" right-bg="top-4" />
       </div>
       <!-- 工会会员性别统计（按图还原的新组件） -->
       <div class="panel h180">
@@ -44,12 +44,16 @@
       <!-- 红框（右中）：经费返还代收金额统计，复用 refund/RankType2 -->
       <div class="panel h360">
         <!-- 组件自带标题切图，替换为 dashboard/title/4 -->
-        <RefundRankType2 :items="refundTop" :title-img1x="dashTitle4_1x" :title-img2x="dashTitle4_2x" :bar-color="'#4E8FFF'" />
+      
+        <RefundRankType2 style="margin-left: 60px;"  :width-percent="90" :img-width="293" :rowHeight="40"
+          :show-more="false" :items="refundTop" :title-img1x="dashTitle4_1x" :title-img2x="dashTitle4_2x"
+          :bar-color="'#4E8FFF'" />
       </div>
       <!-- 右下：新增 6 组互助统计（使用 part3 切图） -->
       <div class="panel h220">
         <span class="title-img title-img--dash-6" aria-hidden="true"></span>
-        <AidCircleStats :items="aidCircleSix" />
+        <!-- 通过属性控制宽度/中心区域/右侧文字左移量 -->
+        <AidCircleStats :items="aidCircleSix" :width="520" :center-width="280" :right-shift="-10" />
       </div>
     </section>
   </main>
@@ -67,18 +71,8 @@ import GenderOverview from '../components/dashboard/GenderOverview.vue';
 import AidCircleStats from '../components/dashboard/AidCircleStats.vue';
 // 右侧“经费返还代收金额统计”标题切图（与 Refund 页保持一致的样式）
 // dashboard/title（从左到右、从上到下：1~6）
-import dashTitle1_1x from '../images/dashboard/title/1/编组 17备份.png';
-import dashTitle1_2x from '../images/dashboard/title/1/编组 17备份@2x.png';
-import dashTitle2_1x from '../images/dashboard/title/2/编组 17备份 2.png';
-import dashTitle2_2x from '../images/dashboard/title/2/编组 17备份 2@2x.png';
-import dashTitle3_1x from '../images/dashboard/title/3/编组 17.png';
-import dashTitle3_2x from '../images/dashboard/title/3/编组 17@2x.png';
 import dashTitle4_1x from '../images/dashboard/title/4/编组 22.png';
 import dashTitle4_2x from '../images/dashboard/title/4/编组 22@2x.png';
-import dashTitle5_1x from '../images/dashboard/title/5/编组 18.png';
-import dashTitle5_2x from '../images/dashboard/title/5/编组 18@2x.png';
-import dashTitle6_1x from '../images/dashboard/title/6/编组 25.png';
-import dashTitle6_2x from '../images/dashboard/title/6/编组 25@2x.png';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 const router = useRouter();
@@ -135,10 +129,10 @@ const aidCircleSix = [
   gap: 10px;
 }
 
-.col--left { grid-template-rows: 140px 210px 300px 220px; }
+.col--left { grid-template-rows: 120px 210px 300px 220px; }
 
 /* 精确控制右列每个模块高度，相加并含 3 处 10px 间距 = 970，刚好不出界 */
-.col--right { grid-template-rows: 140px 210px 300px 220px; }
+.col--right { grid-template-rows: 120px 210px 300px 220px; }
 .col--center { grid-template-rows: 860px; }
 .panel {
   /* 去掉模块背景面板，仅保留内边距与布局 */
@@ -168,12 +162,12 @@ const aidCircleSix = [
 
 .title-img { display: inline-block; background-repeat: no-repeat; background-size: 100% 100%; }
 /* 首页模块 6 个标题：从左到右，从上到下（统一高度 35）*/
-.title-img--dash-1 { width: 151px; height: 35px; background-image: -webkit-image-set(url('../images/dashboard/title/1/编组 17备份.png') 1x, url('../images/dashboard/title/1/编组 17备份@2x.png') 2x); background-image: image-set(url('../images/dashboard/title/1/编组 17备份.png') 1x, url('../images/dashboard/title/1/编组 17备份@2x.png') 2x); }
-.title-img--dash-2 { width: 151px; height: 35px; background-image: -webkit-image-set(url('../images/dashboard/title/2/编组 17备份 2.png') 1x, url('../images/dashboard/title/2/编组 17备份 2@2x.png') 2x); background-image: image-set(url('../images/dashboard/title/2/编组 17备份 2.png') 1x, url('../images/dashboard/title/2/编组 17备份 2@2x.png') 2x); }
+.title-img--dash-1 { width: 110px; height: 35px; background-image: -webkit-image-set(url('../images/dashboard/title/1/编组 17备份.png') 1x, url('../images/dashboard/title/1/编组 17备份@2x.png') 2x); background-image: image-set(url('../images/dashboard/title/1/编组 17备份.png') 1x, url('../images/dashboard/title/1/编组 17备份@2x.png') 2x); }
+.title-img--dash-2 { width: 191px; height: 35px; background-image: -webkit-image-set(url('../images/dashboard/title/2/编组 17备份 2.png') 1x, url('../images/dashboard/title/2/编组 17备份 2@2x.png') 2x); background-image: image-set(url('../images/dashboard/title/2/编组 17备份 2.png') 1x, url('../images/dashboard/title/2/编组 17备份 2@2x.png') 2x); }
 .title-img--dash-3 { width: 151px; height: 35px; background-image: -webkit-image-set(url('../images/dashboard/title/3/编组 17.png') 1x, url('../images/dashboard/title/3/编组 17@2x.png') 2x); background-image: image-set(url('../images/dashboard/title/3/编组 17.png') 1x, url('../images/dashboard/title/3/编组 17@2x.png') 2x); }
-.title-img--dash-4 { width: 151px; height: 35px; background-image: -webkit-image-set(url('../images/dashboard/title/4/编组 22.png') 1x, url('../images/dashboard/title/4/编组 22@2x.png') 2x); background-image: image-set(url('../images/dashboard/title/4/编组 22.png') 1x, url('../images/dashboard/title/4/编组 22@2x.png') 2x); }
-.title-img--dash-5 { width: 151px; height: 35px; background-image: -webkit-image-set(url('../images/dashboard/title/5/编组 18.png') 1x, url('../images/dashboard/title/5/编组 18@2x.png') 2x); background-image: image-set(url('../images/dashboard/title/5/编组 18.png') 1x, url('../images/dashboard/title/5/编组 18@2x.png') 2x); }
-.title-img--dash-6 { width: 151px; height: 35px; background-image: -webkit-image-set(url('../images/dashboard/title/6/编组 25.png') 1x, url('../images/dashboard/title/6/编组 25@2x.png') 2x); background-image: image-set(url('../images/dashboard/title/6/编组 25.png') 1x, url('../images/dashboard/title/6/编组 25@2x.png') 2x); }
+.title-img--dash-4 { width: 293px; height: 35px; background-image: -webkit-image-set(url('../images/dashboard/title/4/编组 22.png') 1x, url('../images/dashboard/title/4/编组 22@2x.png') 2x); background-image: image-set(url('../images/dashboard/title/4/编组 22.png') 1x, url('../images/dashboard/title/4/编组 22@2x.png') 2x); }
+.title-img--dash-5 { width: 171px; height: 35px; background-image: -webkit-image-set(url('../images/dashboard/title/5/编组 18.png') 1x, url('../images/dashboard/title/5/编组 18@2x.png') 2x); background-image: image-set(url('../images/dashboard/title/5/编组 18.png') 1x, url('../images/dashboard/title/5/编组 18@2x.png') 2x); }
+.title-img--dash-6 { width: 212px; height: 35px; background-image: -webkit-image-set(url('../images/dashboard/title/6/编组 25.png') 1x, url('../images/dashboard/title/6/编组 25@2x.png') 2x); background-image: image-set(url('../images/dashboard/title/6/编组 25.png') 1x, url('../images/dashboard/title/6/编组 25@2x.png') 2x); }
 
 /* 中央搜索条容器：宽度与 Home 页相似并居中 */
 .map-tools { max-width: 760px; margin: 0 auto 10px; width: 100%; }

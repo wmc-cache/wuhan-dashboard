@@ -1,6 +1,6 @@
 <template>
   <!-- 底部右侧：环形 + 四角指标卡（如图模块） -->
-  <div class="aid-circle">
+  <div class="aid-circle" :style="rootStyle">
     <!-- 整块使用一张切图做背景，文字覆盖其上 -->
     <i class="bg" aria-hidden="true"></i>
 
@@ -47,6 +47,7 @@ interface Props {
   items?: StatItem[];
   centerWidth?: number; // 中间圆大致宽度（越小两侧越靠近）
   rightShift?: number;  // 右侧三项整体左移像素（正数=左移）
+  width?: number | string; // 组件自身宽度（可传 520、'520px'、'60%'; 为空则按高度自适应）
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -69,6 +70,15 @@ const overlayVars = computed(() => ({
   ['--center-width' as any]: props.centerWidth + 'px',
   ['--r-shift' as any]: `-${props.rightShift}px`,
 }));
+
+// 根容器尺寸：
+// - 未传 width：占满父容器高度，保持原始宽高比
+// - 传了 width：按给定宽度 + aspect-ratio 计算高度
+const rootStyle = computed(() => {
+  if (props.width == null || props.width === '') return {};
+  const w = typeof props.width === 'number' ? props.width + 'px' : String(props.width);
+  return { width: w, height: 'auto' } as const;
+});
 
 function fmt(v: number | string | undefined) {
   if (v === undefined || v === null) return '-';
@@ -113,12 +123,12 @@ function fmt(v: number | string | undefined) {
 }
 
 .stat { text-align: center; display: grid; row-gap: 6px; }
-.stat--l1 { grid-column: 1; grid-row: 1; }
-.stat--r1 { grid-column: 3; grid-row: 1; }
+.stat--l1 { grid-column: 1; grid-row: 1; margin-top: -10px; }
+.stat--r1 { grid-column: 3; grid-row: 1; margin-top: -10px; }
 .stat--l2 { grid-column: 1; grid-row: 2; }
 .stat--r2 { grid-column: 3; grid-row: 2; }
-.stat--l3 { grid-column: 1; grid-row: 3; }
-.stat--r3 { grid-column: 3; grid-row: 3; }
+.stat--l3 { grid-column: 1; grid-row: 3; margin-bottom: -30px;}
+.stat--r3 { grid-column: 3; grid-row: 3; margin-bottom: -30px; }
 
 /* 右侧三项左对齐并整体左移一定像素 */
 .stat--r1, .stat--r2, .stat--r3 {

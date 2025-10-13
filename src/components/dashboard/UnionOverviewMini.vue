@@ -34,9 +34,10 @@ function fmt(n?: number) { return (n ?? 0).toLocaleString('zh-CN'); }
   height: 100%;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  gap: 5px;
   align-items: center;
   justify-items: center;
+  width: 85%;
 }
 
 .k {
