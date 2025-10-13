@@ -17,7 +17,7 @@
       <!-- 红框（左下）：劳模补助人数/金额列表，复用 laomo/SubsidyStatsList -->
       <div class="panel h300">
         <span class="title-img title-img--dash-5" aria-hidden="true"></span>
-        <LaomoSubsidyStatsList :row-height="35" />
+        <LaomoSubsidyStatsList :row-height="35" :width-percent="88" :center="false" />
       </div>
     </section>
 
@@ -38,7 +38,7 @@
       </div>
       <!-- 工会会员性别统计（按图还原的新组件） -->
       <div class="panel h180">
-        <span class="title-img title-img--dash-2" aria-hidden="true"></span>
+        <span class="title-img title-img--dash-2" style="margin-left: 60px;" aria-hidden="true"></span>
         <GenderOverview :male-count="532" :female-count="5132" />
       </div>
       <!-- 红框（右中）：经费返还代收金额统计，复用 refund/RankType2 -->
@@ -51,7 +51,7 @@
       </div>
       <!-- 右下：新增 6 组互助统计（使用 part3 切图） -->
       <div class="panel h220">
-        <span class="title-img title-img--dash-6" aria-hidden="true"></span>
+        <span class="title-img title-img--dash-6" style="margin-left: 60px;" aria-hidden="true"></span>
         <!-- 通过属性控制宽度/中心区域/右侧文字左移量 -->
         <AidCircleStats :items="aidCircleSix" :width="520" :center-width="280" :right-shift="-10" />
       </div>

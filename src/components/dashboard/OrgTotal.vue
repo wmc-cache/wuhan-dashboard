@@ -9,7 +9,8 @@
         </div>
 
       </div>
-      <div class="cone__label">帮扶职工总数</div>
+      <!-- 标题改为切图（src/images/dashboard/part4/帮扶职工总数[ @2x].png） -->
+      <i class="cone__label-img" aria-hidden="true"></i>
     </div>
 
     <!-- 右侧：困难类型三项（蓝/绿/橙，与参考图一致） -->
@@ -116,11 +117,17 @@ function formatNumber(n: number): string {
   font-size: 16px;
   color: #2a6ff0;
 }
-.cone__label {
-  font-size: 18px;
-  color: #2a6ff0;
-  letter-spacing: 1px;
-  font-weight: 600;
+/* 标题切图（替换文字） */
+.cone__label-img {
+  display: inline-block;
+  width: 133px;  /* 1x 尺寸 */
+  height: 19px;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-image: -webkit-image-set(url('../../images/dashboard/part4/帮扶职工总数.png') 1x,
+    url('../../images/dashboard/part4/帮扶职工总数@2x.png') 2x);
+  background-image: image-set(url('../../images/dashboard/part4/帮扶职工总数.png') 1x,
+    url('../../images/dashboard/part4/帮扶职工总数@2x.png') 2x);
 }
 
 /* 右侧三项卡片 */

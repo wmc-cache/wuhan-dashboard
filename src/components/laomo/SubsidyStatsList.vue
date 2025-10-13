@@ -17,7 +17,7 @@
 import { computed } from 'vue';
 
 interface Item { name: string; people: number; amount: number }
-interface Props { items?: Item[]; maxRows?: number; rowHeight?: number }
+interface Props { items?: Item[]; maxRows?: number; rowHeight?: number; widthPercent?: number; center?: boolean }
 
 const props = withDefaults(defineProps<Props>(), {
   items: () => ([
@@ -28,10 +28,17 @@ const props = withDefaults(defineProps<Props>(), {
   ]),
   maxRows: 4,
   rowHeight: 44,
+  widthPercent: 100,
+  center: false,
 });
 
 const rows = computed(() => props.items.slice(0, props.maxRows));
-const rootVars = computed(() => ({ ['--row-h' as any]: (props.rowHeight || 44) + 'px' }));
+const rootVars = computed(() => {
+  const st: Record<string, string> = { ['--row-h']: (props.rowHeight || 44) + 'px' } as any;
+  if (props.widthPercent && props.widthPercent > 0) st.width = props.widthPercent + '%';
+  if (props.center) st.margin = '0 auto';
+  return st as any;
+});
 
 function people(v: number) {
   return Number(v).toLocaleString('zh-CN') + '人';

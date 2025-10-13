@@ -4,7 +4,7 @@
       <div class="num" :class="leftGradient">
         {{ fmt(items[0]?.value) }}<span v-if="items[0]?.unit" class="unit">{{ items[0]?.unit }}</span>
       </div>
-      <div class="label">{{ items[0]?.title }}</div>
+      <div class="label" style="margin-left: 5px;">{{ items[0]?.title }}</div>
     </div>
     <div class="card card--right" :class="rightBgClass">
       <div class="num" :class="rightGradient">
@@ -96,4 +96,5 @@ const rightBgClass = computed(() => `bg-${props.rightBg}`);
 .num--orange { background: linear-gradient(180deg, #FFB37F 0%, #FE870B 90%); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 6px 14px rgba(255,140,20,0.18); }
 .unit { margin-left: 6px; font-size: 20px; font-weight: 800; }
 .label { position: relative; z-index: 1; margin-top: 4px; margin-left: -10px;font-size: 16px; font-weight: 800; color: #333; white-space: nowrap; }
+
 </style>
