@@ -58,7 +58,7 @@ function formatNumber(n: number): string {
 .org-total {
   height: 100%;
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 240px 263px;
   /* 左侧圆锥 + 右侧列表 */
   gap: 24px;
   align-items: center;
@@ -217,5 +217,4 @@ function formatNumber(n: number): string {
   margin-left: 2px;
 }
 
-/* 留白由父布局控制：见 Dashboard.vue 中 .panel > .title-img { margin-bottom: 8px; } */
 </style>

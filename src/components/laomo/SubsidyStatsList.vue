@@ -46,9 +46,14 @@ function noClass(i: number) {
 </script>
 
 <style scoped lang="scss">
-.subsidy-stats { height: 100%; display: grid; grid-template-rows: 1fr; }
+.subsidy-stats {
+   height: 100%;
+   display: grid;
+   grid-template-rows: 1fr; }
 
-.list { list-style: none; margin: 0; padding: 4px 6px 10px 2px; display: grid; row-gap: 22px; }
+.list { list-style: none; margin: 0; padding: 4px 6px 10px 2px; display: grid; row-gap: 22px; 
+ 
+}
 
 /* 行：更高的行高和更大的字号，贴近参考图 */
 .row {
