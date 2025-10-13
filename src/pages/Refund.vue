@@ -21,7 +21,7 @@
     </section>
 
     <!-- 中列：上部大环图跨两行；底部表格 -->
-    <section class="mod mod--tall" style="grid-column: 2; grid-row: 1 / span 2;">
+    <section class="mod mod--tall mod--no-frame" style="grid-column: 2; grid-row: 1 / span 2;">
       <div class="mod__head">
         <div class="year-select">
           <NiceSelect v-model="year" :options="years" :width="122" :formatter="(y: number) => y + '年'" />
@@ -206,6 +206,23 @@ function onOpenDetail(payload: { x: number; y: number }) {
   .mod--wide::before {
     background-image: -webkit-image-set(url('../images/module-broder-width/矩形.png') 1x, url('../images/module-broder-width/矩形@2x.png') 2x);
     background-image: image-set(url('../images/module-broder-width/矩形.png') 1x, url('../images/module-broder-width/矩形@2x.png') 2x);
+  }
+  
+  /* 仅概览模块去掉边框底图 */
+  .mod--no-frame::before { background: none !important; }
+  /* 并为概览模块增加专属背景 */
+  .mod--no-frame {
+    background-repeat: no-repeat;
+    background-position: bottom;
+    background-size: 616px 217px;
+    background-image: -webkit-image-set(
+      url('../images/refund/bg-center/编组 3.png') 1x,
+      url('../images/refund/bg-center/编组 3@2x.png') 2x
+    );
+    background-image: image-set(
+      url('../images/refund/bg-center/编组 3.png') 1x,
+      url('../images/refund/bg-center/编组 3@2x.png') 2x
+    );
   }
 .mod__title {
   margin: 0 0 10px;
