@@ -149,19 +149,20 @@ if (typeof window !== 'undefined') {
 
 .udlg__sub { margin: 0 0 10px; font-size: 0; }
 .udlg__sub-bg { display: inline-grid; place-items: center; height: 36px; min-width: 130px; padding: 0 14px; background-repeat: no-repeat; background-size: 100% 100%; background-position: center; 
-  background-image: -webkit-image-set(url('../images/dialog-module/title/小标题.png') 1x, url('../images/dialog-module/title/小标题@2x.png') 2x);
-  background-image: image-set(url('../images/dialog-module/title/小标题.png') 1x, url('../images/dialog-module/title/小标题@2x.png') 2x);
+  /* 使用新的“标题背景”贴图（1x/2x）：src/images/dialog-module/titlebg */
+  background-image: -webkit-image-set(url('../images/dialog-module/titlebg/矩形备份 15.png') 1x, url('../images/dialog-module/titlebg/矩形备份 15@2x.png') 2x);
+  background-image: image-set(url('../images/dialog-module/titlebg/矩形备份 15.png') 1x, url('../images/dialog-module/titlebg/矩形备份 15@2x.png') 2x);
 }
-.udlg__sub-text { font-size: 16px; font-weight: 800; color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
+.udlg__sub-text { font-size: 16px; font-weight: 800; color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,.25);margin-bottom: 5px; }
 
 /* 明细表 */
 .info { list-style: none; margin: 0; padding: 0; border: 1px solid rgba(80, 140, 230, .35); border-radius: 6px; overflow: hidden; background: #fff; }
-.info__row { position: relative; display: grid; grid-template-columns: 160px 1fr 160px 1fr; column-gap: 0; min-height: 56px; align-items: center; }
+.info__row { position: relative; display: grid; grid-template-columns: 170px 1fr 170px 1fr; column-gap: 0; min-height: 56px; align-items: center; }
 /* 更接近截图的淡蓝条纹 */
 .info__row:nth-child(odd) { background: rgba(87, 151, 255, .12); }
 .info__row:nth-child(even) { background: rgba(87, 151, 255, .22); }
 .info__row::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(60, 120, 220, .35); }
 
-.lab { padding: 14px 16px; color: #2a6ff0; font-weight: 800; }
+.lab { padding: 14px 16px; color: #333; font-weight: 800; white-space: nowrap; }
 .val { padding: 14px 16px; color: #333; font-weight: 700; }
 </style>

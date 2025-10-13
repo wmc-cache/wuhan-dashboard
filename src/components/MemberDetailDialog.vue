@@ -168,8 +168,9 @@ const medClaims = computed<MedClaim[]>(() => d.value.medClaims || [
 
 .mdlg__sub { margin: 0 0 10px; font-size: 0; }
 .mdlg__sub-bg { display: inline-grid; place-items: center; height: 36px; min-width: 130px; padding: 0 14px; background-repeat: no-repeat; background-size: 100% 100%; background-position: center; 
-  background-image: -webkit-image-set(url('../images/dialog-module/title/小标题.png') 1x, url('../images/dialog-module/title/小标题@2x.png') 2x);
-  background-image: image-set(url('../images/dialog-module/title/小标题.png') 1x, url('../images/dialog-module/title/小标题@2x.png') 2x);
+  /* 替换为新的“标题背景”贴图（1x/2x）：src/images/dialog-module/titlebg */
+  background-image: -webkit-image-set(url('../images/dialog-module/titlebg/矩形备份 15.png') 1x, url('../images/dialog-module/titlebg/矩形备份 15@2x.png') 2x);
+  background-image: image-set(url('../images/dialog-module/titlebg/矩形备份 15.png') 1x, url('../images/dialog-module/titlebg/矩形备份 15@2x.png') 2x);
 }
 .mdlg__sub-text { font-size: 14px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
 
