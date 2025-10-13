@@ -59,8 +59,9 @@ const route = useRoute();
 const activeTab = computed<TabId>(() => (route.name as TabId) || 'dashboard');
 
 // “更多”下拉的真实条目
-// 仅包含：困难救助、经费返还
+// 新增：职工帮扶（指向我们新增的 AidV2 页面）
 const moreMenus = [
+  { label: '职工帮扶', name: 'aid-v2' },
   { label: '困难救助', name: 'aid' },
   { label: '经费返还', name: 'refund' }
 ] as const;
@@ -84,7 +85,9 @@ const moreDisplayLabel = computed(() => {
 const moreImgClass = computed(() => {
   const cur = moreMenus.find(m => m.name === (route.name as string));
   if (!cur) return '';
-  return cur.name === 'aid' ? 'tab__img--aid' : 'tab__img--refund';
+  if (cur.name === 'aid-v2') return 'tab__img--worker-aid';
+  if (cur.name === 'aid') return 'tab__img--aid';
+  return 'tab__img--refund';
 });
 onMounted(() => document.addEventListener('click', onDocClick));
 onBeforeUnmount(() => document.removeEventListener('click', onDocClick));
@@ -141,6 +144,8 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick));
 /* “更多”被替换为两种具体图片态 */
 .tab__img--aid { width: 74px; height: 16px; background-image: -webkit-image-set(url('../images/more-menu/困难救助/困难救助.png') 1x, url('../images/more-menu/困难救助/困难救助@2x.png') 2x); background-image: image-set(url('../images/more-menu/困难救助/困难救助.png') 1x, url('../images/more-menu/困难救助/困难救助@2x.png') 2x); }
 .tab__img--refund { width: 74px; height: 16px; background-image: -webkit-image-set(url('../images/more-menu/经费返还/经费返还.png') 1x, url('../images/more-menu/经费返还/经费返还@2x.png') 2x); background-image: image-set(url('../images/more-menu/经费返还/经费返还.png') 1x, url('../images/more-menu/经费返还/经费返还@2x.png') 2x); }
+/* 新增：职工帮扶（使用 font/职工帮扶 的图片） */
+.tab__img--worker-aid { width: 74px; height: 16px; background-image: -webkit-image-set(url('../images/font/职工帮扶/职工帮扶.png') 1x, url('../images/font/职工帮扶/职工帮扶@2x.png') 2x); background-image: image-set(url('../images/font/职工帮扶/职工帮扶.png') 1x, url('../images/font/职工帮扶/职工帮扶@2x.png') 2x); }
 
 /* 下拉菜单 */
 .more-menu { position: absolute; right: 0; top: 100%; margin-top: 8px; min-width: 160px; background: rgba(255,255,255,.96); box-shadow: 0 6px 20px rgba(20,80,200,.18); border: 1px solid rgba(120,170,255,.35); border-radius: 8px; padding: 6px; backdrop-filter: blur(6px); z-index: 10; }

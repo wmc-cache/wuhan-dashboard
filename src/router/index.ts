@@ -39,6 +39,7 @@ const routes: RouteRecordRaw[] = [
   },
   // 更多 下拉真实页面
   { path: "/aid", name: "aid", component: () => import("../pages/Aid.vue") },
+  { path: "/aid-v2", name: "aid-v2", component: () => import("../pages/AidV2.vue") },
   {
     path: "/refund",
     name: "refund",
