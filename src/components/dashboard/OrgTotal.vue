@@ -1,33 +1,36 @@
 <template>
   <div class="org-total">
-    <!-- 左侧：3D 圆锥 + 总数 -->
+    <!-- 左侧：3D 漏斗 + 总数（还原参考图：18,897 人 + 下方标题） -->
     <div class="org-total__left">
       <div class="cone">
         <i class="cone__img" aria-hidden="true"></i>
-        <div class="cone__num">{{ formatNumber(total) }}</div>
+        <div class="cone__num">
+          {{ formatNumber(total) }} <span class="cone__unit">人</span>
+        </div>
+
       </div>
-      <div class="cone__label">工会总数(个)</div>
+      <div class="cone__label">帮扶职工总数</div>
     </div>
 
-    <!-- 右侧：三项类别卡片 -->
+    <!-- 右侧：困难类型三项（蓝/绿/橙，与参考图一致） -->
     <ul class="org-total__list" role="list">
+      <li class="list-item list-item--blue">
+        <i class="list-item__bg" aria-hidden="true"></i>
+        <span class="dot dot--blue" aria-hidden="true"></span>
+        <span class="label">深度困难</span>
+        <span class="value value--blue">{{ deep }}人</span>
+      </li>
       <li class="list-item list-item--green">
         <i class="list-item__bg" aria-hidden="true"></i>
         <span class="dot dot--green" aria-hidden="true"></span>
-        <span class="label">市工会</span>
-        <span class="value value--green">{{ city }}个</span>
+        <span class="label">相对困难</span>
+        <span class="value value--green">{{ relative }}人</span>
       </li>
       <li class="list-item list-item--orange">
         <i class="list-item__bg" aria-hidden="true"></i>
         <span class="dot dot--orange" aria-hidden="true"></span>
-        <span class="label">街道工会</span>
-        <span class="value value--orange">{{ street }}个</span>
-      </li>
-      <li class="list-item list-item--blue">
-        <i class="list-item__bg" aria-hidden="true"></i>
-        <span class="dot dot--blue" aria-hidden="true"></span>
-        <span class="label">区县工会</span>
-        <span class="value value--blue">{{ district }}个</span>
+        <span class="label">意外致困</span>
+        <span class="value value--orange">{{ accident }}人</span>
       </li>
     </ul>
   </div>
@@ -35,19 +38,19 @@
 
 <script setup lang="ts">
 interface Props {
-  total?: number;
-  city?: number; // 市工会数量
-  street?: number; // 街道工会数量
-  district?: number; // 区县工会数量
+  total?: number; // 帮扶职工总数
+  deep?: number; // 深度困难人数
+  relative?: number; // 相对困难人数
+  accident?: number; // 意外致困人数
 }
 const props = withDefaults(defineProps<Props>(), {
   total: 18897,
-  city: 12,
-  street: 62,
-  district: 90,
+  deep: 500,
+  relative: 100,
+  accident: 50,
 });
 
-const { total, city, street, district } = props;
+const { total, deep, relative, accident } = props;
 
 function formatNumber(n: number): string {
   return n.toLocaleString('zh-CN');
@@ -94,10 +97,11 @@ function formatNumber(n: number): string {
 }
 
 .cone__num {
+  white-space: nowrap;
   position: absolute;
   top: 6px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-40%);
   font-size: 42px;
   font-weight: 700;
   letter-spacing: 2px;
@@ -108,6 +112,10 @@ function formatNumber(n: number): string {
   text-shadow: 0 2px 8px rgba(38, 112, 255, 0.35);
 }
 
+.cone__unit {
+  font-size: 16px;
+  color: #2a6ff0;
+}
 .cone__label {
   font-size: 18px;
   color: #2a6ff0;
