@@ -45,16 +45,22 @@ interface Props {
   accident?: number; // 意外致困人数
 }
 const props = withDefaults(defineProps<Props>(), {
-  total: 18897,
-  deep: 500,
-  relative: 100,
-  accident: 50,
+  total: 0,
+  deep: 0,
+  relative: 0,
+  accident: 0,
 });
 
-const { total, deep, relative, accident } = props;
+// 保持对父组件数据更新的响应（避免解构 props 造成的失去响应性）
+import { computed } from 'vue';
+const total = computed(() => props.total);
+const deep = computed(() => props.deep);
+const relative = computed(() => props.relative);
+const accident = computed(() => props.accident);
 
-function formatNumber(n: number): string {
-  return n.toLocaleString('zh-CN');
+function formatNumber(n: number | undefined): string {
+  const v = typeof n === 'number' ? n : 0;
+  return v.toLocaleString('zh-CN');
 }
 </script>
 

@@ -29,9 +29,10 @@ const props = withDefaults(defineProps<Props>(), {
   maleCount: 532,
   femaleCount: 5132,
 });
-
-const maleCount = props.maleCount;
-const femaleCount = props.femaleCount;
+// NOTE: 使用 computed 包装 props，保持对父组件更新的响应
+import { computed } from 'vue';
+const maleCount = computed(() => props.maleCount);
+const femaleCount = computed(() => props.femaleCount);
 
 function pretty(n?: number) {
   if (typeof n !== 'number') return '-';
@@ -74,7 +75,7 @@ function pretty(n?: number) {
 .stat--female { grid-column: 3; color: #FFA36B; }
 
 .num {
-  font-size: 30px;
+  font-size: 25px;
   font-weight: 900;
   line-height: 1;
 }

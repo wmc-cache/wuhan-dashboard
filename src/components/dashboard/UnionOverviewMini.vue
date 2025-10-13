@@ -24,8 +24,9 @@ const props = withDefaults(defineProps<Props>(), {
     { label: '执行职代会制度', value: 5 },
   ]),
 });
-
-const items = props.items;
+// 注意：不要直接解构/赋值 props，否则会失去响应性
+import { computed } from 'vue';
+const items = computed(() => props.items);
 function fmt(n?: number) { return (n ?? 0).toLocaleString('zh-CN'); }
 </script>
 
@@ -132,5 +133,4 @@ function fmt(n?: number) { return (n ?? 0).toLocaleString('zh-CN'); }
 
 
 </style>
-
 

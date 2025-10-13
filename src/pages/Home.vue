@@ -55,6 +55,7 @@ import 'element-plus/es/components/pagination/style/css';
 import { useRouter, useRoute } from 'vue-router';
 import UnionDetailDialog, { type UnionDetail } from '../components/UnionDetailDialog.vue';
 import MemberDetailDialog, { type MemberDetail } from '../components/MemberDetailDialog.vue';
+import { apiGet } from '../utils/api';
 
 const router = useRouter();
 const route = useRoute();
@@ -63,6 +64,18 @@ function goBack() { router.back(); }
 // 搜索与筛选
 const selCat = ref<'org' | 'member'>('org');
 const keyword = ref('');
+
+// 接口：模糊查询统计 + 列表
+// - 统计：根据关键字返回类型分组计数（code/name/count）
+// - 列表：/business/union/segmentation?searchCode=&code=&pageNum=&pageSize=
+// 统计接口路径不确定，支持通过环境变量覆盖：VITE_SEGMENTATION_STATS_PATH
+const API = {
+  segList: '/business/union/segmentation',
+  // 默认猜测路径；如不同，请在 .env.development 中设置 VITE_SEGMENTATION_STATS_PATH
+  segStats:
+    ((import.meta as any).env?.VITE_SEGMENTATION_STATS_PATH as string) ||
+    '/business/union/segmentationCount'
+};
 
 // 列定义：根据后端字段自适应（优先展示“截图风格”的列；缺失时回退到已有字段）
 const gridTemplate = computed(() => columns.value.map(() => '1fr').join(' '));
@@ -98,35 +111,53 @@ const total = ref(0);
 const pageSize = 15;
 const page = ref(1);
 
+// 左侧统计分类
+type SegStat = { code: number; name: string; count: number };
+const segStats = ref<SegStat[]>([]);
+const activeCode = ref<number | undefined>(undefined); // 当前选中的结果类型 code
+
+// 本地过滤/分页仅用于演示（会员 tab）。工会组织使用服务端分页。
 const filtered = computed(() => {
   const kw = keyword.value.trim();
-  if (!kw) return allRows.value;
   if (selCat.value === 'member') {
+    if (!kw) return allRows.value as MemberRow[];
     return (allRows.value as MemberRow[]).filter(r => r.name?.includes(kw));
   }
-  return (allRows.value as Row[]).filter(r => r.fullname?.includes(kw));
+  // 组织：直接返回服务端数据
+  return allRows.value as Row[];
 });
 
 const pagedRows = computed(() => {
+  if (selCat.value === 'org') return filtered.value; // 服务端分页
   const start = (page.value - 1) * pageSize;
   return filtered.value.slice(start, start + pageSize);
 });
-function to(p: number) { page.value = p; }
+function to(p: number) { page.value = p; if (selCat.value === 'org') fetchListFromApi(); }
 
 const navItems = computed(() => {
-  // 第一项：全总法人系统（count=total）；其余为占位的“其他数据（12）”以还原截图
-  const items = [{ title: '全总法人系统', count: total.value || 0 }];
-  for (let i = 0; i < 6; i++) items.push({ title: '其他数据', count: 12 });
-  return items;
+  // 来自统计接口；若暂无数据则退回到单一分类
+  if (segStats.value.length > 0) {
+    return segStats.value.map((s) => ({ title: s.name || '—', count: s.count ?? 0, code: s.code }));
+  }
+  return [{ title: '全总法人系统', count: total.value || 0, code: undefined as any }];
 });
 
 // 左侧菜单激活项（默认选中第一个）
 const activeIndex = ref(0);
 function setActive(i: number) {
   activeIndex.value = i;
+  // 同步选中 code 并重新加载（仅工会组织分类）
+  const it = navItems.value[i] as any;
+  activeCode.value = it?.code;
+  if (selCat.value === 'org') fetchListFromApi();
 }
 
-function onSearch() { /* 客户端过滤已生效；如需服务器端搜索，可在此发起请求 */ }
+async function onSearch() {
+  page.value = 1;
+  if (selCat.value === 'org') {
+    await Promise.all([fetchStats(), fetchListFromApi()]).catch(() => void 0);
+  }
+}
 
 // 弹框：工会详情/会员详情
 const showUnion = ref(false);
@@ -208,7 +239,15 @@ function buildColumnsByData(sample?: Row | MemberRow) {
       { key: 'unitDistrictSuffix', title: '行政区划' },
       { key: 'establishDate', title: '成立时间' },
     ];
+    return;
   }
+  // 回退列：当后端只给出 unionName/orgCode/othersOrgCode/region/establishDate 等时
+  columns.value = [
+    { key: 'index', title: '序号', formatter: (v) => String(v).padStart(2, '0') },
+    { key: 'fullname', title: '工会名称', clickable: true, align: 'left' },
+    { key: 'unitDistrictSuffix', title: '行政区划' },
+    { key: 'establishDate', title: '成立时间' },
+  ];
 }
 
 function mapRow(raw: any, i: number): Row {
@@ -217,14 +256,15 @@ function mapRow(raw: any, i: number): Row {
     fullname: raw.fullname ?? raw.name ?? raw.unionName ?? raw.orgName ?? '',
     memberCount: toNum(raw.memberCount ?? raw.members),
     unitDistrictSuffix: raw.unitDistrictSuffix ?? raw.district ?? raw.area ?? raw.region,
-    establishDate: raw.establishDate ?? raw.createdAt ?? raw.foundedAt ?? raw.createTime,
+    establishDate: normalizeDate(raw.establishDate ?? raw.createdAt ?? raw.foundedAt ?? raw.createTime),
     unitIndustry: raw.unitIndustry,
     linkMan: raw.linkMan ?? raw.contact,
     linkPhone: raw.linkPhone ?? raw.phone,
     chair: raw.chair ?? raw.chairman,
-    legalCode: raw.legalCode ?? raw.licenseCode ?? raw.corporateCode,
-    unitName: raw.unitName,
-    creditCode: raw.creditCode ?? raw.uscc ?? raw.socialCreditCode,
+    // 兼容列表接口字段：orgCode -> 法人证代码；orgName -> 单位名称；othersOrgCode -> 统一社会信用代码
+    legalCode: raw.legalCode ?? raw.licenseCode ?? raw.corporateCode ?? raw.orgCode,
+    unitName: raw.unitName ?? raw.orgName,
+    creditCode: raw.creditCode ?? raw.uscc ?? raw.socialCreditCode ?? raw.othersOrgCode,
   };
   return r;
 }
@@ -241,10 +281,46 @@ function mapMemberRow(raw: any, i: number): MemberRow {
 
 function toNum(v: any): number | undefined { const n = Number(v); return Number.isFinite(n) ? n : undefined; }
 
-// 不调接口，使用本地模拟数据
-function fetchList() {
-  page.value = 1;
+function normalizeDate(v: any): string | undefined {
+  if (!v) return v;
+  const s = String(v);
+  // 兼容 2025-08-20T00:00:00.000+08:00
+  if (s.includes('T')) return s.slice(0, 10);
+  return s;
+}
+
+// ---------------- API: 统计 + 列表 ----------------
+async function fetchStats() {
+  // 若未提供统计接口路径，直接清空统计，由列表总数代替
+  if (!API.segStats) { segStats.value = []; return; }
+  try {
+    const qs = new URLSearchParams();
+    if (keyword.value?.trim()) qs.set('searchCode', keyword.value.trim());
+    const url = `${API.segStats}?${qs.toString()}`;
+    const resp = await apiGet<any>(url).catch(() => null);
+    const arr = Array.isArray((resp as any)?.data) ? (resp as any).data : Array.isArray(resp) ? resp : [];
+    const mapped: SegStat[] = arr.map((it: any) => ({
+      code: Number(it.code ?? it.type ?? 0) || 0,
+      name: String(it.name ?? it.title ?? ''),
+      count: Number(it.count ?? it.total ?? 0) || 0
+    }));
+    if (mapped.length) {
+      segStats.value = mapped;
+      activeIndex.value = 0;
+      activeCode.value = mapped[0].code;
+    } else {
+      segStats.value = [];
+      activeCode.value = undefined;
+    }
+  } catch {
+    segStats.value = [];
+  }
+}
+
+async function fetchListFromApi() {
+  page.value = Math.max(1, page.value);
   if (selCat.value === 'member') {
+    // 暂无会员接口：保留本地演示数据
     const rows = Array.from({ length: 800 }, (_, i) => ({
       name: `名称${i + 1}`,
       unionName: `工会${(i % 20) + 1}`,
@@ -256,29 +332,55 @@ function fetchList() {
     buildColumnsByData(allRows.value[0]);
     return;
   }
-  const rows = Array.from({ length: 800 }, (_, i) => ({
-    fullname: `武汉市某某工会 ${i + 1}`,
-    legalCode: `4201${String(100000 + i)}`,
-    unitName: `某某单位 ${i + 1}`,
-    creditCode: `91420100${String(100000 + i)}`,
-    unitDistrictSuffix: ['江岸区', '江汉区', '硚口区', '汉阳区', '武昌区', '青山区'][i % 6],
-    establishDate: `20${10 + (i % 15)}-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 27) + 1).padStart(2, '0')}`,
-    memberCount: 100 + (i % 500),
-  }));
-  allRows.value = rows.map((r, i) => mapRow(r, i));
-  total.value = allRows.value.length;
-  buildColumnsByData(allRows.value[0]);
+
+  try {
+    const qs = new URLSearchParams();
+    if (keyword.value?.trim()) qs.set('searchCode', keyword.value.trim());
+    if (activeCode.value != null) qs.set('code', String(activeCode.value));
+    qs.set('pageNum', String(page.value));
+    qs.set('pageSize', String(pageSize));
+    const url = `${API.segList}?${qs.toString()}`;
+    const resp = await apiGet<any>(url).catch(() => null);
+    const totalVal = Number((resp as any)?.total ?? (resp as any)?.count ?? 0) || 0;
+    const rows = Array.isArray((resp as any)?.rows)
+      ? (resp as any).rows
+      : Array.isArray((resp as any)?.data)
+      ? (resp as any).data
+      : Array.isArray(resp)
+      ? resp
+      : [];
+    total.value = totalVal;
+    allRows.value = rows.map((r: any, i: number) => mapRow(r, i + (page.value - 1) * pageSize));
+    buildColumnsByData(allRows.value[0]);
+  } catch (e) {
+    // 失败时不抛出，保留当前视图
+  }
 }
 
-watch(selCat, () => { fetchList(); buildColumnsByData(); });
-onMounted(() => {
+watch(selCat, async () => {
+  // 切换分类：工会组织 -> 调接口；会员 -> 本地演示
+  page.value = 1;
+  if (selCat.value === 'org') {
+    await Promise.all([fetchStats(), fetchListFromApi()]).catch(() => void 0);
+  } else {
+    segStats.value = [];
+    await fetchListFromApi();
+  }
+  buildColumnsByData(allRows.value[0]);
+});
+onMounted(async () => {
   // 读取来自其他页面的查询参数：kw/cat
   const qKw = String(route.query.kw ?? '').trim();
   const qCat = String(route.query.cat ?? '');
   if (qKw) keyword.value = qKw;
   if (qCat === 'org' || qCat === 'member') selCat.value = qCat as any;
-  buildColumnsByData();
-  fetchList();
+  // 初次加载
+  if (selCat.value === 'org') {
+    await Promise.all([fetchStats(), fetchListFromApi()]).catch(() => void 0);
+  } else {
+    await fetchListFromApi();
+  }
+  buildColumnsByData(allRows.value[0]);
 });
 </script>
 

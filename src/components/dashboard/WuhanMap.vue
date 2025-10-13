@@ -334,7 +334,7 @@ watch(() => props.initialActive, (n) => { if (n) { active.value = n; chart.value
   background-repeat: no-repeat; background-size: 100% 100%;
   border: none; box-shadow: none; backdrop-filter: none; border-radius: 0;
 }
-.info-card .title { display: flex; align-items: center; gap: 8px; color: #ffffff; font-weight: 900; font-size: 18px;
+.info-card .title { display: flex; align-items: center; gap: 8px; color: #ffffff; font-weight: 900; font-size: 14px;
   
   background: transparent; border-radius: 0; padding: 0 6px; margin: -32px 0 0 80px; line-height: 32px;
 }
@@ -342,6 +342,6 @@ watch(() => props.initialActive, (n) => { if (n) { active.value = n; chart.value
 .info-card .stats { list-style: none; margin: 0; padding: 0; }
 .info-card .stats li { display: grid; grid-template-columns: 1fr auto auto; align-items: baseline; color: #ffffff;margin-left: 70px;padding: 6px 10px; }
 .info-card .stats span { font-weight: 700; }
-.info-card .stats b { color: #ffffff; font-weight: 900; font-size: 18px; margin: 0 6px; text-shadow: 0 1px 2px rgba(0,0,0,0.15); }
+.info-card .stats b { color: #ffffff; font-weight: 900; font-size: 14px; margin: 0 6px; text-shadow: 0 1px 2px rgba(0,0,0,0.15); }
 .info-card .stats i { color: rgba(255,255,255,0.85); font-style: normal; }
 </style>
