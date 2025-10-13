@@ -172,7 +172,7 @@ const medClaims = computed<MedClaim[]>(() => d.value.medClaims || [
   background-image: -webkit-image-set(url('../images/dialog-module/titlebg/矩形备份 15.png') 1x, url('../images/dialog-module/titlebg/矩形备份 15@2x.png') 2x);
   background-image: image-set(url('../images/dialog-module/titlebg/矩形备份 15.png') 1x, url('../images/dialog-module/titlebg/矩形备份 15@2x.png') 2x);
 }
-.mdlg__sub-text { font-size: 14px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
+.mdlg__sub-text { font-size: 14px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.25);margin-bottom: 5px; }
 
 /* 通用 info 列表，与工会详情保持一致 */
 .info { list-style: none; margin: 0 0 8px; padding: 0; border: 1px solid rgba(80, 140, 230, .35); border-radius: 6px; overflow: hidden; background: #fff; }
