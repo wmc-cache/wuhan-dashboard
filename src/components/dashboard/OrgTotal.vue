@@ -178,15 +178,14 @@ function formatNumber(n: number): string {
 }
 
 .label {
-  font-size: 20px;
-  color: rgba(19, 115, 255, 0.85);
-  font-weight: 700;
+  font-size: 16px;
+  color: #333;
   letter-spacing: 1px;
 }
 
-.list-item--green .label { color: #25c56b; }
-.list-item--orange .label { color: #ff9a1a; }
-.list-item--blue .label { color: #2c6eff; }
+.list-item--green .label {  }
+.list-item--orange .label {  }
+.list-item--blue .label {  }
 
 .value {
   margin-left: auto;
