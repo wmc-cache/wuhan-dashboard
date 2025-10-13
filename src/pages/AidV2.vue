@@ -22,7 +22,7 @@
     </section>
 
     <!-- 左下：档案类别（使用 HonorRingsChart 实现环图） -->
-    <section class="mod" style="grid-area: lb;">
+    <section class="mod mod--tall" style="grid-area: lb;">
       <div class="mod__head"><h3 class="mod__title">帮扶职工档案类别</h3></div>
       <div class="mod__body mod__body--full">
         <HonorRingsChart :items="archiveItems" center-text="档案分类" :center="['50%','56%']" :gap-deg="10" :base-start="20" :sweep-angle="260" />
@@ -48,7 +48,7 @@
     </section>
 
     <!-- 右下：覆盖类别指标占位（竖排 3 个） -->
-    <section class="mod" style="grid-area: rb;">
+    <section class="mod mod--tall" style="grid-area: rb;">
       <div class="mod__head"><h3 class="mod__title">覆盖情况（占位）</h3></div>
       <div class="mod__body">
         <div class="ph-list">
@@ -88,7 +88,7 @@ const causeVals = [1080, 720, 860, 1180];
     'lt cm rt'
     'lb cm rb'
     'lb cb rb';
-  gap: 10px;
+  gap: 0px;
 }
 
 /* 模块外框与 Refund 一致 */
