@@ -16,6 +16,7 @@ interface Props {
   max?: number;           // x 轴最大刻度（万人）
   tick?: number;          // 刻度间隔（万人）
   showPercent?: boolean;  // 右侧是否显示占比
+  yUnit?: string;         // x 轴单位文案（默认“万人”）；传入“人”可用于劳模页
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -29,7 +30,8 @@ const props = withDefaults(defineProps<Props>(), {
   ],
   max: 90,
   tick: 15,
-  showPercent: true
+  showPercent: true,
+  yUnit: '万人'
 });
 
 const total = computed(() => props.items.reduce((s, i) => s + i.value, 0));
@@ -53,7 +55,7 @@ const option = computed(() => {
       splitLine: { lineStyle: { type: 'dashed', color: gridLine } },
       axisLabel: {
         color: '#2a6ff0',
-        formatter: (val: number) => (val === props.max ? `${val}万人` : `${val}`)
+        formatter: (val: number) => (val === props.max ? `${val}${props.yUnit}` : `${val}`)
       }
     },
     yAxis: {
@@ -109,4 +111,3 @@ const option = computed(() => {
 <style scoped lang="scss">
 .age-distribution { height: 100%; }
 </style>
-

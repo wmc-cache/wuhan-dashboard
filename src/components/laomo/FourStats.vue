@@ -1,6 +1,6 @@
 <template>
   <div class="four-stats">
-    <div v-for="(item, i) in items" :key="i" class="stat">
+    <div v-for="(item, i) in rows" :key="i" class="stat">
       <div class="value" :style="{ color: item.color }">{{ formatNumber(item.value) }}</div>
       <div class="label">{{ item.label }}</div>
       <img class="icon" :src="item.img1x" :srcset="item.img2x + ' 2x'" :alt="item.label" draggable="false" />
@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import { withDefaults, defineProps } from 'vue';
+import { withDefaults, defineProps, computed } from 'vue';
 
 import icon1_1x from '../../images/laomo/title1/编组 7.png';
 import icon1_2x from '../../images/laomo/title1/编组 7@2x.png';
@@ -28,7 +28,11 @@ interface StatItem {
   img2x: string;
 }
 
-interface Props { items?: StatItem[] }
+interface Props {
+  items?: StatItem[];
+  // 可选：仅覆盖数值，顺序与默认四项一致
+  values?: number[];
+}
 
 const props = withDefaults(defineProps<Props>(), {
   items: () => [
@@ -36,10 +40,16 @@ const props = withDefaults(defineProps<Props>(), {
     { label: '退休劳模总数', value: 8405, color: '#5EE0D2', img1x: icon2_1x, img2x: icon2_2x },
     { label: '特困劳模总数', value: 2680, color: '#FFA542', img1x: icon3_1x, img2x: icon3_2x },
     { label: '低收入人群总数', value: 4706, color: '#3E7BFF', img1x: icon4_1x, img2x: icon4_2x }
-  ]
+  ],
+  values: () => []
 });
 
-const items = props.items;
+// 合并覆盖：如果传入 values，则只替换数值，图标/颜色/标签沿用默认
+const rows = computed<StatItem[]>(() => {
+  const base = props.items || [];
+  const vs = Array.isArray(props.values) ? props.values : [];
+  return base.map((it, i) => ({ ...it, value: Number(vs[i] ?? it.value) || 0 }));
+});
 
 function formatNumber(n: number): string { return n.toLocaleString('zh-CN'); }
 </script>

@@ -24,14 +24,34 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import HonorRingsChart from '../HonorRingsChart.vue';
 
-// 数据源（可替换为接口数据）
-const data = [
-  { name: '省级', value: 23, color: '#4DD0E1' },
-  { name: '市级', value: 22, color: '#4293FF' },
-  { name: '国家级', value: 44, color: '#FF7875' }
-];
+interface Item { name: string; value: number; color?: string }
+interface Props { items?: Item[] }
+
+const props = withDefaults(defineProps<Props>(), {
+  items: () => [
+    { name: '省级', value: 23, color: '#4DD0E1' },
+    { name: '市级', value: 22, color: '#4293FF' },
+    { name: '国家级', value: 44, color: '#FF7875' }
+  ]
+});
+
+// 给缺省项补色：省/市/国家固定颜色，其他顺序回退
+const colorMap: Record<string, string> = {
+  '省级': '#4DD0E1',
+  '市级': '#4293FF',
+  '国家级': '#FF7875'
+};
+
+const data = computed<Item[]>(() =>
+  (props.items || []).map((it, i) => ({
+    name: String(it?.name ?? ''),
+    value: Number(it?.value ?? 0) || 0,
+    color: it?.color || colorMap[String(it?.name ?? '')] || ['#4DD0E1','#4293FF','#FF7875'][i % 3]
+  }))
+);
 
 // 交互与图形逻辑已抽到子组件中
 </script>

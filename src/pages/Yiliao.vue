@@ -3,7 +3,7 @@
     <!-- 顶部三块：参助性别 / 总指标概览 / 给付性别 -->
     <section class="mod" style="grid-area: tl;">
       <div class="mod__body mod__body--full">
-        <GenderStat />
+        <GenderStat :male-count="joinMale" :female-count="joinFemale" />
       </div>
     </section>
 
@@ -11,13 +11,13 @@
     <section class="mod mod--tall metrics" style="grid-column: 2; grid-row: 1 / span 2;">
       <div></div>
       <div class="mod__body mod__body--full">
-        <OverallOverview />
+        <OverallOverview :years="years" :initial-year="year" :left-metrics="leftMetrics" :right-metrics="rightMetrics" @year-change="onYearChange" />
       </div>
     </section>
 
     <section class="mod" style="grid-area: tr;">
       <div class="mod__body mod__body--full">
-        <PayoutGenderStat />
+        <PayoutGenderStat :male-count="payMale" :female-count="payFemale" />
       </div>
     </section>
 
@@ -25,7 +25,7 @@
     <section class="mod" style="grid-area: ml;">
       <div></div>
       <div class="mod__body mod__body--full">
-        <JoinAgeStat />
+        <JoinAgeStat :data="joinAgeRows" />
       </div>
     </section>
 
@@ -34,34 +34,34 @@
     <section class="mod" style="grid-area: mr;">
       <div></div>
       <div class="mod__body mod__body--full">
-        <PayoutAgeDist />
+        <PayoutAgeDist :data="payAgeRows" />
       </div>
     </section>
 
     <!-- 底部三块：参助类型 / 给付疾病前类 / 给付类型 -->
     <section class="mod" style="grid-area: bl;">
       <div class="mod__body mod__body--full">
-        <JoinTypeStat />
+        <JoinTypeStat :data="joinTypeRows" />
       </div>
     </section>
 
     <section class="mod" style="grid-area: bc;">
       <div></div>
       <div class="mod__body mod__body--full">
-        <DiseaseCategoryDist />
+        <DiseaseCategoryDist :categories="illCats" :values="illVals" :y-max="illMax" />
       </div>
     </section>
 
     <section class="mod" style="grid-area: br;">
       <div class="mod__body mod__body--full">
-        <PayoutTypeStat />
+        <PayoutTypeStat :data="payTypeRows" />
       </div>
     </section>
   </main>
 </template>
 
 <script setup lang="ts">
-// 仅布局分区与占位，无具体数据逻辑
+// 对接医疗互助接口，集中在页面拉取并将数据下发到各子组件
 import GenderStat from '../components/yiliao/GenderStat.vue';
 import PayoutGenderStat from '../components/yiliao/PayoutGenderStat.vue';
 import JoinTypeStat from '../components/yiliao/JoinTypeStat.vue';
@@ -70,6 +70,157 @@ import PayoutTypeStat from '../components/yiliao/PayoutTypeStat.vue';
 import PayoutAgeDist from '../components/yiliao/PayoutAgeDist.vue';
 import DiseaseCategoryDist from '../components/yiliao/DiseaseCategoryDist.vue';
 import OverallOverview from '../components/yiliao/OverallOverview.vue';
+import { ref, onMounted } from 'vue';
+import { apiGet, niceMax } from '../utils/api';
+
+// ---------------- 年份 ----------------
+const now = new Date().getFullYear();
+const years = ref<number[]>([now, now - 1, now - 2]);
+const year = ref<number>(now);
+
+// ---------------- 总体概览（左/右三项） ----------------
+type Metric = { label: string; value: number };
+const leftMetrics = ref<Metric[]>([
+  { label: '参加综合金额(元)', value: 0 },
+  { label: '参加重大疾病金额(元)', value: 0 },
+  { label: '参加住院金额(元)', value: 0 },
+]);
+const rightMetrics = ref<Metric[]>([
+  { label: '给付综合金额(元)', value: 0 },
+  { label: '给付重大疾病金额(元)', value: 0 },
+  { label: '给付住院金额(元)', value: 0 },
+]);
+
+// ---------------- 顶部两侧性别统计 ----------------
+const joinMale = ref<number>(0);   // 参加 男性
+const joinFemale = ref<number>(0); // 参加 女性
+const payMale = ref<number>(0);    // 给付 男性
+const payFemale = ref<number>(0);  // 给付 女性
+
+// ---------------- 年龄分布 ----------------
+interface AgeRow { label: string; male: number; female: number }
+const joinAgeRows = ref<AgeRow[]>([]);
+const payAgeRows = ref<AgeRow[]>([]);
+
+// ---------------- 类型统计（参加/给付） ----------------
+interface SexStat { count: number; percent: number } // 0~1
+interface TypeRow { name: string; male: SexStat; female: SexStat }
+const joinTypeRows = ref<TypeRow[]>([]);
+const payTypeRows = ref<TypeRow[]>([]);
+
+// ---------------- 给付疾病分布 ----------------
+const illCats = ref<string[]>([]);
+const illVals = ref<number[]>([]);
+const illMax = ref<number>(0);
+
+onMounted(() => loadAll(year.value));
+
+function onYearChange(y: number) { year.value = y; loadAll(y); }
+
+async function loadAll(y: number) {
+  await Promise.allSettled([
+    loadAllNum(y),
+    loadJoinAge(y),
+    loadPayAge(y),
+    loadJoinType(y),
+    loadPayType(y),
+    loadPayIll(y)
+  ]);
+}
+
+// 中部总体概览 + 顶部左右性别
+async function loadAllNum(y: number) {
+  const d = await apiGet<any>(`/medicalMutual/allNum/${y}`).catch(() => null);
+  if (!d) return;
+  leftMetrics.value = [
+    { label: '参加综合金额(元)', value: Number(d?.zhJoin || 0) },
+    { label: '参加重大疾病金额(元)', value: Number(d?.zdJoin || 0) },
+    { label: '参加住院金额(元)', value: Number(d?.zyJoin || 0) }
+  ];
+  rightMetrics.value = [
+    { label: '给付综合金额(元)', value: Number(d?.zhPay || 0) },
+    { label: '给付重大疾病金额(元)', value: Number(d?.zdPay || 0) },
+    { label: '给付住院金额(元)', value: Number(d?.zyPay || 0) }
+  ];
+  joinMale.value = Number(d?.joinMan || 0);
+  joinFemale.value = Number(d?.joinWoman || 0);
+  payMale.value = Number(d?.payMan || 0);
+  payFemale.value = Number(d?.payWoman || 0);
+}
+
+// 参加年龄分布
+async function loadJoinAge(y: number) {
+  const r = await apiGet<any>(`/medicalMutual/joinAge/${y}`).catch(() => null);
+  const ages: string[] = Array.isArray(r?.age) ? r.age : [];
+  const maleArr: number[] = Array.isArray(r?.nums) ? r.nums.map((n: any) => Number(n) || 0) : [];
+  const femaleArr: number[] = Array.isArray(r?.womanNums) ? r.womanNums.map((n: any) => Number(n) || 0) : [];
+  const mapped: AgeRow[] = ages.map((label, i) => ({ label, male: maleArr[i] || 0, female: femaleArr[i] || 0 }));
+  joinAgeRows.value = mapped.reverse(); // 与设计一致：从高龄到低龄
+}
+
+// 给付年龄分布
+async function loadPayAge(y: number) {
+  const r = await apiGet<any>(`/medicalMutual/payAge/${y}`).catch(() => null);
+  const ages: string[] = Array.isArray(r?.age) ? r.age : [];
+  const maleArr: number[] = Array.isArray(r?.nums) ? r.nums.map((n: any) => Number(n) || 0) : [];
+  const femaleArr: number[] = Array.isArray(r?.womanNums) ? r.womanNums.map((n: any) => Number(n) || 0) : [];
+  const mapped: AgeRow[] = ages.map((label, i) => ({ label, male: maleArr[i] || 0, female: femaleArr[i] || 0 }));
+  payAgeRows.value = mapped.reverse();
+}
+
+// 参加类型统计（综合/住院/重疾）
+async function loadJoinType(y: number) {
+  const d = await apiGet<any>(`/medicalMutual/joinType/${y}`).catch(() => null);
+  if (!d) return;
+  joinTypeRows.value = buildTypeRows(d, '参加');
+}
+
+// 给付类型统计（综合/住院/重疾）
+async function loadPayType(y: number) {
+  const d = await apiGet<any>(`/medicalMutual/payType/${y}`).catch(() => null);
+  if (!d) return;
+  payTypeRows.value = buildTypeRows(d, '给付');
+}
+
+function buildTypeRows(d: any, kind: '参加' | '给付'): TypeRow[] {
+  const map: Record<string, string> = { zh: '综合', zy: '住院', zj: '重疾' };
+  const rows: TypeRow[] = [];
+  for (const key of ['zy', 'zh', 'zj'] as const) {
+    if (Array.isArray(d?.[key])) {
+      const arr = d[key] as any[];
+      const male = arr.find((x) => (x?.name || '').includes('男'));
+      const female = arr.find((x) => (x?.name || '').includes('女'));
+      const maleCount = Number(male?.value || 0);
+      const femaleCount = Number(female?.value || 0);
+      const total = maleCount + femaleCount || 1;
+      const malePct = pctFromText(male?.region) ?? maleCount / total;
+      const femalePct = pctFromText(female?.region) ?? femaleCount / total;
+      rows.push({
+        name: map[key] + kind,
+        male: { count: maleCount, percent: malePct },
+        female: { count: femaleCount, percent: femalePct }
+      });
+    }
+  }
+  return rows;
+}
+
+function pctFromText(s: any): number | undefined {
+  if (typeof s !== 'string') return undefined;
+  const m = s.match(/([0-9]+(?:\.[0-9]+)?)%/);
+  if (m) return Math.max(0, Math.min(1, Number(m[1]) / 100));
+  return undefined;
+}
+
+// 给付疾病分布（Top10）
+async function loadPayIll(y: number) {
+  const r = await apiGet<any>(`/medicalMutual/payIllType/${y}`).catch(() => null);
+  const cats: string[] = Array.isArray(r?.districts) ? r.districts : [];
+  const vals: number[] = Array.isArray(r?.values) ? r.values.map((n: any) => Number(n) || 0) : [];
+  illCats.value = cats;
+  illVals.value = vals;
+  illMax.value = Number(r?.ymax) || niceMax(vals, 10);
+}
 </script>
 
 <style scoped lang="scss">

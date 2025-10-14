@@ -56,6 +56,11 @@ const routes: RouteRecordRaw[] = [
     name: "grid-table-2",
     component: () => import("../pages/GridTablePage2.vue"),
   },
+  {
+    path: "/laomo-list",
+    name: "laomo-list",
+    component: () => import("../pages/LaomoList.vue"),
+  },
 ];
 
 const router = createRouter({

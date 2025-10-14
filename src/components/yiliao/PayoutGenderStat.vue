@@ -35,18 +35,11 @@ import male2x from '../../images/yiliao/part2/icon1/编组 17@2x.png';
 import female1x from '../../images/yiliao/part2/icon2/编组 18.png';
 import female2x from '../../images/yiliao/part2/icon2/编组 18@2x.png';
 
-interface Props {
-  maleCount?: number;
-  femaleCount?: number;
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  maleCount: 343889,
-  femaleCount: 343889
-});
-
-const maleCount = props.maleCount;
-const femaleCount = props.femaleCount;
+interface Props { maleCount?: number; femaleCount?: number }
+const props = withDefaults(defineProps<Props>(), { maleCount: 343889, femaleCount: 343889 });
+import { computed } from 'vue';
+const maleCount = computed(() => Number(props.maleCount || 0));
+const femaleCount = computed(() => Number(props.femaleCount || 0));
 
 const maleColor = '#2a6ff0';
 const femaleColor = '#FFA36B';

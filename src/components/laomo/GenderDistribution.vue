@@ -40,15 +40,16 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import RingPie from '../RingPie.vue';
 import icon1x from '../../images/laomo/title5/编组 7备份.png';
 import icon2x from '../../images/laomo/title5/编组 7备份@2x.png';
 
 interface Props {
-  malePct?: number;     // 百分比 0~100
-  femalePct?: number;   // 百分比 0~100
-  maleCount?: number;   // 人数
-  femaleCount?: number; // 人数
+  malePct?: number | string;     // 百分比 0~100 或 'xx%'
+  femalePct?: number | string;   // 百分比 0~100 或 'xx%'
+  maleCount?: number;            // 人数
+  femaleCount?: number;          // 人数
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -63,21 +64,27 @@ const maleRest = 'rgba(53,215,200,0.10)';
 const femaleColor = '#FFA36B';
 const femaleRest = 'rgba(255,163,107,0.12)';
 
-const maleData = [
-  { name: '男性', value: props.malePct, color: maleColor },
-  { name: '其余', value: 100 - props.malePct, color: maleRest }
-];
-const femaleData = [
-  { name: '女性', value: props.femalePct, color: femaleColor },
-  { name: '其余', value: 100 - props.femalePct, color: femaleRest }
-];
+function pctNum(v?: number | string) {
+  if (v == null) return 0;
+  const n = Number(String(v).replace(/%/g, ''));
+  return Number.isFinite(n) ? n : 0;
+}
 
-const malePct = props.malePct;
-const femalePct = props.femalePct;
-const maleCount = props.maleCount;
-const femaleCount = props.femaleCount;
+const malePct = computed(() => pctNum(props.malePct));
+const femalePct = computed(() => pctNum(props.femalePct));
+const maleCount = computed(() => Number(props.maleCount || 0));
+const femaleCount = computed(() => Number(props.femaleCount || 0));
 
-function formatPeople(n: number) { return `${n.toLocaleString('zh-CN')}人`; }
+const maleData = computed(() => [
+  { name: '男性', value: malePct.value, color: maleColor },
+  { name: '其余', value: Math.max(0, 100 - malePct.value), color: maleRest }
+]);
+const femaleData = computed(() => [
+  { name: '女性', value: femalePct.value, color: femaleColor },
+  { name: '其余', value: Math.max(0, 100 - femalePct.value), color: femaleRest }
+]);
+
+function formatPeople(n: number) { return `${Number(n || 0).toLocaleString('zh-CN')}人`; }
 </script>
 
 <style scoped lang="scss">

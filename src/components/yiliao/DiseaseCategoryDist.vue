@@ -15,11 +15,8 @@ import title1x from '../../images/yiliao/part6/title/编组 21.png';
 import title2x from '../../images/yiliao/part6/title/编组 21@2x.png';
 
 
-interface Props {
-  categories?: string[];
-  values?: number[];
-  yMax?: number;
-}
+import { computed } from 'vue';
+interface Props { categories?: string[]; values?: number[]; yMax?: number }
 
 const props = withDefaults(defineProps<Props>(), {
   categories: () => [
@@ -29,9 +26,9 @@ const props = withDefaults(defineProps<Props>(), {
   yMax: 1200
 });
 
-const categories = props.categories;
-const values = props.values;
-const yMax = props.yMax;
+const categories = computed(() => props.categories || []);
+const values = computed(() => props.values || []);
+const yMax = computed(() => Number(props.yMax || 0));
 </script>
 
 <style scoped lang="scss">
@@ -43,4 +40,3 @@ const yMax = props.yMax;
   box-sizing: border-box;
 }
 </style>
-

@@ -6,7 +6,7 @@
       :columns="columns"
       :rows="items"
       :grid-template="gridTemplate"
-      more-page-name="grid-table-2"
+      more-page-name="laomo-list"
       :show-header="true"
       :title-img1x="titleImg1x"
       :title-img2x="titleImg2x"

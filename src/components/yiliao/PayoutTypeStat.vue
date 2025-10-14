@@ -44,6 +44,7 @@ import title2x from '../../images/yiliao/part5/title/编组 21@2x.png';
 
 interface SexStat { count: number; percent: number } // percent: 0~1
 interface Row { name: string; male: SexStat; female: SexStat }
+import { computed } from 'vue';
 interface Props { data?: Row[] }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -54,7 +55,7 @@ const props = withDefaults(defineProps<Props>(), {
   ]
 });
 
-const data = props.data;
+const data = computed(() => props.data || []);
 const segTotal = 10;
 const barWidth = 96; // 与“参加类型统计”保持一致，固定条宽消除不同行长度误差
 

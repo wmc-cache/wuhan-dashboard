@@ -54,8 +54,18 @@ const props = withDefaults(defineProps<Props>(), {
   gapDeg: 8
 });
 
-const data = props.items;
-const total = computed(() => data.reduce((s, d) => s + d.value, 0));
+// 兜底：清洗传入数据，补齐缺色，避免 items 含空位或缺少 color 时崩溃
+const palette = ['#4DD0E1', '#4293FF', '#FF7875', '#6FD9C9', '#FDB94E', '#8D63FF'];
+const data = computed(() => {
+  const arr = (props.items || []).map((it: any, i: number) => ({
+    name: String(it?.name ?? ''),
+    value: Number(it?.value ?? 0) || 0,
+    color: String(it?.color || palette[i % palette.length])
+  }));
+  // 若为空，提供一个占位，防止除以 0/越界
+  return arr.length ? arr : [{ name: '—', value: 1, color: palette[0] }];
+});
+const total = computed(() => data.value.reduce((s, d) => s + d.value, 0));
 
 function angleByValue(v: number) {
   return (v / total.value) * props.sweepAngle;
@@ -70,15 +80,15 @@ const rings = computed(() => {
     { radius: ['46%', '58%'] as [string, string], startAngle: 180 },  // 中环
     { radius: ['32%', '44%'] as [string, string], startAngle: 315 }   // 内环
   ];
-  const n = Math.max(0, Math.min(3, data.length));
+  const n = Math.max(0, Math.min(3, data.value.length));
   // 与旧版展示顺序保持一致：三项时为 [0,2,1]（省→国→市）
   // 两项时简化为 [0,1]；一项时为 [0]
   const order = n >= 3 ? [0, 2, 1] : n === 2 ? [0, 1] : [0];
   return order.map((dataIdx, k) => ({
     radius: defs[k].radius,
     startAngle: defs[k].startAngle,
-    color: data[dataIdx].color,
-    value: data[dataIdx].value
+    color: data.value[dataIdx].color,
+    value: data.value[dataIdx].value
   }));
 });
 
@@ -138,12 +148,12 @@ const option = computed(() => {
 
   // 主环（半透明底 + 实色层），并带缝隙
   // 三项时顺序为 [0,2,1]；两项时为 [0,1]；一项为 [0]
-  const order = data.length >= 3 ? [0, 2, 1] : (data.length === 2 ? [0, 1] : [0]);
-  const sumVal = data.reduce((s, d) => s + d.value, 0);
-  const usable = 360 - props.gapDeg * data.length;
-  const ang = data.map((d) => (d.value / sumVal) * usable);
+  const order = data.value.length >= 3 ? [0, 2, 1] : (data.value.length === 2 ? [0, 1] : [0]);
+  const sumVal = data.value.reduce((s, d) => s + d.value, 0);
+  const usable = 360 - props.gapDeg * data.value.length;
+  const ang = data.value.map((d) => (d.value / sumVal) * usable);
   const r = props.gapDeg / 360;
-  const gapValue = (r * sumVal) / (1 - data.length * r);
+  const gapValue = (r * sumVal) / (1 - data.value.length * r);
 
   const underData: any[] = [];
   const solidData: any[] = [];
@@ -155,12 +165,12 @@ const option = computed(() => {
     return `rgba(${R},${G},${B},${alpha})`;
   }
   order.forEach((idx, i) => {
-    underData.push({ value: data[idx].value, name: data[idx].name, itemStyle: { color: hexToRgba(data[idx].color, 0.3) } });
+    underData.push({ value: data.value[idx].value, name: data.value[idx].name, itemStyle: { color: hexToRgba(data.value[idx].color, 0.3) } });
     underData.push({ value: gapValue, name: `gap-u-${i}`, itemStyle: { color: 'rgba(0,0,0,0)' }, tooltip: { show: false }, label: { show: false }, labelLine: { show: false } });
     solidData.push({
-      value: data[idx].value,
-      name: data[idx].name,
-      itemStyle: { color: data[idx].color, borderColor: '#eef2f7', borderWidth: 2 },
+      value: data.value[idx].value,
+      name: data.value[idx].name,
+      itemStyle: { color: data.value[idx].color, borderColor: '#eef2f7', borderWidth: 2 },
       label: {
         show: true,
         position: 'outside',
@@ -168,7 +178,7 @@ const option = computed(() => {
         alignTo: 'edge', edgeDistance: 10,
         color: '#2a6ff0', fontSize: 12, width: 72, lineHeight: 16, overflow: 'break'
       },
-      labelLine: { show: true, length: 8, length2: 6, lineStyle: { color: data[idx].color, width: 1.5 } }
+      labelLine: { show: true, length: 8, length2: 6, lineStyle: { color: data.value[idx].color, width: 1.5 } }
     });
     solidData.push({ value: gapValue, name: `gap-s-${i}`, itemStyle: { color: 'rgba(0,0,0,0)' }, tooltip: { show: false }, label: { show: false }, labelLine: { show: false } });
   });

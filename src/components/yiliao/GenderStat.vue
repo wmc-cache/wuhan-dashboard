@@ -36,18 +36,11 @@ import male2x from '../../images/yiliao/part1/icon1/编组 6@2x.png';
 import female1x from '../../images/yiliao/part1/icon2/编组 7.png';
 import female2x from '../../images/yiliao/part1/icon2/编组 7@2x.png';
 
-interface Props {
-  maleCount?: number;
-  femaleCount?: number;
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  maleCount: 324,
-  femaleCount: 324
-});
-
-const maleCount = props.maleCount;
-const femaleCount = props.femaleCount;
+interface Props { maleCount?: number; femaleCount?: number }
+const props = withDefaults(defineProps<Props>(), { maleCount: 324, femaleCount: 324 });
+import { computed } from 'vue';
+const maleCount = computed(() => Number(props.maleCount || 0));
+const femaleCount = computed(() => Number(props.femaleCount || 0));
 
 // 无 JS 逻辑
 </script>
@@ -80,7 +73,7 @@ const femaleCount = props.femaleCount;
 .icon { width: 110px; height: 117px; object-fit: contain; }
 .texts { display: grid; row-gap: 6px; align-content: center; }
 .label { font-size: 16px; color: #4c5566; }
-.value { font-size: 32px; font-weight: 800; letter-spacing: 1px; }
+.value { font-size: 22px; font-weight: 800; letter-spacing: 1px; }
 .male .value { color: #2a6ff0; }
 .female .value { color: #ff6b97; }
 .num { margin-right: 4px; }

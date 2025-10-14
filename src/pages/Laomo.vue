@@ -4,13 +4,13 @@
     <section class="mod" style="grid-area: tl;">
       <span class="title-img title-img--laomo-3" aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
-        <LaomoHonorDistribution />
+        <LaomoHonorDistribution :items="honorItems" />
       </div>
     </section>
 
     <section style="grid-area: tc;">
       <div class="mod__body" style="place-items: stretch;margin-top: 50px;">
-        <LaomoFourStats />
+        <LaomoFourStats :values="fourVals" />
       </div>
     </section>
 
@@ -18,7 +18,7 @@
       <!-- 图片标题：劳模人员性别分布统计（2/7） -->
       <span class="title-img title-img--laomo-2" aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
-        <LaomoGenderDistribution />
+        <LaomoGenderDistribution :male-pct="malePct" :female-pct="femalePct" :male-count="maleCount" :female-count="femaleCount" />
       </div>
     </section>
 
@@ -27,7 +27,7 @@
       <!-- 标题替换为第 8 号切图；内容改为排行列表样式 -->
       <span class="title-img title-img--laomo-8" aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
-        <LaomoSubsidyStatsList />
+        <LaomoSubsidyStatsList :items="subsidyItems" />
       </div>
 
     </section>
@@ -36,7 +36,7 @@
       <!-- 图片标题：劳模收入情况统计（4/7） -->
       <span class="title-img title-img--laomo-4" aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
-        <LaomoIncomeDistribution />
+        <LaomoIncomeDistribution :categories="incomeCats" :values="incomeVals" :yMax="incomeMax" />
       </div>
     </section>
 
@@ -44,14 +44,14 @@
 
       <span class="title-img title-img--laomo-5" aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
-        <LaomoAgeDistribution />
+        <LaomoAgeDistribution :items="ageItems" />
       </div>
     </section>
 
     <section class="mod " style="grid-area: bl;">
       <span aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
-        <LaomoMemberNew />
+        <LaomoMemberNew :items="listItems" />
       </div>
     </section>
 
@@ -59,7 +59,7 @@
 
       <span class="title-img title-img--laomo-7" aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
-        <LaomoRegionDistribution />
+        <LaomoRegionDistribution :categories="areaCats" :values="areaVals" :yMax="areaMax" />
       </div>
     </section>
   </main>
@@ -76,6 +76,148 @@ import LaomoIncomeDistribution from '../components/laomo/IncomeDistribution.vue'
 import LaomoFourStats from '../components/laomo/FourStats.vue';
 import LaomoGenderDistribution from '../components/laomo/GenderDistribution.vue';
 // 中间顶栏不再放搜索（已移至首页地图上方）
+import { ref, onMounted } from 'vue';
+import { apiGet, niceMax } from '../utils/api';
+
+// ---------------- 数据状态 ----------------
+// 荣誉分类
+const honorItems = ref<{ name: string; value: number }[]>([]);
+// 补助排行
+const subsidyItems = ref<{ name: string; people: number; amount: number }[]>([]);
+// 收入折线
+const incomeCats = ref<string[]>([]);
+const incomeVals = ref<number[]>([]);
+const incomeMax = ref<number>(1200);
+// 年龄分布
+const ageItems = ref<{ name: string; value: number }[]>([]);
+// 区域分布
+const areaCats = ref<string[]>([]);
+const areaVals = ref<number[]>([]);
+const areaMax = ref<number>(1200);
+// 列表
+const listItems = ref<{ id: string | number; name: string; union: string; joinedAt: string }[]>([]);
+// 中部四数值 + 性别分布
+const fourVals = ref<number[]>([]);
+const maleCount = ref<number>(0);
+const femaleCount = ref<number>(0);
+const malePct = ref<number | string>(0);
+const femalePct = ref<number | string>(0);
+
+// ---------------- 挂载加载 ----------------
+onMounted(async () => {
+  await Promise.allSettled([
+    fetchHonor(),
+    fetchSubsidy(),
+    fetchIncome(),
+    fetchAge(),
+    fetchArea(),
+    fetchList(),
+    fetchAllNum()
+  ]);
+});
+
+// ---------------- API 拉取与映射 ----------------
+async function fetchHonor() {
+  const res = await apiGet<any>('/modelWorker/modelLevel').catch(() => null);
+  const rows: any[] = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
+  const mapped = rows.map((r) => ({ name: String(r?.name ?? ''), value: Number(r?.value ?? 0) || 0 }))
+    .filter((it) => it.name);
+  if (mapped.length) honorItems.value = mapped;
+}
+
+async function fetchSubsidy() {
+  const res = await apiGet<any>('/modelWorker/subsidy').catch(() => null);
+  const rows: any[] = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
+  const mapped = rows.map((r) => ({
+    name: String(r?.name ?? ''),
+    people: Number(r?.value ?? 0) || 0,
+    amount: parseAmount(r?.region)
+  })).filter((it) => it.name);
+  if (mapped.length) subsidyItems.value = mapped;
+}
+
+function parseAmount(v: any): number {
+  if (v == null) return 0;
+  const s = String(v);
+  const m = s.match(/[0-9]+(?:\.[0-9]+)?/);
+  return m ? Number(m[0]) : 0;
+}
+
+async function fetchIncome() {
+  const res = await apiGet<any>('/modelWorker/income').catch(() => null);
+  const cats: string[] = Array.isArray(res?.categories) ? res.categories : Array.isArray(res?.data?.categories) ? res.data.categories : [];
+  const vals: number[] = Array.isArray(res?.values) ? res.values : Array.isArray(res?.data?.values) ? res.data.values : [];
+  const ymax = Number(res?.ymax ?? res?.data?.ymax);
+  if (cats.length && vals.length) {
+    incomeCats.value = cats.map((s: any) => String(s ?? ''));
+    incomeVals.value = vals.map((n: any) => Number(n) || 0);
+    incomeMax.value = Number.isFinite(ymax) && ymax > 0 ? ymax : niceMax(incomeVals.value, 10);
+  }
+}
+
+async function fetchAge() {
+  const res = await apiGet<any>('/modelWorker/age').catch(() => null);
+  const rows: any[] = Array.isArray(res?.data) ? res.data : Array.isArray(res?.data?.data) ? res.data.data : [];
+  const mapped = rows.map((r) => ({ name: String(r?.name ?? ''), value: Number(r?.value ?? 0) || 0 }))
+    .filter((it) => it.name);
+  if (mapped.length) ageItems.value = mapped;
+}
+
+async function fetchArea() {
+  const res = await apiGet<any>('/modelWorker/area').catch(() => null);
+  const cats: string[] = Array.isArray(res?.categories) ? res.categories : Array.isArray(res?.data?.categories) ? res.data.categories : [];
+  const vals: number[] = Array.isArray(res?.values) ? res.values : Array.isArray(res?.data?.values) ? res.data.values : [];
+  const ymax = Number(res?.ymax ?? res?.data?.ymax);
+  if (cats.length && vals.length) {
+    areaCats.value = cats.map((s: any) => String(s ?? ''));
+    areaVals.value = vals.map((n: any) => Number(n) || 0);
+    areaMax.value = Number.isFinite(ymax) && ymax > 0 ? ymax : niceMax(areaVals.value, 10);
+  }
+}
+
+async function fetchList() {
+  const res = await apiGet<any>('/modelWorker/list').catch(() => null);
+  const rows: any[] = Array.isArray(res?.rows) ? res.rows : Array.isArray(res?.data?.rows) ? res.data.rows : [];
+  const mapped = rows.map((r: any, i: number) => {
+    const id = r?.id ?? i;
+    const name = r?.name ?? r?.fullname ?? `劳模${i+1}`;
+    const union = r?.union ?? r?.tjdw ?? r?.streetUnion ?? '';
+    const joinedAt = formatDate(r?.createdTime ?? r?.sbsj ?? r?.provinceTime ?? r?.cityTime);
+    return { id, name, union, joinedAt };
+  });
+  if (mapped.length) listItems.value = mapped.slice(0, 6);
+}
+
+function formatDate(v: any): string {
+  if (!v) return '';
+  const s = String(v);
+  // 支持 ISO 字符串或 yyyy-MM-dd 等
+  const d = new Date(s);
+  if (Number.isFinite(d.getTime())) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+  // 纯数字年份：直接返回
+  if (/^\d{4}(-\d{2}-\d{2})?$/.test(s)) return s.substring(0, 10);
+  return String(s).slice(0, 10);
+}
+
+// 中部数据：四项统计 + 性别分布
+async function fetchAllNum() {
+  const d = await apiGet<any>('/modelWorker/allNum').catch(() => null);
+  if (!d) return;
+  const all = Number(d?.allModelWorker || 0);
+  const retire = Number(d?.retireModelWorker || 0);
+  const special = Number(d?.reimbursementModelWorker || 0);
+  const low = Number(d?.subsidyModelWorker || 0);
+  fourVals.value = [all, retire, special, low];
+  maleCount.value = Number(d?.maleCount || 0);
+  femaleCount.value = Number(d?.femaleCount || 0);
+  malePct.value = d?.malePct ?? 0;
+  femalePct.value = d?.femalePct ?? 0;
+}
 </script>
 
 <style scoped lang="scss">

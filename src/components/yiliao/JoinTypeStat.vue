@@ -78,6 +78,7 @@ import SegmentedBar from '../SegmentedBar.vue';
 
 interface SexStat { count: number; percent: number } // percent: 0~1
 interface Row { name: string; male: SexStat; female: SexStat }
+import { computed } from 'vue';
 interface Props { data?: Row[] }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -88,7 +89,7 @@ const props = withDefaults(defineProps<Props>(), {
   ]
 });
 
-const data = props.data;
+const data = computed(() => props.data || []);
 const segTotal = 10; // 默认 10 段（如需 10 小格的视觉）
 const barWidth = 96; // 固定条宽，避免不同行出现长度差异
 function pretty(n: number) { return n.toLocaleString('zh-CN'); }
