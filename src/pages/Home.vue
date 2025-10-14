@@ -3,6 +3,9 @@
     <!-- 顶部：搜索条（自定义样式） -->
     <section class="tools">
       <TopSearch v-model="keyword" v-model:category="selCat" @search="onSearch" />
+      <div @click="goBack">
+        <img class="btn-back__icon" :src="back1x" :srcset="back2x + ' 2x'" alt="返回" draggable="false" />
+      </div>
     </section>
 
     <section class="content">
@@ -23,16 +26,8 @@
 
       <!-- 右：表格与分页 -->
       <section class="table-area">
-        <GridTable
-          :columns="columns"
-          :rows="pagedRows"
-          :grid-template="gridTemplate"
-          :visible-rows="15"
-          :row-height="44"
-          :show-header="false"
-          :fill-placeholder="true"
-          @cell-click="onCellClick"
-        />
+        <GridTable :columns="columns" :rows="pagedRows" :grid-template="gridTemplate" :visible-rows="15"
+          :row-height="44" :show-header="false" :fill-placeholder="true" @cell-click="onCellClick" />
 
         <div class="pager">
           <el-pagination v-model:current-page="page" :page-size="pageSize" :total="total" background
@@ -56,6 +51,8 @@ import { useRouter, useRoute } from 'vue-router';
 import UnionDetailDialog, { type UnionDetail } from '../components/UnionDetailDialog.vue';
 import MemberDetailDialog, { type MemberDetail } from '../components/MemberDetailDialog.vue';
 import { apiGet } from '../utils/api';
+import back1x from '../images/back/编组 4.png';
+import back2x from '../images/back/编组 4@2x.png';
 
 const router = useRouter();
 const route = useRoute();
@@ -64,17 +61,17 @@ function goBack() { router.back(); }
 // 搜索与筛选
 const selCat = ref<'org' | 'member'>('org');
 const keyword = ref('');
-
-// 接口：模糊查询统计 + 列表
-// - 统计：根据关键字返回类型分组计数（code/name/count）
-// - 列表：/business/union/segmentation?searchCode=&code=&pageNum=&pageSize=
-// 统计接口路径不确定，支持通过环境变量覆盖：VITE_SEGMENTATION_STATS_PATH
 const API = {
   segList: '/business/union/segmentation',
-  // 默认猜测路径；如不同，请在 .env.development 中设置 VITE_SEGMENTATION_STATS_PATH
   segStats:
     ((import.meta as any).env?.VITE_SEGMENTATION_STATS_PATH as string) ||
-    '/business/union/segmentationCount'
+    '/business/union/segmentationCount',
+  memStats:
+    ((import.meta as any).env?.VITE_MEMBER_SEG_STATS_PATH as string) ||
+    '/business/member/segmentationCount',
+  memList:
+    ((import.meta as any).env?.VITE_MEMBER_SEG_LIST_PATH as string) ||
+    '/business/member/segmentation'
 };
 
 // 列定义：根据后端字段自适应（优先展示“截图风格”的列；缺失时回退到已有字段）
@@ -116,23 +113,15 @@ type SegStat = { code: number; name: string; count: number };
 const segStats = ref<SegStat[]>([]);
 const activeCode = ref<number | undefined>(undefined); // 当前选中的结果类型 code
 
-// 本地过滤/分页仅用于演示（会员 tab）。工会组织使用服务端分页。
+// 服务端分页（组织 + 会员）。
 const filtered = computed(() => {
-  const kw = keyword.value.trim();
-  if (selCat.value === 'member') {
-    if (!kw) return allRows.value as MemberRow[];
-    return (allRows.value as MemberRow[]).filter(r => r.name?.includes(kw));
-  }
-  // 组织：直接返回服务端数据
   return allRows.value as Row[];
 });
 
 const pagedRows = computed(() => {
-  if (selCat.value === 'org') return filtered.value; // 服务端分页
-  const start = (page.value - 1) * pageSize;
-  return filtered.value.slice(start, start + pageSize);
+  return filtered.value; // 统一服务端分页
 });
-function to(p: number) { page.value = p; if (selCat.value === 'org') fetchListFromApi(); }
+function to(p: number) { page.value = p; fetchListFromApi(); }
 
 const navItems = computed(() => {
   // 来自统计接口；若暂无数据则退回到单一分类
@@ -146,18 +135,13 @@ const navItems = computed(() => {
 const activeIndex = ref(0);
 function setActive(i: number) {
   activeIndex.value = i;
-  // 同步选中 code 并重新加载（仅工会组织分类）
+  // 同步选中 code 并重新加载（组织/会员均使用服务端分页）
   const it = navItems.value[i] as any;
   activeCode.value = it?.code;
-  if (selCat.value === 'org') fetchListFromApi();
+  fetchListFromApi();
 }
 
-async function onSearch() {
-  page.value = 1;
-  if (selCat.value === 'org') {
-    await Promise.all([fetchStats(), fetchListFromApi()]).catch(() => void 0);
-  }
-}
+async function onSearch() { page.value = 1; await Promise.all([fetchStats(), fetchListFromApi()]).catch(() => void 0); }
 
 // 弹框：工会详情/会员详情
 const showUnion = ref(false);
@@ -275,7 +259,7 @@ function mapMemberRow(raw: any, i: number): MemberRow {
     name: raw.name ?? raw.memberName ?? raw.username ?? `名称${i + 1}`,
     unionName: raw.unionName ?? raw.orgName ?? raw.fullname,
     gender: raw.gender ?? raw.sex ?? (i % 2 ? '女' : '男'),
-    joinAt: raw.joinAt ?? raw.joinTime ?? raw.createdAt ?? '2024-03-02',
+    joinAt: raw.joinAt ?? raw.joinDate ?? raw.joinTime ?? raw.createdAt ?? '2024-03-02',
   } as MemberRow;
 }
 
@@ -291,12 +275,13 @@ function normalizeDate(v: any): string | undefined {
 
 // ---------------- API: 统计 + 列表 ----------------
 async function fetchStats() {
-  // 若未提供统计接口路径，直接清空统计，由列表总数代替
-  if (!API.segStats) { segStats.value = []; return; }
+  // 组织与会员分支：若无路径，直接清空统计
+  const statPath = selCat.value === 'member' ? API.memStats : API.segStats;
+  if (!statPath) { segStats.value = []; return; }
   try {
     const qs = new URLSearchParams();
     if (keyword.value?.trim()) qs.set('searchCode', keyword.value.trim());
-    const url = `${API.segStats}?${qs.toString()}`;
+    const url = `${statPath}?${qs.toString()}`;
     const resp = await apiGet<any>(url).catch(() => null);
     const arr = Array.isArray((resp as any)?.data) ? (resp as any).data : Array.isArray(resp) ? resp : [];
     const mapped: SegStat[] = arr.map((it: any) => ({
@@ -319,27 +304,13 @@ async function fetchStats() {
 
 async function fetchListFromApi() {
   page.value = Math.max(1, page.value);
-  if (selCat.value === 'member') {
-    // 暂无会员接口：保留本地演示数据
-    const rows = Array.from({ length: 800 }, (_, i) => ({
-      name: `名称${i + 1}`,
-      unionName: `工会${(i % 20) + 1}`,
-      gender: i % 2 ? '女' : '男',
-      joinAt: `2024-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 27) + 1).padStart(2, '0')}`,
-    }));
-    allRows.value = rows.map((r, i) => mapMemberRow(r, i));
-    total.value = allRows.value.length;
-    buildColumnsByData(allRows.value[0]);
-    return;
-  }
-
   try {
     const qs = new URLSearchParams();
     if (keyword.value?.trim()) qs.set('searchCode', keyword.value.trim());
     if (activeCode.value != null) qs.set('code', String(activeCode.value));
     qs.set('pageNum', String(page.value));
     qs.set('pageSize', String(pageSize));
-    const url = `${API.segList}?${qs.toString()}`;
+    const url = selCat.value === 'member' ? `${API.memList}?${qs.toString()}` : `${API.segList}?${qs.toString()}`;
     const resp = await apiGet<any>(url).catch(() => null);
     const totalVal = Number((resp as any)?.total ?? (resp as any)?.count ?? 0) || 0;
     const rows = Array.isArray((resp as any)?.rows)
@@ -350,7 +321,11 @@ async function fetchListFromApi() {
       ? resp
       : [];
     total.value = totalVal;
-    allRows.value = rows.map((r: any, i: number) => mapRow(r, i + (page.value - 1) * pageSize));
+    if (selCat.value === 'member') {
+      allRows.value = rows.map((r: any, i: number) => mapMemberRow(r, i + (page.value - 1) * pageSize));
+    } else {
+      allRows.value = rows.map((r: any, i: number) => mapRow(r, i + (page.value - 1) * pageSize));
+    }
     buildColumnsByData(allRows.value[0]);
   } catch (e) {
     // 失败时不抛出，保留当前视图
@@ -358,14 +333,9 @@ async function fetchListFromApi() {
 }
 
 watch(selCat, async () => {
-  // 切换分类：工会组织 -> 调接口；会员 -> 本地演示
+  // 切换分类：统一走服务端
   page.value = 1;
-  if (selCat.value === 'org') {
-    await Promise.all([fetchStats(), fetchListFromApi()]).catch(() => void 0);
-  } else {
-    segStats.value = [];
-    await fetchListFromApi();
-  }
+  await Promise.all([fetchStats(), fetchListFromApi()]).catch(() => void 0);
   buildColumnsByData(allRows.value[0]);
 });
 onMounted(async () => {
@@ -374,12 +344,8 @@ onMounted(async () => {
   const qCat = String(route.query.cat ?? '');
   if (qKw) keyword.value = qKw;
   if (qCat === 'org' || qCat === 'member') selCat.value = qCat as any;
-  // 初次加载
-  if (selCat.value === 'org') {
-    await Promise.all([fetchStats(), fetchListFromApi()]).catch(() => void 0);
-  } else {
-    await fetchListFromApi();
-  }
+  // 初次加载：统一走服务端
+  await Promise.all([fetchStats(), fetchListFromApi()]).catch(() => void 0);
   buildColumnsByData(allRows.value[0]);
 });
 </script>
@@ -407,7 +373,11 @@ onMounted(async () => {
   background-image: image-set(url('../images/home/home-bg/背景.png') 1x, url('../images/home/home-bg/背景@2x.png') 2x);
 }
 
-.tools { display: grid; grid-template-columns: 1fr; align-items: center; }
+.tools { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; }
+/* 顶部 右侧返回按钮（与搜索按钮风格一致） */
+.btn-back { height: 48px; padding: 0 16px 0 12px; border-radius: 12px; border: 2px solid rgba(90,160,255,.9); background: rgba(255,255,255,.96); color: #2a6ff0; font-weight: 900; font-size: 16px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 18px rgba(30,100,220,.12), inset 0 0 20px rgba(120,170,255,.06); }
+.btn-back__icon { width: 68px; height: 25px;cursor: pointer; }
+.btn-back__text { line-height: 1; }
 
 .content {
   display: grid;
