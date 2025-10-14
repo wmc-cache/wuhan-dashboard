@@ -61,8 +61,10 @@ const props = withDefaults(defineProps<Props>(), {
   femaleCount: 343889
 });
 
-const maleCount = props.maleCount;
-const femaleCount = props.femaleCount;
+// 保持对外部传值的响应，避免解构为常量后不更新
+import { computed } from 'vue';
+const maleCount = computed(() => Number(props.maleCount || 0));
+const femaleCount = computed(() => Number(props.femaleCount || 0));
 
 // 颜色与原型一致：男蓝 女橙
 const maleColor = '#2a6ff0';

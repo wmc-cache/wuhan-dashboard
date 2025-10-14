@@ -17,7 +17,7 @@
           name="legend"
           :items="visibleItems"
           :activeIndex="localActiveIndex"
-          :pageStart="pageStart"
+          :pageStart="scrollStart"
           :setActive="setActive"
           :formatNumber="formatNumber"
         >

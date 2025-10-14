@@ -4,21 +4,21 @@
     <section class="mod" style="grid-area: tl;">
       <span class="title-img title-img--member-1" aria-hidden="true"></span>
       <div class="mod__body">
-        <GenderDistribution />
+        <GenderDistribution :male-count="maleCount" :female-count="femaleCount" />
       </div>
     </section>
 
     <section style="grid-area: tc;">
       <div class="mod__body">
-        <!-- <OrgSearchKpis :items="kpis" /> -->
-        <TopSearchKpis :items="kpis" />
+        <!-- 顶部中间搜索：也支持跳转到二级搜索结果页（Home） -->
+        <TopSearchKpis v-model="keyword" :items="kpiItems" @search="goToHome" />
       </div>
     </section>
 
     <section class="mod" style="grid-area: tr;">
       <span class="title-img title-img--member-2" aria-hidden="true"></span>
       <div class="mod__body">
-        <EthnicDistribution />
+        <EthnicDistribution :items="ethnicItems" major-name="汉族" />
       </div>
     </section>
 
@@ -26,14 +26,14 @@
     <section class="mod" style="grid-area: ml;">
       <span class="title-img title-img--member-3" aria-hidden="true"></span>
       <div class="mod__body">
-        <EducationBar />
+        <EducationBar :categories="eduCats" :values="eduVals" :yMax="eduMax" />
       </div>
     </section>
 
     <section class="mod" style="grid-area: mc;">
       <span class="title-img title-img--member-5" aria-hidden="true"></span>
       <div class="mod__body">
-        <MonthTrend />
+        <MonthTrend :values="monthVals" :yMax="monthMax" />
       </div>
     </section>
 
@@ -41,7 +41,7 @@
       <span class="title-img title-img--member-b1" aria-hidden="true"></span>
       <div class="mod__body">
         <div class="split-vert">
-          <PoliticsList />
+          <PoliticsList :items="politicsItems" />
 
         </div>
       </div>
@@ -53,9 +53,9 @@
         <div class="bottom-row">
           <div class="bottom-col">
             <span class="title-img title-img--member-b2" aria-hidden="true"></span>
-            <SearchTodayTotal :today-total="111121" :weekly-increase="10" :progress="64" />
+            <SearchTodayTotal :today-total="todayTotal" :weekly-increase="weeklyIncrease" :progress="progress" />
           </div>
-          <StripedBarChart :categories="industryCats" :values="industryVals" y-unit="人" :y-max="1200" :grid-left="64"
+          <StripedBarChart :categories="industryCats" :values="industryVals" y-unit="人" :y-max="industryMax" :grid-left="64"
             :grid-right="20" :grid-bottom="56" :x-label-rotate="25" />
 
         </div>
@@ -81,14 +81,149 @@ import icon31x from '../images/org/title3/位图.png';
 import icon32x from '../images/org/title3/位图@2x.png';
 import icon41x from '../images/org/title4/位图.png';
 import icon42x from '../images/org/title4/位图@2x.png';
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { apiGet, niceMax } from '../utils/api';
 
-const kpis = [
-  { title: '会员总数', value: 18897, icon1x: icon31x, icon2x: icon32x },
-  { title: '新就业形态劳动者', value: 48897, icon1x: icon41x, icon2x: icon42x },
-];
+// 顶部 KPI（来自 /business/member/allNum）
+const kpiItems = ref([
+  { title: '会员总数', value: 0, icon1x: icon31x, icon2x: icon32x },
+  { title: '新就业形态劳动者', value: 0, icon1x: icon41x, icon2x: icon42x },
+]);
 
-const industryCats = ['市州区委(行业工会)', '市州圈委', '乡镇工会', '街道工会', '社区工会', '开发园区工会', '小三级企业工会'];
-const industryVals = [420, 360, 280, 340, 300, 360, 320];
+// 顶左：性别分布（来自 /business/member/allNum）
+const maleCount = ref<number>(0);
+const femaleCount = ref<number>(0);
+
+// ---------------- API ----------------
+const API = {
+  nation: '/business/member/nation',
+  education: '/business/member/education',
+  newMember: (year: number | string) => `/business/member/newMember/${year}`,
+  position: '/business/member/position',
+  threeDept: '/business/member/threeDept'
+};
+
+// 公共配色（环图/图例）
+const palette = ['#6F85FF','#5EE0D2','#8D63FF','#4E8FFF','#6FD9C9','#8FB9FF','#A8C4FF','#7EC8FF','#5AA0FF','#9AA0AD','#C9D2FF','#D8D6D2'];
+
+// 右上：会员民族分布（RingPie 使用次要民族，majorName 作为主民族）
+type PieItem = { name: string; value: number; region?: string; color?: string };
+const ethnicItems = ref<PieItem[]>([]);
+
+// 中左：会员学历分布
+const eduCats = ref<string[]>([]);
+const eduVals = ref<number[]>([]);
+const eduMax = ref<number>(1200);
+
+// 中中：会员就业新业态（月度）
+const monthVals = ref<number[]>(new Array(12).fill(0));
+const monthMax = ref<number>(500);
+const yearNow = new Date().getFullYear();
+
+// 中右：会员政治面貌横向条形
+const politicsItems = ref<{ name: string; value: number }[]>([]);
+
+// 底部：小三级工会组织统计（左大数 + 右条形）
+const todayTotal = ref<number>(0); // ysum
+const weeklyIncrease = ref<number>(0); // lastWeek
+const progress = ref<number>(64); // 进度：缺少明确口径，暂沿用示例值
+const industryCats = ref<string[]>([]);
+const industryVals = ref<number[]>([]);
+const industryMax = ref<number>(1200);
+
+onMounted(async () => {
+  await Promise.allSettled([
+    fetchMemberAllNum(),
+    fetchNation(),
+    fetchEducation(),
+    fetchNewMember(yearNow),
+    fetchPolitics(),
+    fetchThreeDept()
+  ]);
+});
+
+// 搜索跳转：带上分类 cat=member，关键词从 v-model 读取
+const router = useRouter();
+const keyword = ref('');
+function goToHome(kw?: string) {
+  // 当同时使用 ?? 与 || 时，需加括号避免解析歧义
+  const k = (((kw ?? keyword.value) || '') as string).trim();
+  router.push({ path: '/home', query: { kw: k, cat: 'member' } });
+}
+
+// 会员总览与性别分布
+async function fetchMemberAllNum() {
+  const d = await apiGet<any>('/business/member/allNum').catch(() => null);
+  if (!d) return;
+  const total = Number(d?.total || 0);
+  const newMember = Number(d?.newMember || 0);
+  maleCount.value = Number(d?.manNum || 0);
+  femaleCount.value = Number(d?.womanNum || 0);
+  const items = kpiItems.value.slice();
+  if (items[0]) items[0].value = total;
+  if (items[1]) items[1].value = newMember;
+  kpiItems.value = items;
+}
+
+async function fetchNation() {
+  const res = await apiGet<any>(API.nation).catch(() => null);
+  const rows: any[] = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
+  const mapped = rows.map((r: any, i: number) => ({
+    name: String((r?.name ?? '')).trim(),
+    value: Number(r?.value ?? 0) || 0,
+    region: typeof r?.region === 'string' ? String(r.region).trim() : undefined,
+    color: palette[i % palette.length]
+  })).filter((it: any) => it.name);
+  if (mapped.length) ethnicItems.value = mapped;
+}
+
+async function fetchEducation() {
+  const res = await apiGet<any>(API.education).catch(() => null);
+  const cats: string[] = Array.isArray(res?.districts) ? res.districts.map((s: any) => String(s ?? '')) : [];
+  const vals: number[] = Array.isArray(res?.values) ? res.values.map((n: any) => Number(n) || 0) : [];
+  if (cats.length && cats.length === vals.length) {
+    eduCats.value = cats;
+    eduVals.value = vals;
+    eduMax.value = Number(res?.ymax ?? res?.yMax) || niceMax(vals, 10);
+  }
+}
+
+async function fetchNewMember(year: number | string) {
+  const res = await apiGet<any>(API.newMember(year)).catch(() => null);
+  const cats: string[] = Array.isArray(res?.districts) ? res.districts.map((s: any) => String(s ?? '')) : [];
+  const vals: number[] = Array.isArray(res?.values) ? res.values.map((n: any) => Number(n) || 0) : [];
+  // 将接口月份对齐到 1~12 月
+  const target = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0') + '月');
+  const map = new Map<string, number>();
+  cats.forEach((m, i) => map.set(m, vals[i] ?? 0));
+  monthVals.value = target.map((m) => Number(map.get(m) || 0));
+  monthMax.value = Math.max(Number(res?.ymax ?? res?.yMax) || 0, niceMax(monthVals.value, 10));
+}
+
+async function fetchPolitics() {
+  const res = await apiGet<any>(API.position).catch(() => null);
+  const cats: string[] = Array.isArray(res?.districts) ? res.districts.map((s: any) => String(s ?? '')) : [];
+  const vals: number[] = Array.isArray(res?.values) ? res.values.map((n: any) => Number(n) || 0) : [];
+  if (cats.length && cats.length === vals.length) {
+    politicsItems.value = cats.map((name, i) => ({ name, value: vals[i] || 0 }));
+  }
+}
+
+async function fetchThreeDept() {
+  const res = await apiGet<any>(API.threeDept).catch(() => null);
+  const cats: string[] = Array.isArray(res?.districts) ? res.districts.map((s: any) => String(s ?? '')) : [];
+  const vals: number[] = Array.isArray(res?.values) ? res.values.map((n: any) => Number(n) || 0) : [];
+  if (cats.length && cats.length === vals.length) {
+    industryCats.value = cats;
+    industryVals.value = vals;
+    industryMax.value = Number(res?.ymax ?? res?.yMax) || niceMax(vals, 10);
+  }
+  const total = Number(res?.ysum);
+  if (Number.isFinite(total)) todayTotal.value = total as number;
+  const lastWeek = Number(res?.lastWeek);
+  if (Number.isFinite(lastWeek)) weeklyIncrease.value = lastWeek as number;
+}
 </script>
 
 <style scoped lang="scss">

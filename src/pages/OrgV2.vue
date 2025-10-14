@@ -18,7 +18,13 @@
 
     <section style="grid-area: tc;">
       <div class="mod__body" style="margin-top: 10px;">
-        <OrgSearchKpis style="margin-top: 10px;" :items="searchKpiItems" />
+        <!-- 顶部中间搜索：也支持跳转到二级搜索结果页（Home） -->
+        <OrgSearchKpis
+          v-model="keyword"
+          style="margin-top: 10px;"
+          :items="searchKpiItems"
+          @search="goToHome"
+        />
       </div>
     </section>
 
@@ -112,7 +118,9 @@ import SmallTripleGauge from '../components/org/SmallTripleGauge.vue';
 import StripedBarChart from '../components/StripedBarChart.vue';
 import OrgAreaRank from '../components/org/AreaRank.vue';
 
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { apiGet, niceMax } from '../utils/api';
 
 import pin1x from '../images/org/title2/地图／定位／选中.png';
 import pin2x from '../images/org/title2/地图／定位／选中@2x.png';
@@ -157,85 +165,228 @@ const titleImgRegion1x = v2t6x; const titleImgRegion2x = v2t6x2;
 // 7: 底部右（合并模块：小三级+行业条形）
 const titleImgSmall1x = v2t7x; const titleImgSmall2x = v2t7x2;
 
-// 顶部中：KPI 卡片三项（市、区/产业合计、街道）沿用 Org 页面实现
-const searchKpiItems = [
-  { title: '基层工会总数', value: 23421, icon1x: icon31x, icon2x: icon32x },
-  { title: '涵盖单位数', value: 82321, icon1x: icon41x, icon2x: icon42x },
-  { title: '会员总数', value: 7321318, icon1x: icon51x, icon2x: icon52x }
-];
+// 顶部中：KPI 卡片三项（来自 /business/union/allNum）
+// 与 Dashboard.vue 保持口径：总数 / 较上周新增 / 下辖工会
+const searchKpiItems = ref([
+  { title: '工会总数(个)', value: 0, icon1x: icon31x, icon2x: icon32x },
+  { title: '较上周新增(个)', value: 0, icon1x: icon41x, icon2x: icon42x },
+  { title: '下辖工会(个)', value: 0, icon1x: icon51x, icon2x: icon52x }
+]);
 
-// 顶部右：工会概况三项（占位数据）
-const kpiOverview = { downUnion: 12329, openGov: 1239, staffRep: 5518 };
+// 搜索框关键词；点击“搜索”或回车后跳到 Home 页面，并携带 kw/cat
+const router = useRouter();
+const keyword = ref('');
+function goToHome(kw?: string) {
+  // 同时使用 ?? 与 || 需要外层括号
+  const k = (((kw ?? keyword.value) || '') as string).trim();
+  router.push({ path: '/home', query: { kw: k, cat: 'org' } });
+}
 
-// 左上：行业占比环图（占位数据 + 可滚动图例）
-const industryPieItems = [
-  { name: '公共管理、社会保障和社会组织', value: 7433, color: '#506EFF' },
-  { name: '其他', value: 5451, color: '#C9D2FF' },
-  { name: '制造业', value: 7878, color: '#5EE0D2' },
-  { name: '居民服务、修理和其他服务业', value: 5436, color: '#6F85FF' },
-  { name: '批发零售业', value: 4324, color: '#8D63FF' },
-  { name: '农林牧渔业', value: 3421, color: '#D8D6D2' },
-  { name: '农林牧渔业', value: 3421, color: '#D8D6D2' }
-];
+// 顶部右：工会概况三项（来自 /business/union/allNum）
+const kpiOverview = ref({ downUnion: 0, openGov: 0, staffRep: 0 });
+
+// ---------------- API 定义 ----------------
+const API = {
+  industry: '/business/union/industry',                // 单位行业
+  nextLevelTop: '/business/union/nextLevelTop',        // 下级工会组织排行（Top N）
+  tradeNature: '/business/union/tradeNature',          // 工会类型统计
+  proportion: '/business/union/proportion',            // 企业性质占比
+  area: '/business/union/area',                        // 各行政区组织分布统计（堆叠）
+  threeDept: '/business/union/threeDept'               // 小三级工会统计
+};
+
+// 常用调色板（环图/柱状图使用）
+const piePalette = ['#6F85FF','#5EE0D2','#8D63FF','#4E8FFF','#6FD9C9','#8FB9FF','#A8C4FF','#7EC8FF','#5AA0FF','#9AA0AD','#C9D2FF','#D8D6D2'];
+
+// 左上：单位行业占比（来自 /business/union/industry）
+type PieItem = { name: string; value: number; color?: string };
+const industryPieItems = ref<PieItem[]>([]);
 const activeIndustryIndex = ref(0);
-const activeIndustry = computed(() => industryPieItems[activeIndustryIndex.value] || { name: '—', value: 0 });
-const totalIndustry = computed(() => industryPieItems.reduce((s, it) => s + (it.value || 0), 0).toLocaleString('zh-CN'));
+const activeIndustry = computed(() => industryPieItems.value[activeIndustryIndex.value] || { name: '—', value: 0 });
+const totalIndustry = computed(() => industryPieItems.value.reduce((s, it) => s + (it.value || 0), 0).toLocaleString('zh-CN'));
 
-// 右上：企业性质占比（占位）
-const bizPieItems = [
-  { name: '社会组织', value: 7439, color: '#6F85FF' },
-  { name: '其他', value: 5451, color: '#C9D2FF' },
-  { name: '机关', value: 7878, color: '#5EE0D2' },
-  { name: '居民服务', value: 5436, color: '#6FD9C9' },
-  { name: '制造业', value: 4324, color: '#8D63FF' },
-  { name: '外商投资企业', value: 427, color: '#D8D6D2' }
-];
+// 右上：企业性质占比（来自 /business/union/proportion）
+const bizPieItems = ref<PieItem[]>([]);
 const activeBizIndex = ref(0);
-const activeBiz = computed(() => bizPieItems[activeBizIndex.value] || { name: '—', value: 0 });
-const bizTotalNum = computed(() => bizPieItems.reduce((s, it) => s + (it.value || 0), 0));
+const activeBiz = computed(() => bizPieItems.value[activeBizIndex.value] || { name: '—', value: 0 });
+const bizTotalNum = computed(() => bizPieItems.value.reduce((s, it) => s + (it.value || 0), 0));
 const totalBiz = computed(() => bizTotalNum.value.toLocaleString('zh-CN'));
 
-// 中中：工会类型统计（占位）
-const unionTypeCategories = ['总工会', '工会小组', '分工会', '独立建制工会', '联合基层工会', '行业工会联合会', '镇街工会'];
-const unionTypeValues = [1100, 680, 760, 820, 540, 460, 600];
-const typeYMax = 1200;
+// 中中：工会类型统计（来自 /business/union/tradeNature）
+const unionTypeCategories = ref<string[]>([]);
+const unionTypeValues = ref<number[]>([]);
+const typeYMax = ref<number>(1200);
 
-// 中左：下辖工会组织排行（占位）
-const rankList = [
-  { name: '武昌区', value: 61898 },
-  { name: '东湖新技术开发区', value: 61897 },
-  { name: '汉阳区', value: 3092 },
-  { name: '江汉区', value: 6189 },
-  { name: '江夏区', value: 5230 }
-];
+// 中左：下级工会组织排行（来自 /business/union/nextLevelTop）
+const rankList = ref<{ name: string; value: number }[]>([]);
 
-// 底部左：各行政区组织分布（复用 OrgRegionDistribution 默认占位）
-const rdCategories = ['武昌区', '硚口区', '江岸区', '东湖开发区', '新洲区', '洪山区', '青山区', '蔡甸区', '江夏区', '汉阳区', '东西湖区', '东湖风景区', '黄陂区', '经开区', '江汉区'];
-const rdYMax = 1200;
-const districtStackSeries = [
-  { name: '未建会', data: [60, 40, 50, 30, 45, 55, 48, 36, 44, 50, 42, 38, 47, 35, 46] },
-  { name: '总工会', data: [180, 120, 150, 110, 130, 140, 145, 120, 150, 160, 148, 135, 142, 150, 155] },
-  { name: '其他', data: [40, 35, 38, 28, 30, 32, 30, 28, 29, 30, 30, 28, 30, 28, 29] },
-  { name: '工会小组', data: [120, 80, 90, 70, 72, 75, 68, 66, 74, 78, 70, 72, 76, 74, 79] },
-  { name: '分工会', data: [240, 160, 180, 130, 128, 140, 132, 120, 150, 170, 150, 145, 155, 165, 168] },
-  { name: '单独基层工会', data: [200, 130, 150, 100, 96, 120, 110, 108, 126, 136, 120, 118, 124, 130, 132] },
-  { name: '联合基层工会', data: [110, 90, 100, 86, 70, 82, 80, 78, 84, 90, 86, 80, 88, 92, 94] },
-  { name: '行业性工会联合会', data: [40, 35, 36, 30, 26, 28, 26, 24, 30, 32, 28, 26, 28, 30, 32] }
-];
+// 底部左：各行政区组织分布（来自 /business/union/area）
+const rdCategories = ref<string[]>([]);
+const rdYMax = ref<number>(1200);
+const districtStackSeries = ref<{ name: string; data: number[] }[]>([]);
 
-// 底部中：小三级工会组织统计（用环图表现一个总量）
-const small3Total = 6329;
+// 底部中：小三级工会组织统计（左仪表：总数；右条形：分项）
+const small3Total = ref<number>(0);
 
-// 底部右：示例条形图
-const rightBarCats = ['冶金工会', '教育工会', '建筑工会', '纺织工会', '轻工工会', '化工工会', '煤炭工会'];
-const rightBarVals = [520, 680, 860, 740, 600, 560, 620];
-const rightBarMax = 1200;
+// 底部右：小三级工会的分项条形（来自 /business/union/threeDept）
+const rightBarCats = ref<string[]>([]);
+const rightBarVals = ref<number[]>([]);
+const rightBarMax = ref<number>(1200);
 
 function fmt(n?: number) { return (n ?? 0).toLocaleString('zh-CN'); }
 function percent(v: number, total: number | { value: number }) {
   const t = typeof total === 'number' ? total : (total as any).value;
   const p = t > 0 ? (v / t) * 100 : 0;
   return Math.round(p) + '%';
+}
+
+// ---------------- 数据加载：按模块分别拉取并映射 ----------------
+onMounted(async () => {
+  await Promise.allSettled([
+    fetchAllNum(),
+    fetchIndustry(),
+    fetchProportion(),
+    fetchTradeNature(),
+    fetchNextLevelTop(),
+    fetchAreaStacked(),
+    fetchThreeDept()
+  ]);
+});
+
+async function fetchAllNum() {
+  // 工会组织总数/工会数据
+  const d = await apiGet<any>('/business/union/allNum').catch(() => null);
+  if (!d) return;
+  const total = Number(d?.total || 0);
+  const add = Number(d?.addThenLastWeek || 0);
+  const nextLevel = Number(d?.nextLevel || 0);
+  const zhi = Number((d as any)?.zhi || 0);
+  const chang = Number((d as any)?.chang || 0);
+
+  // 顶部中 KPI 三项
+  const items = searchKpiItems.value.slice();
+  if (items[0]) items[0].value = total;
+  if (items[1]) items[1].value = add;
+  if (items[2]) items[2].value = nextLevel;
+  searchKpiItems.value = items;
+
+  // 顶部右 概况三项
+  kpiOverview.value = {
+    downUnion: nextLevel,
+    openGov: chang,
+    staffRep: zhi
+  };
+}
+
+async function fetchIndustry() {
+  const res = await apiGet<any>(API.industry).catch(() => null);
+  // 预期：[{ name, value, region }]
+  const rows: any[] = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
+  const mapped = rows.map((r, i) => ({
+    name: String(r.name ?? ''),
+    value: Number(r.value ?? 0) || 0,
+    color: piePalette[i % piePalette.length]
+  } as PieItem)).filter(it => it.name);
+  if (mapped.length) industryPieItems.value = mapped;
+}
+
+async function fetchProportion() {
+  const res = await apiGet<any>(API.proportion).catch(() => null);
+  // 预期：[{ name, value, region }]
+  const rows: any[] = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
+  const mapped = rows.map((r, i) => ({
+    name: String(r.name ?? ''),
+    value: Number(r.value ?? 0) || 0,
+    color: piePalette[i % piePalette.length]
+  } as PieItem)).filter(it => it.name);
+  if (mapped.length) bizPieItems.value = mapped;
+}
+
+async function fetchTradeNature() {
+  const res = await apiGet<any>(API.tradeNature).catch(() => null);
+  // 预期：{ districts: string[]; values: number[]; ymax?: number }
+  const dists: any[] = Array.isArray(res?.districts) ? res.districts : [];
+  const vals: any[] = Array.isArray(res?.values) ? res.values : [];
+  // 对齐过滤：剔除空的类目，同时同步剔除对应的数值
+  const cats: string[] = [];
+  const nums: number[] = [];
+  dists.forEach((name, idx) => {
+    if (name != null && name !== '') {
+      cats.push(String(name));
+      nums.push(Number(vals[idx] ?? 0) || 0);
+    }
+  });
+  if (cats.length) {
+    unionTypeCategories.value = cats;
+    unionTypeValues.value = nums;
+    typeYMax.value = Number(res?.ymax ?? res?.yMax) || niceMax(nums, 10);
+  }
+}
+
+async function fetchNextLevelTop() {
+  const res = await apiGet<any>(API.nextLevelTop).catch(() => null);
+  const rows: any[] = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
+  const mapped = rows.map((r: any) => ({ name: String(r.name ?? ''), value: Number(r.value ?? 0) || 0 }))
+                    .filter((it) => it.name);
+  if (mapped.length) rankList.value = mapped;
+}
+
+async function fetchAreaStacked() {
+  const res = await apiGet<any>(API.area).catch(() => null);
+  if (!res) return;
+  const cats: string[] = Array.isArray(res.districts) ? res.districts : [];
+  rdCategories.value = cats;
+
+  // 将各字段映射为堆叠序列。字段名 -> 展示名
+  const mapDefs: Record<string, string> = {
+    wei: '未建会',
+    zonGong: '总工会',
+    qiTa: '其他',
+    xiaoZu: '工会小组',
+    fen: '分工会',
+    danDu: '单独基层工会',
+    lianHeJi: '联合基层工会',
+    hangYe: '行业性工会联合会',
+    quYu: '区域性工会联合会',
+    gongZuo: '工会工作委员会',
+    banShi: '工会办事处'
+  };
+
+  const seriesOrder = [
+    'wei','zonGong','qiTa','xiaoZu','fen','danDu','lianHeJi','hangYe','quYu','gongZuo','banShi'
+  ];
+
+  const ser: { name: string; data: number[] }[] = [];
+  for (const key of seriesOrder) {
+    if (res[key] && Array.isArray(res[key])) {
+      const arr = (res[key] as any[]).map((n) => Number(n ?? 0) || 0);
+      ser.push({ name: mapDefs[key], data: arr });
+    }
+  }
+  districtStackSeries.value = ser;
+
+  // yMax：优先 values（总量），否则根据堆叠后的每列和求出最大
+  let yMax = 0;
+  if (Array.isArray(res.values) && res.values.length) {
+    yMax = niceMax(res.values.map((n: any) => Number(n) || 0), 10);
+  } else if (ser.length && cats.length) {
+    const colSums = cats.map((_, i) => ser.reduce((s, c) => s + (c.data[i] ?? 0), 0));
+    yMax = niceMax(colSums, 10);
+  }
+  rdYMax.value = yMax || 10;
+}
+
+async function fetchThreeDept() {
+  const res = await apiGet<any>(API.threeDept).catch(() => null);
+  const cats: string[] = Array.isArray(res?.districts) ? res.districts.map((s: any) => String(s ?? '')) : [];
+  const vals: number[] = Array.isArray(res?.values) ? res.values.map((n: any) => Number(n) || 0) : [];
+  if (cats.length === vals.length && cats.length) {
+    rightBarCats.value = cats;
+    rightBarVals.value = vals;
+    rightBarMax.value = Number(res?.ymax ?? res?.yMax) || niceMax(vals, 10);
+    const total = Number(res?.ysum);
+    small3Total.value = Number.isFinite(total) ? total : vals.reduce((s, n) => s + n, 0);
+  }
 }
 </script>
 

@@ -24,28 +24,29 @@
       </template>
 
       <!-- 右侧：自定义图例（含顶部概览） -->
-      <template #legend="{ items: vis, activeIndex: ai, pageStart, setActive, formatNumber }">
+      <!-- 使用具名对象接收插槽参数，避免“未定义”告警 -->
+      <template #legend="sp">
         <!-- 概览：当前高亮民族 + 数量 + 占比 -->
         <div class="summary">
           <img class="summary__icon" :src="summaryIcon1x" :srcset="summaryIcon2x + ' 2x'" alt="" />
           <div class="summary__text">
             <div class="summary__name">{{ majorItem.name }}</div>
-            <div class="summary__meta">{{ formatNumber(majorItem.value) }}人、{{ percentAll(majorItem.value) }}</div>
+            <div class="summary__meta">{{ sp.formatNumber(majorItem.value) }}人、{{ percentText(majorItem) }}</div>
           </div>
         </div>
 
         <!-- 列表图例：名称 + 数量 + 占比 -->
         <ul class="legend" role="list">
           <li
-            v-for="(it, idx) in vis"
-            :key="it.name + idx"
+            v-for="(it, idx) in sp.items"
+            :key="(it?.name || '') + idx"
             class="legend-item"
-            :class="{ active: (pageStart + idx) === ai }"
-            @mouseenter="setActive(pageStart + idx)"
+            :class="{ active: (sp.pageStart + idx) === sp.activeIndex }"
+            @mouseenter="sp.setActive(sp.pageStart + idx)"
           >
-            <span class="dot" :style="{ backgroundColor: it.color }" aria-hidden="true"></span>
-            <span class="label">{{ it.name }}</span>
-            <span class="count">{{ formatNumber(it.value) }}、{{ percentAll(it.value) }}</span>
+            <span class="dot" :style="{ backgroundColor: it?.color }" aria-hidden="true"></span>
+            <span class="label">{{ it?.name }}</span>
+            <span class="count">{{ sp.formatNumber(it?.value || 0) }}、{{ percentText(it as any) }}</span>
           </li>
         </ul>
       </template>
@@ -65,46 +66,44 @@ import legend2x from '../../images/distribution-legend/位图@2x.png';
 import summaryIcon1x from '../../images/member-v2/icon/位图.png';
 import summaryIcon2x from '../../images/member-v2/icon/位图@2x.png';
 
-interface Item { name: string; value: number; color?: string }
-
+interface Item { name: string; value: number; region?: string; color?: string }
 interface Props { items?: Item[]; majorName?: string }
 
 const props = withDefaults(defineProps<Props>(), {
-  // 示例数据贴近设计稿：包含多项以触发翻页
-  items: () => [
-    { name: '汉族',     value: 865432, color: '#6F85FF' },
-    { name: '回族',     value: 2345,   color: '#2a6ff0' },
-    { name: '维吾尔族', value: 4788,   color: '#FFA640' },
-    { name: '满族',     value: 23,     color: '#7A87DC' },
-    { name: '傣族',     value: 21,     color: '#8C6BFF' },
-    { name: '高山族',   value: 32,     color: '#D8D6D2' },
-    { name: '苗族',     value: 21,     color: '#5EE0D2' },
-    { name: '藏族',     value: 19,     color: '#6CD7FF' },
-    { name: '蒙古族',   value: 18,     color: '#A7B1FF' },
-    { name: '布依族',   value: 17,     color: '#7FC1FF' }
-  ],
+  items: () => [],
   majorName: '汉族'
 });
 
-const allItems = props.items; // 全部民族
-const activeIndex = ref(0);   // 仅用于次要民族滚动/高亮
+// 使用 computed 包装 props.items，避免初始为空时引用错误，并保持响应性
+const allItems = computed<Item[]>(() => Array.isArray(props.items) ? props.items : []);
+const activeIndex = ref(0); // 用于环图高亮
 
-// 选出“主民族”（优先匹配名称；不存在时取最大值项）
+// 主民族：优先名称匹配；无数据时提供占位
 const majorItem = computed<Item>(() => {
-  const byName = allItems.find((i) => i.name === props.majorName);
+  const list = allItems.value;
+  if (!list.length) return { name: '—', value: 0 };
+  const byName = list.find((i) => String(i?.name || '').trim() === props.majorName);
   if (byName) return byName;
-  return allItems.reduce((max, i) => (i.value > max.value ? i : max), allItems[0]);
+  return list.reduce((max, i) => (i.value > max.value ? i : max), list[0]);
 });
 
-// 次要民族 = 全部 - 主民族；用于环形图与右侧列表
-const minorItems = computed<Item[]>(() => allItems.filter((i) => i !== majorItem.value));
+// 次要民族 = 全部 - 主民族
+const minorItems = computed<Item[]>(() => allItems.value.filter((i) => i !== majorItem.value));
 
-// 总量用于百分比显示（图例显示“占总量”的占比，以贴合设计稿中小于 1% 的表现）
-const totalAll = computed(() => allItems.reduce((s, i) => s + i.value, 0));
+// 占比计算：对总量安全处理
+const totalAll = computed(() => allItems.value.reduce((s, i) => s + (i?.value || 0), 0));
 
 function percentAll(v: number) {
   const n = totalAll.value ? (v / totalAll.value) * 100 : 0;
   return `${Math.round(n)}%`;
+}
+
+// 展示百分比：优先采用后端提供的 region 文案；无则回退到按总量计算
+function percentText(item?: Item | null) {
+  if (!item) return '0%';
+  const r: any = (item as any).region;
+  if (r != null && String(r).trim() !== '') return String(r).trim();
+  return percentAll(item.value);
 }
 
 // 调整环形图中心位置，让右侧有足够空间显示图例
@@ -127,7 +126,7 @@ const seriesCenter = ref<[string, string]>(['38%', '48%']);
 }
 .summary__icon { width: 56px; height: 56px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(90,160,255,0.25)); }
 .summary__text { display: flex; align-items: baseline; column-gap: 12px; white-space: nowrap; }
-.summary__name { font-size: 16 px; font-weight: 900; color: #2a6ff0; letter-spacing: 1px; }
+.summary__name { font-size: 16px; font-weight: 900; color: #2a6ff0; letter-spacing: 1px; }
 .summary__meta { font-size: 16px; font-weight: 800; color: rgba(42,111,240,0.95); line-height: 1; }
 
 /* 自定义图例样式，延续 RingPie 默认风格 */
