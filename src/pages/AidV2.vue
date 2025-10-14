@@ -1,29 +1,73 @@
 <template>
   <main class="aidv2__grid">
-    <!-- 左上：类型分布 -->
-    <section class="mod" style="grid-area: lt;">
-      <div class="mod__head"><h3 class="mod__title">类型分布（占位）</h3></div>
-      <div class="mod__body"><div class="ph ph--bars" /></div>
-    </section>
-
-    <!-- 中部：总数 + 中心插画（占位），跨两行 -->
-    <section class="mod mod--tall" style="grid-area: cm;">
-      <div class="mod__head"><h3 class="mod__title">帮扶职工总数（占位）</h3></div>
-      <div class="mod__body mod__body--full">
-        <div class="ph ph--counter">1 1 1 2 1 1</div>
-        <div class="ph ph--center-illust" />
+    <!-- 左上：还原的卡片+柱体组合 -->
+    <section class="mod mod--tall" style="grid-area: lt;">
+      <div class="mod__head"><span class="title-img title-img--aid2-1" aria-hidden="true"></span></div>
+      <div class="mod__body">
+        <div class="aid2-left">
+          <div class="aid2-left__pillar" aria-hidden="true"></div>
+          <ul class="aid2-left__list">
+            <li v-for="(it, i) in leftItems" :key="i" class="aid2-left__item" :style="{ '--dot': it.color } as any">
+              <span class="dot" />
+              <span class="label">{{ it.name }}</span>
+              <span class="val"><b>{{ it.value }}</b><i>人</i></span>
+            </li>
+          </ul>
+        </div>
       </div>
     </section>
 
-    <!-- 右上：性别/年龄分布 -->
-    <section class="mod" style="grid-area: rt;">
-      <div class="mod__head"><h3 class="mod__title">性别 / 年龄分布（占位）</h3></div>
-      <div class="mod__body"><div class="ph ph--hbars" /></div>
+    <!-- 中部：还原“总数+中心插画”，跨两行 -->
+    <section class=" mod--tall" style="grid-area: cm;">
+      <div class="mod__body mod__body--full">
+        <div class="aid2-center">
+          <div class="aid2-center__counter">
+            <ul class="digits" aria-label="总数">
+              <li v-for="(d, i) in counterDigits" :key="i">{{ d }}</li>
+            </ul>
+            <div class="delta-row" aria-label="环比">
+              <span class="delta-text">比上月新增 {{ lastMonthAdd }} 人</span>
+              <span class="delta-bar"><i :style="{ width: Math.round(deltaPercent * 100) + '%' }"></i></span>
+            </div>
+          </div>
+          <div class="aid2-center__illus" aria-hidden="true"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 右上：还原“性别头像 + 年龄分布堆叠条形” -->
+    <section class="mod mod--tall" style="grid-area: rt;">
+      <div class="mod__head"><span class="title-img title-img--aid2-2" aria-hidden="true"></span></div>
+      <div class="mod__body">
+        <div class="aid2-right">
+          <div class="aid2-right__badges">
+            <div class="badge-box">
+              <div class="badge-num">{{ maleTotal }}人</div>
+              <span class="badge badge--male" aria-hidden="true"></span>
+            </div>
+            <div class="badge-box">
+              <div class="badge-num">{{ femaleTotal }}人</div>
+              <span class="badge badge--female" aria-hidden="true"></span>
+            </div>
+          </div>
+          <HorizontalGenderStack
+            class="aid2-right__chart"
+            :labels="ageLabels"
+            :male="male"
+            :female="female"
+            :min-total="90"
+            :step="15"
+            unit-text="万人"
+            :grid-left="74" :grid-right="26" :grid-top="14" :grid-bottom="36"
+            :bar-width="12"
+          />
+        </div>
+      </div>
     </section>
 
     <!-- 左下：档案类别（使用 HonorRingsChart 实现环图） -->
-    <section class="mod mod--tall" style="grid-area: lb;">
-      <div class="mod__head"><h3 class="mod__title">帮扶职工档案类别</h3></div>
+    <section class="mod" style="grid-area: lb;">
+      <div class="mod__head"><span class="title-img title-img--aid2-3" aria-hidden="true"></span></div>
       <div class="mod__body mod__body--full">
         <HonorRingsChart :items="archiveItems" center-text="档案分类" :center="['50%','56%']" :gap-deg="10" :base-start="20" :sweep-angle="260" />
       </div>
@@ -31,7 +75,7 @@
 
     <!-- 中下：致困原因柱状图（使用 StripedBarChart） -->
     <section class="mod" style="grid-area: cb;">
-      <div class="mod__head"><h3 class="mod__title">帮扶职工致困原因</h3></div>
+      <div class="mod__head"><span class="title-img title-img--aid2-4" aria-hidden="true"></span></div>
       <div class="mod__body mod__body--full">
         <StripedBarChart
           :categories="causeCats"
@@ -48,14 +92,10 @@
     </section>
 
     <!-- 右下：覆盖类别指标占位（竖排 3 个） -->
-    <section class="mod mod--tall" style="grid-area: rb;">
-      <div class="mod__head"><h3 class="mod__title">覆盖情况（占位）</h3></div>
-      <div class="mod__body">
-        <div class="ph-list">
-          <div class="ph ph--ring"></div>
-          <div class="ph ph--ring"></div>
-          <div class="ph ph--ring"></div>
-        </div>
+    <section class="mod" style="grid-area: rb;">
+      <div class="mod__head"><span class="title-img title-img--aid2-5" aria-hidden="true"></span></div>
+      <div class="mod__body mod__body--full">
+        <CoverageRings :items="coverageItems" />
       </div>
     </section>
   </main>
@@ -64,6 +104,8 @@
 <script setup lang="ts">
 import HonorRingsChart from '../components/HonorRingsChart.vue';
 import StripedBarChart from '../components/StripedBarChart.vue';
+import HorizontalGenderStack from '../components/HorizontalGenderStack.vue';
+import CoverageRings from '../components/aid/CoverageRings.vue';
 
 // 档案类别环图数据（示例）
 const archiveItems = [
@@ -75,6 +117,38 @@ const archiveItems = [
 // 致困原因柱状图
 const causeCats = ['本人失业', '供养直系亲属负担', '本人疾病', '家属疾病'];
 const causeVals = [1080, 720, 860, 1180];
+
+// 右上“年龄分布（男女堆叠）”示例数据
+const ageLabels = ['80岁以上', '60-80岁', '40-60岁', '20-40岁', '20岁以下'];
+const male = [6, 20, 42, 18, 4];
+const female = [8, 26, 48, 28, 7];
+
+// 中部计数器（假数据）
+const total = 111211; // 总数（假数据）
+const lastMonthAdd = 10; // 本月新增（假数据）
+// 将数字填充为 6 位，便于与底图 6 个盒子对齐
+const counterDigits = Array.from(String(total).padStart(6, '0'));
+
+// 左上三项文案 + 数值（假数据）
+const leftItems = [
+  { name: '深度困难', value: 500, color: '#2a6ff0' },
+  { name: '相对困难', value: 100, color: '#27b87a' },
+  { name: '意外致困', value: 50, color: '#f6a03a' }
+];
+
+// 右上男女总数（假数据）
+const maleTotal = 5237;
+const femaleTotal = 5237;
+
+// 环比进度条占比（0~1），仅用于装饰
+const deltaPercent = 0.58;
+
+// 右下：覆盖类别三项（假数据）
+const coverageItems = [
+  { percent: 80, value: 2347, label: '城镇困难职工', color: '#4E8FFF' },
+  { percent: 80, value: 2347, label: '困难农民工', color: '#27b87a' },
+  { percent: 80, value: 2347, label: '职工涵盖', color: '#f6a03a' },
+];
 </script>
 
 <style scoped lang="scss">
@@ -83,21 +157,29 @@ const causeVals = [1080, 720, 860, 1180];
   padding: 0 20px 20px;
   display: grid;
   grid-template-columns: 540px 1fr 540px;
-  grid-template-rows: 320px 1fr 1fr;
+  /* 两行布局：左右列上下各 50%；中间 cm 仍跨两行，cb 位于第二行中间 */
+  grid-template-rows: 1fr 1fr;
   grid-template-areas:
     'lt cm rt'
-    'lb cm rb'
     'lb cb rb';
-  gap: 0px;
+  gap: 10px; /* 统一模块间距 */
 }
 
 /* 模块外框与 Refund 一致 */
-.mod { position: relative; border: none; border-radius: 10px; background: none; padding: 18px; display: grid; grid-template-rows: auto 1fr; }
-.mod::before { content: ''; position: absolute; left: -8px; right: -8px; top: -8px; bottom: -8px; background-repeat: no-repeat; background-size: 100% 100%; background-image: -webkit-image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x); background-image: image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x); pointer-events: none; z-index: -1; }
+.mod { position: relative; border: none; border-radius: 10px; background: none; padding: 18px; display: grid; grid-template-rows: auto 1fr; height: 100%; min-height: 0; }
+.mod::before { content: ''; position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-repeat: no-repeat; background-size: 100% 100%; background-image: -webkit-image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x); background-image: image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x); pointer-events: none; z-index: -1; }
 .mod--tall::before { background-image: -webkit-image-set(url('../images/module-broder-height/矩形.png') 1x, url('../images/module-broder-height/矩形@2x.png') 2x); background-image: image-set(url('../images/module-broder-height/矩形.png') 1x, url('../images/module-broder-height/矩形@2x.png') 2x); }
 
 .mod__title { margin: 0 0 8px; font-size: 16px; font-weight: 800; color: #2a6ff0; letter-spacing: 1px; }
-.mod__body { overflow: hidden; display: grid; }
+.mod__body { overflow: hidden; display: grid; min-height: 0; }
+
+/* 统一标题切图样式 */
+.title-img { display: inline-block; height: 35px; background-repeat: no-repeat; background-size: 100% 100%; margin: 0 0 10px; }
+.title-img--aid2-1 { width: 191px; background-image: -webkit-image-set(url('../images/aid2/title/1/编组 21.png') 1x, url('../images/aid2/title/1/编组 21@2x.png') 2x); background-image: image-set(url('../images/aid2/title/1/编组 21.png') 1x, url('../images/aid2/title/1/编组 21@2x.png') 2x); }
+.title-img--aid2-2 { width: 254px; background-image: -webkit-image-set(url('../images/aid2/title/2/编组 21.png') 1x, url('../images/aid2/title/2/编组 21@2x.png') 2x); background-image: image-set(url('../images/aid2/title/2/编组 21.png') 1x, url('../images/aid2/title/2/编组 21@2x.png') 2x); }
+.title-img--aid2-3 { width: 191px; background-image: -webkit-image-set(url('../images/aid2/title/3/编组 21.png') 1x, url('../images/aid2/title/3/编组 21@2x.png') 2x); background-image: image-set(url('../images/aid2/title/3/编组 21.png') 1x, url('../images/aid2/title/3/编组 21@2x.png') 2x); }
+.title-img--aid2-4 { width: 191px; background-image: -webkit-image-set(url('../images/aid2/title/4/编组 21.png') 1x, url('../images/aid2/title/4/编组 21@2x.png') 2x); background-image: image-set(url('../images/aid2/title/4/编组 21.png') 1x, url('../images/aid2/title/4/编组 21@2x.png') 2x); }
+.title-img--aid2-5 { width: 191px; background-image: -webkit-image-set(url('../images/aid2/title/5/编组 21.png') 1x, url('../images/aid2/title/5/编组 21@2x.png') 2x); background-image: image-set(url('../images/aid2/title/5/编组 21.png') 1x, url('../images/aid2/title/5/编组 21@2x.png') 2x); }
 
 /* 占位图形：用中性颜色 + 虚线边框表达结构 */
 .ph { border: 2px dashed rgba(0, 120, 255, .35); border-radius: 10px; background: rgba(80, 150, 255, .06); }
@@ -110,4 +192,36 @@ const causeVals = [1080, 720, 860, 1180];
 .ph--ring { height: 96px; border-radius: 50%; }
 
 .ph-list { height: 100%; display: grid; align-content: space-evenly; justify-items: center; row-gap: 10px; }
+
+/* --- Aid2: 左上模块（柱体 + 右侧 3 条卡片） --- */
+.aid2-left { height: 100%; display: grid; grid-template-columns: 128px 1fr; column-gap: 16px; align-items: center; }
+.aid2-left__pillar { align-self: stretch; background-repeat: no-repeat; background-position: left center; background-size: contain; background-image: -webkit-image-set(url('../images/aid2/part1/1/编组 23.png') 1x, url('../images/aid2/part1/1/编组 23@2x.png') 2x); background-image: image-set(url('../images/aid2/part1/1/编组 23.png') 1x, url('../images/aid2/part1/1/编组 23@2x.png') 2x); }
+.aid2-left__list { list-style: none; margin: 0; padding: 0; display: grid; row-gap: 14px; }
+.aid2-left__item { height: 72px; border-radius: 8px; background-repeat: no-repeat; background-size: 100% 100%; background-position: center; background-image: -webkit-image-set(url('../images/aid2/part1/2/矩形.png') 1x, url('../images/aid2/part1/2/矩形@2x.png') 2x); background-image: image-set(url('../images/aid2/part1/2/矩形.png') 1x, url('../images/aid2/part1/2/矩形@2x.png') 2x); display: grid; grid-template-columns: 18px 1fr auto; align-items: center; column-gap: 10px; padding: 0 16px; }
+.aid2-left__item .dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 0 3px rgba(255,255,255,.7) inset; background: var(--dot); }
+.aid2-left__item .label { font-weight: 800; color: #2a6ff0; letter-spacing: .5px; }
+.aid2-left__item .val { justify-self: end; font-weight: 900; color: #2a6ff0; }
+.aid2-left__item .val b { font-size: 18px; }
+.aid2-left__item .val i { font-style: normal; margin-left: 2px; opacity: .9; }
+
+/* --- Aid2: 中部高模块（数字计数 + 中心插画） --- */
+.aid2-center { height: 100%; display: grid; grid-template-rows: 220px 1fr; align-content: start; justify-items: center; row-gap: 8px; }
+.aid2-center__counter { position: relative; width: min(92%, 540px); height: 166px; background-repeat: no-repeat; background-size: contain; background-position: center top; background-image: -webkit-image-set(url('../images/aid2/part2/1/编组 31.png') 1x, url('../images/aid2/part2/1/编组 31@2x.png') 2x); background-image: image-set(url('../images/aid2/part2/1/编组 31.png') 1x, url('../images/aid2/part2/1/编组 31@2x.png') 2x); margin-top: 2px; }
+.digits { position: absolute; left: 8%; right: 8%; top: 56px; display: grid; grid-template-columns: repeat(6, 1fr); align-items: center; justify-items: center; gap: 8px; }
+.digits li { list-style: none; font-weight: 900; font-size: 34px; color: #2a6ff0; text-shadow: 0 1px 0 rgba(255,255,255,.6); }
+.delta-row { position: absolute; left: 50%; transform: translateX(-50%); top: 126px; display: grid; grid-template-columns: auto 180px; align-items: center; column-gap: 12px; }
+.delta-text { font-size: 13px; color: #2a6ff0; font-weight: 800; background: rgba(255,255,255,.65); padding: 2px 8px; border-radius: 10px; border: 1px solid rgba(42,111,240,.25); }
+.delta-bar { height: 8px; background: rgba(42,111,240,.15); border-radius: 6px; overflow: hidden; }
+.delta-bar i { display: block; height: 100%; background: linear-gradient(90deg, rgba(110,168,255,1) 0%, rgba(42,111,240,1) 100%); border-radius: 6px; }
+.aid2-center__illus { width: min(86%, 500px); height: 298px; background-repeat: no-repeat; background-size: contain; background-position: center; background-image: -webkit-image-set(url('../images/aid2/part2/2/编组 9.png') 1x, url('../images/aid2/part2/2/编组 9@2x.png') 2x); background-image: image-set(url('../images/aid2/part2/2/编组 9.png') 1x, url('../images/aid2/part2/2/编组 9@2x.png') 2x); }
+
+/* --- Aid2: 右上模块（男女头像 + 年龄堆叠条形） --- */
+.aid2-right { height: 100%; display: grid; grid-template-rows: auto 1fr; row-gap: 4px; }
+.aid2-right__badges { display: grid; grid-auto-flow: column; column-gap: 18px; justify-content: start; align-items: center; padding-left: 6px; }
+.badge-box { display: grid; justify-items: center; row-gap: 6px; }
+.badge-num { font-weight: 900; color: #2a6ff0; }
+.badge { display: inline-block; width: 194px; height: 92px; background-repeat: no-repeat; background-size: 100% 100%; }
+.badge--male { background-image: -webkit-image-set(url('../images/aid2/part3/1/编组 22.png') 1x, url('../images/aid2/part3/1/编组 22@2x.png') 2x); background-image: image-set(url('../images/aid2/part3/1/编组 22.png') 1x, url('../images/aid2/part3/1/编组 22@2x.png') 2x); }
+.badge--female { background-image: -webkit-image-set(url('../images/aid2/part3/2/编组 22备份 2.png') 1x, url('../images/aid2/part3/2/编组 22备份 2@2x.png') 2x); background-image: image-set(url('../images/aid2/part3/2/编组 22备份 2.png') 1x, url('../images/aid2/part3/2/编组 22备份 2@2x.png') 2x); }
+.aid2-right__chart { height: 100%; }
 </style>
