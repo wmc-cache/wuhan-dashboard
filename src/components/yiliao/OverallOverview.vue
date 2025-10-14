@@ -184,7 +184,7 @@ function pretty(n: number) { return n.toLocaleString('zh-CN'); }
   justify-self: start;
 
   .num {
-    left: 20px;
+    left: 10px;
   }
 }
 
@@ -192,7 +192,7 @@ function pretty(n: number) { return n.toLocaleString('zh-CN'); }
   justify-self: end;
 
   .num {
-    right: 20px;
+    right: 10px;
   }
 }
 
