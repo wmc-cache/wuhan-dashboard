@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lottie 动效预览</title>
+  <style>
+    :root { --bg:#0f1115; --panel:#161a22; --muted:#99a2b2; --text:#e6e8ec; --accent:#4da3ff; }
+    html,body{height:100%}
+    body { margin:0; background:var(--bg); color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif; }
+    header { position:sticky; top:0; z-index:10; background:linear-gradient(180deg, rgba(15,17,21,.95), rgba(15,17,21,.75)); backdrop-filter:saturate(140%) blur(8px); box-shadow:0 1px 0 rgba(255,255,255,.04); }
+    .toolbar { display:flex; gap:12px; align-items:center; padding:10px 14px; flex-wrap:wrap; }
+    .toolbar .title { font-weight:600; margin-right:8px; }
+    .btn { background:var(--panel); color:var(--text); border:1px solid #2a3140; padding:6px 10px; border-radius:6px; cursor:pointer; }
+    .btn:hover { border-color:#3a4357; }
+    .field { display:flex; align-items:center; gap:8px; }
+    .field input[type="text"]{ background:var(--panel); border:1px solid #2a3140; color:var(--text); padding:6px 10px; border-radius:6px; min-width:220px; }
+    .grid { padding:14px; display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap:14px; }
+    .item { background:var(--panel); border:1px solid #222836; border-radius:10px; overflow:hidden; }
+    .label { padding:8px 10px; font-size:12px; color:var(--muted); border-bottom:1px solid #222836; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; justify-content:space-between; gap:6px; }
+    .label a{ color:var(--accent); font-size:12px; text-decoration:none; }
+    .label a:hover{ text-decoration:underline; }
+    .box { width:100%; height:240px; display:flex; align-items:center; justify-content:center; background:#0e121a; }
+    .meta { padding:6px 10px; font-size:12px; color:#b5bdcb; display:flex; gap:12px; border-top:1px solid #222836; }
+    .err { color:#ff6b6b; font-size:12px; }
+    .hint { color:var(--muted); font-size:12px; margin-left:8px; }
+    select, input[type="range"]{ background:var(--panel); border:1px solid #2a3140; color:var(--text); border-radius:6px; padding:6px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="toolbar">
+      <div class="title">Lottie 动效预览</div>
+      <button class="btn" id="playAll">播放全部</button>
+      <button class="btn" id="pauseAll">暂停全部</button>
+      <div class="field">
+        <label for="speed">速度</label>
+        <input id="speed" type="range" min="0.1" max="3" step="0.1" value="1"/>
+        <span id="speedVal" class="hint">1.0x</span>
+      </div>
+      <div class="field">
+        <label for="renderer">渲染</label>
+        <select id="renderer">
+          <option value="svg" selected>svg（清晰）</option>
+          <option value="canvas">canvas（更稳、性能更好）</option>
+        </select>
+      </div>
+      <div class="field">
+        <input id="filter" type="text" placeholder="筛选文件名/路径"/>
+      </div>
+      <span class="hint">本地脚本已内置，无需联网</span>
+    </div>
+  </header>
+
+  <main class="grid" id="grid"></main>
+
+  <!-- Lottie lib (local) -->
+  <script src="./vendor/lottie.min.js"></script>
+  <!-- Files manifest (generated) -->
+  <script src="./preview-manifest.js"></script>
+
+  <script>
+    const files = (window.__LOTTIE_FILES__ || []).filter(p => p.toLowerCase().endsWith('.json'));
+    const grid = document.getElementById('grid');
+    const animations = [];
+    let renderer = 'svg';
+
+    function buildGrid(){
+      grid.innerHTML = '';
+      files.forEach((p, i) => {
+        const item = document.createElement('div');
+        item.className = 'item';
+
+        const label = document.createElement('div');
+        label.className = 'label';
+        label.title = p;
+        const span = document.createElement('span');
+        span.textContent = p;
+        const open = document.createElement('a');
+        open.href = p; open.target = '_blank'; open.textContent = '打开';
+        label.append(span, open);
+
+        const box = document.createElement('div');
+        box.className = 'box';
+        box.id = 'box-' + i;
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.id = 'meta-' + i;
+        meta.textContent = '加载中...';
+
+        item.appendChild(label);
+        item.appendChild(box);
+        item.appendChild(meta);
+        grid.appendChild(item);
+      });
+    }
+
+    function destroyAll(){ animations.forEach(a => a && a.destroy && a.destroy()); animations.length = 0; }
+
+    function loadAll(){
+      files.forEach((p, i) => {
+        const box = document.getElementById('box-' + i);
+        const meta = document.getElementById('meta-' + i);
+        try {
+          const anim = lottie.loadAnimation({
+            container: box,
+            renderer: renderer,
+            loop: true,
+            autoplay: true,
+            path: p
+          });
+          anim.addEventListener('DOMLoaded', () => {
+            const d = anim.animationData || {};
+            if (d.w && d.h) {
+              const width = box.clientWidth || 320;
+              const height = Math.max(120, Math.round(width * d.h / d.w));
+              box.style.height = height + 'px';
+            }
+            const fr = anim.frameRate || (d.fr || 0);
+            const ip = d.ip ?? 0, op = d.op ?? 0;
+            const dur = (fr && op > ip) ? ((op - ip) / fr).toFixed(2) : '—';
+            meta.textContent = `尺寸 ${d.w || '—'}x${d.h || '—'} | 帧率 ${fr || '—'} | 时长 ${dur}s`;
+          });
+          anim.addEventListener('data_failed', () => {
+            box.innerHTML = '<div class="err">加载失败</div>';
+            meta.textContent = '—';
+          });
+          animations[i] = anim;
+        } catch (e) {
+          box.innerHTML = '<div class="err">初始化失败</div>';
+          meta.textContent = '—';
+        }
+      });
+    }
+
+    buildGrid();
+    loadAll();
+
+    // Controls
+    const playAllBtn = document.getElementById('playAll');
+    const pauseAllBtn = document.getElementById('pauseAll');
+    const speedInput = document.getElementById('speed');
+    const speedVal = document.getElementById('speedVal');
+    const rendererSel = document.getElementById('renderer');
+
+    playAllBtn.addEventListener('click', () => animations.forEach(a => a && a.play && a.play()));
+    pauseAllBtn.addEventListener('click', () => animations.forEach(a => a && a.pause && a.pause()));
+    speedInput.addEventListener('input', (e) => {
+      const v = parseFloat(e.target.value) || 1;
+      animations.forEach(a => a && a.setSpeed && a.setSpeed(v));
+      speedVal.textContent = (Math.round(v * 10) / 10).toFixed(1) + 'x';
+    });
+    rendererSel.addEventListener('change', (e) => {
+      renderer = e.target.value;
+      destroyAll();
+      buildGrid();
+      loadAll();
+    });
+
+    // Filter
+    const filterInput = document.getElementById('filter');
+    filterInput.addEventListener('input', (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      const items = grid.querySelectorAll('.item');
+      files.forEach((p, i) => {
+        const visible = !q || p.toLowerCase().includes(q);
+        items[i].style.display = visible ? '' : 'none';
+      });
+    });
+  </script>
+</body>
+</html>
