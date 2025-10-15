@@ -15,6 +15,7 @@
 </template>
 
 <script setup lang="ts">
+import { toRefs } from 'vue';
 import HorizontalGenderStack from '../HorizontalGenderStack.vue';
 
 interface Props {
@@ -31,7 +32,7 @@ const props = withDefaults(defineProps<Props>(), {
   female: () => [10, 28, 54, 30, 8]
 });
 
-const { title, labels, male, female } = props;
+const { title, labels, male, female } = toRefs(props);
 </script>
 
 <style scoped lang="scss">

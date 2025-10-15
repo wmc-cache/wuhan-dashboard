@@ -9,6 +9,7 @@
 </template>
 
 <script setup lang="ts">
+import { toRefs } from 'vue';
 import GridTable, { type ColumnDef } from '../GridTable.vue';
 
 interface Row { lv?: string | number; name: string; count: number; amount: number; union: string }
@@ -34,7 +35,8 @@ const cols: ColumnDef[] = [
   { key: 'union', title: '工会' }
 ];
 
-const rows = props.rows;
+// 响应式接入
+const { rows } = toRefs(props);
 </script>
 
 <style scoped lang="scss">

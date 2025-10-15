@@ -10,15 +10,23 @@
       <!-- 右：年龄分布（男女） -->
       <div class="right">
         <span class="title-img" aria-hidden="true"></span>
-        <HorizontalGenderStack :labels="ageLabels" :male="male" :female="female" :min-total="60" :step="15"
-          unit-text="万人" :grid-left="80" :grid-right="30" :grid-top="36" :grid-bottom="50" />
+        <HorizontalGenderStack
+          :labels="ageLabels"
+          :male="male"
+          :female="female"
+          :min-total="10"
+          :step="axisStep"
+          unit-text="人"
+          :grid-left="80" :grid-right="30" :grid-top="36" :grid-bottom="50"
+        />
       </div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, toRefs } from 'vue';
+import { niceMax } from '../../utils/api';
 import GenderPie from './GenderPie.vue';
 import HorizontalGenderStack from '../HorizontalGenderStack.vue';
 
@@ -45,12 +53,18 @@ const props = withDefaults(defineProps<Props>(), {
   female: () => [10, 28, 54, 30, 8]
 });
 
-const leftTitle = props.leftTitle;
-const rightTitle = props.rightTitle;
-const gender = props.gender;
-const ageLabels = props.ageLabels;
-const male = props.male;
-const female = props.female;
+const { leftTitle, rightTitle, gender, ageLabels, male, female } = toRefs(props);
+
+// 根据数据规模动态选择“好看”的步长，避免密集分隔线
+const totals = computed(() => (male.value || []).map((m: number, i: number) => (Number(m) || 0) + (Number((female.value || [])[i]) || 0)));
+const axisMax = computed(() => niceMax(totals.value, 10));
+const axisStep = computed(() => {
+  const target = Math.max(1, Math.ceil(axisMax.value / 6));
+  const mag = Math.pow(10, Math.floor(Math.log10(target)));
+  const norm = target / mag;
+  const nice = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
+  return nice * mag;
+});
 
 // 左侧饼图交由 GenderPie 处理
 </script>

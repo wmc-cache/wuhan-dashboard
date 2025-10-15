@@ -28,13 +28,13 @@
         </div>
       </div>
       <div class="mod__body mod__body--full">
-        <RefundOverview :year="year" @open-detail="onOpenDetail" />
+        <RefundOverview :year="year" :top-items="overviewTop" :bottom-items="overviewBottom" :value-unit="overviewUnit" @open-detail="onOpenDetail" />
       </div>
     </section>
 
     <section class="mod" style="grid-area: bc;">
       <div class="mod__body mod__body--full">
-        <RefundCompanyTable />
+        <RefundCompanyTable :rows="companyRows" value-title="企业产业金额" unit-text="万元" />
       </div>
     </section>
 
@@ -81,80 +81,140 @@ import RefundOverview from '../components/refund/Overview.vue';
 import NiceDialog from '../components/NiceDialog.vue';
 import RefundRankType2 from '../components/refund/RankType2.vue';
 import RefundRankType3 from '../components/refund/RankType3.vue';
-import { ref } from 'vue';
+import { ref, onMounted, watch } from 'vue';
+import { apiGet } from '../utils/api';
 import titleImg1x from '../images/refund/title5/编组 21.png';
 import titleImg2x from '../images/refund/title5/编组 21@2x.png';
 
 // 年份选择
 const years = [2021, 2022, 2023, 2024, 2025];
-const year = ref(2024);
+const year = ref<number>(new Date().getFullYear());
 
-// 示例数据（可按需替换为真实接口数据）
-const topCards = [
-  { name: '硚口区总工会', amount: 6189873.092 },
-  { name: '江岸区总工会', amount: 6189873.092 },
-  { name: '武汉市新鑫工会', amount: 6189873.092 },
-  { name: '汉阳区总工会', amount: 6189873.092 }
-];
+// 顶部 TOP4（代收金额）
+const topCards = ref<{ name: string; amount: number }[]>([]);
+// 左上：省总金额 TOP4（szje）
+const provinceAmountTop = ref<{ name: string; value: number }[]>([]);
+// 左下：手续费 TOP5（sxf）
+const feeTop = ref<{ name: string; value: number }[]>([]);
+// 右上：市州金额 TOP4（dsje）
+const districtTop4 = ref<{ name: string; value: number }[]>([]);
+// 右中：县区金额 TOP5（xsje）
+const districtTop5 = ref<{ name: string; value: number }[]>([]);
+// 右下：基层金额 TOP5（jcje）
+const basicTop5 = ref<{ name: string; value: number }[]>([]);
 
-const provinceAmountTop = [
-  { name: '武汉市新鑫工会', value: 6189873.092 },
-  { name: '江岸区总工会', value: 6189873.092 },
-  { name: '洪山区工会', value: 6189873.092 },
-  { name: '武汉经济开发区总工会', value: 6189873.092 }
-];
+// 中部 7 项概览
+const overviewTop = ref<{ name: string; value: number }[]>([]);     // 3 项
+const overviewBottom = ref<{ name: string; value: number }[]>([]);  // 4 项
+const overviewUnit = ref<'yuan' | 'wan' | 'yi'>('yuan');
 
-const feeTop = [
-  { name: '武汉市新鑫工会', value: 6189873.092 },
-  { name: '江岸区总工会', value: 6189873.092 },
-  { name: '洪山区工会', value: 6189873.092 },
-  { name: '武汉经济开发区总工会', value: 6189873.092 },
-  { name: '洪山区工会', value: 6189873.092 }
-];
-
-const districtTop4 = [
-  { name: '武汉市新鑫工会', value: 43572819.232 },
-  { name: '江岸区总工会', value: 43572819.232 },
-  { name: '江汉区总工会', value: 43572819.232 },
-  { name: '武昌区总工会', value: 43572819.232 }
-];
-
-const districtTop5 = [
-  { name: '武汉市新鑫工会', value: 6189873.092 },
-  { name: '江岸区总工会', value: 6189873.092 },
-  { name: '洪山区工会', value: 6189873.092 },
-  { name: '武汉经济开发区总工会', value: 6189873.092 },
-  { name: '洪山区工会', value: 6189873.092 }
-];
-
-const basicTop5 = [
-  { name: '武汉市新鑫工会', value: 6189873.092 },
-  { name: '汉阳区总工会', value: 6189873.092 },
-  { name: '硚口区总工会', value: 6189873.092 },
-  { name: '新洲区总工会', value: 6189873.092 },
-  { name: '化工区', value: 6189873.092 }
-];
+// 底部企业/单位表格（默认展示手续费 TOP5）
+import type { Row as CompanyRow } from '../components/refund/CompanyTable.vue';
+const companyRows = ref<CompanyRow[]>([]);
 
 // 简易详情弹窗数据与开关
 const dlgOpen = ref(false);
 const dlgX = ref<number | null>(null);
 const dlgY = ref<number | null>(null);
-const dlgTitle = '武汉市筹备金工会';
-const dlgItems = [
-  { name: '代收金额', value: 42352552.212 },
-  { name: '省总金额', value: 42352552.212 },
-  { name: '企业产业金额', value: 0 },
-  { name: '市州金额', value: 42352552.212 },
-  { name: '县市金额', value: 42352552.212 },
-  { name: '基层金额', value: 42352552.212 },
-  { name: '手续费', value: 42352552.212 }
-];
+const dlgTitle = '汇总统计';
+const dlgItems = ref<{ name: string; value: number }[]>([]);
 
 function onOpenDetail(payload: { x: number; y: number }) {
   dlgX.value = payload.x;
   dlgY.value = payload.y;
+  // 用当前概览数据填充弹窗
+  dlgItems.value = [
+    ...(overviewTop.value || []),
+    ...(overviewBottom.value || [])
+  ];
   dlgOpen.value = true;
 }
+
+// ---------------- API 对接 ----------------
+function qs(params: Record<string, any>): string {
+  const usp = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v === undefined || v === null || v === '') return;
+    usp.set(k, String(v));
+  });
+  return usp.toString();
+}
+
+async function listApi(p: Record<string, any>) {
+  const q = qs(p);
+  return await apiGet<any>(`/refundOfFunds/list?${q}`).catch(() => null);
+}
+
+async function detailListApi(p: Record<string, any>) {
+  const q = qs(p);
+  return await apiGet<any>(`/refundOfFunds/detailList?${q}`).catch(() => null);
+}
+
+/**
+ * 统计汇总（中部 7 项）：当 sum=0 时接口返回统计；
+ * 若后端仍返回 rows，则对 rows 求和作为兜底。
+ */
+async function loadOverview(y: number) {
+  const res = await listApi({ year: y, pageNum: 1, pageSize: 10000, orderName: '', sum: 0 });
+  const rows: any[] = Array.isArray(res?.rows) ? res.rows : [];
+  const pick = (k: string) => {
+    if (typeof res?.[k] === 'number') return Number(res[k]);
+    // 兜底：按 rows 求和
+    return rows.reduce((s, r) => s + (Number(r?.[k]) || 0), 0);
+  };
+  const zje = pick('zje');
+  const szje = pick('szje');
+  const qycyje = pick('qycyje');
+  const dsje = pick('dsje');
+  const xsje = pick('xsje');
+  const jcje = pick('jcje');
+  const sxf = pick('sxf');
+
+  overviewTop.value = [
+    { name: '代收金额合计', value: zje },
+    { name: '省总金额合计', value: szje },
+    { name: '企业产业金额合计', value: qycyje }
+  ];
+  overviewBottom.value = [
+    { name: '市州金额合计', value: dsje },
+    { name: '县市金额合计', value: xsje },
+    { name: '基层金额合计', value: jcje },
+    { name: '手续费合计', value: sxf }
+  ];
+
+  // 单位推断：若量级普遍 < 1000（如 8.9、1.0 等），多数后端是“亿元”；否则按“元”→万/亿。
+  const maxVal = Math.max(zje, szje, qycyje, dsje, xsje, jcje, sxf);
+  overviewUnit.value = maxVal < 1000 ? 'yi' : 'yuan';
+}
+
+async function loadRank(y: number, field: string, size = 5) {
+  const res = await listApi({ year: y, pageNum: 1, pageSize: size, orderName: field, sum: 1 });
+  const rows: any[] = Array.isArray(res?.rows) ? res.rows : [];
+  return rows.map((r) => ({ name: String(r?.ghzzmc || ''), value: Number(r?.[field] || 0) }));
+}
+
+async function loadCompanyTable(y: number) {
+  // 企业产业金额排名（使用 list 接口 + qycyje 排序）
+  const res = await listApi({ year: y, pageNum: 1, pageSize: 5, orderName: 'qycyje', sum: 1 });
+  const rows: any[] = Array.isArray(res?.rows) ? res.rows : [];
+  companyRows.value = rows.map((r, i) => ({ lv: i + 1, name: String(r?.ghzzmc || ''), fee: Number(r?.qycyje || 0) }));
+}
+
+async function loadAll(y: number) {
+  await Promise.allSettled([
+    loadOverview(y),
+    (async () => { topCards.value = (await loadRank(y, 'zje', 4)).map(it => ({ name: it.name, amount: it.value })); })(),
+    (async () => { provinceAmountTop.value = await loadRank(y, 'szje', 4); })(),
+    (async () => { feeTop.value = await loadRank(y, 'sxf', 5); })(),
+    (async () => { districtTop4.value = await loadRank(y, 'dsje', 4); })(),
+    (async () => { districtTop5.value = await loadRank(y, 'xsje', 5); })(),
+    (async () => { basicTop5.value = await loadRank(y, 'jcje', 5); })(),
+    loadCompanyTable(y),
+  ]);
+}
+
+onMounted(() => loadAll(year.value));
+watch(year, (y) => loadAll(y));
 </script>
 
 <style scoped lang="scss">

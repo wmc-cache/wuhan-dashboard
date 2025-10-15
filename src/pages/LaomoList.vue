@@ -50,7 +50,7 @@
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import GridTable, { type ColumnDef } from '../components/GridTable.vue';
-import { apiGet, API_BASE } from '../utils/api';
+import { apiGet, apiPostBlob } from '../utils/api';
 import { ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElButton, ElPagination } from 'element-plus';
 import 'element-plus/es/components/form/style/css';
 import 'element-plus/es/components/form-item/style/css';
@@ -110,12 +110,7 @@ async function exportCsv() {
   const payload: any = {};
   if (q.kw) payload.name = q.kw;
   try {
-    const url = API_BASE.replace(/\/$/, '') + '/modelWorker/export';
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: '*/*' },
-      body: JSON.stringify(payload)
-    });
+    const res = await apiPostBlob('/modelWorker/export', payload);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const blob = await res.blob();
     // 文件名从 Content-Disposition 解析

@@ -32,26 +32,31 @@
 </template>
 
 <script setup lang="ts">
-// 仅保留年份 prop（可用于后续按年切换）
-interface Props { year: number }
-defineProps<Props>();
+import { toRefs } from 'vue';
+// 接收年份 + 可选的“顶部/底部 7 个统计项”，便于由页面统一取数
+type Item = { name: string; value: number }
+type ValueUnit = 'yuan' | 'wan' | 'yi'; // 原始数值单位（默认 'yuan'）
+interface Props { year: number; topItems?: Item[]; bottomItems?: Item[]; valueUnit?: ValueUnit }
+const props = withDefaults(defineProps<Props>(), {
+  topItems: () => ([
+    { name: '代收金额合计', value: 1221 * 1e8 },
+    { name: '省总金额合计', value: 111 * 1e8 },
+    { name: '企业产业金额合计', value: 8131 * 1e4 },
+  ]),
+  bottomItems: () => ([
+    { name: '市州金额合计', value: 1221 * 1e8 },
+    { name: '县市金额合计', value: 111 * 1e8 },
+    { name: '基层金额合计', value: 8131 * 1e4 },
+    { name: '手续费合计', value: 8131 * 1e4 },
+  ]),
+  valueUnit: 'yuan'
+});
 
 // 暴露点击位置，方便外层打开弹窗
 const emit = defineEmits<{ (e: 'open-detail', payload: { x: number; y: number }): void }>();
 
-// 演示数据：与视觉稿一致的 7 个指标
-type Item = { name: string; value: number }
-const topItems: Item[] = [
-  { name: '代收金额合计', value: 1221 * 1e8 },
-  { name: '省总金额合计', value: 111 * 1e8 },
-  { name: '企业产业金额合计', value: 8131 * 1e4 },
-];
-const bottomItems: Item[] = [
-  { name: '市州金额合计', value: 1221 * 1e8 },
-  { name: '县市金额合计', value: 111 * 1e8 },
-  { name: '基层金额合计', value: 8131 * 1e4 },
-  { name: '手续费合计', value: 8131 * 1e4 },
-];
+// 渲染时使用 props 传入的数组（保持响应式）
+const { topItems, bottomItems } = toRefs(props);
 
 function onCellClick(e: MouseEvent) {
   emit('open-detail', { x: e.clientX, y: e.clientY });
@@ -59,8 +64,18 @@ function onCellClick(e: MouseEvent) {
 
 // 将原始金额换算为 亿/万 的整洁文案，贴近效果图（不加千分位分隔）
 function amountParts(v: number): { n: string; u: '亿' | '万' } {
-  if (v >= 1e8) return { n: String(Math.round(v / 1e8)), u: '亿' };
-  return { n: String(Math.round(v / 1e4)), u: '万' };
+  const unit = props.valueUnit;
+  if (unit === 'yi') {
+    // 后端已是“亿元”，直接保留 1 位小数
+    return { n: (Number(v) || 0).toFixed(1), u: '亿' };
+  }
+  if (unit === 'wan') {
+    return { n: (Math.round((Number(v) || 0))).toString(), u: '万' };
+  }
+  // 默认：原始是“元”，根据量级换算到亿/万
+  const val = Number(v) || 0;
+  if (val >= 1e8) return { n: String(Math.round(val / 1e8)), u: '亿' };
+  return { n: String(Math.round(val / 1e4)), u: '万' };
 }
 </script>
 

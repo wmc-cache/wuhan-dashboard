@@ -12,14 +12,14 @@
     </div>
 
     <div class="chart">
+     
       <HorizontalGenderStack
         :labels="labels"
         :male="males"
         :female="females"
-        :step="15"
-        :min-total="90"
-        male-color="#2a6ff0"
-        female-color="#FFA36B"
+        :step="axisStep"
+        :min-total="60"
+        unit-text="人"
       />
     </div>
   </div>
@@ -27,6 +27,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { niceMax } from '../../utils/api';
 import HorizontalGenderStack from '../HorizontalGenderStack.vue';
 import title1x from '../../images/yiliao/part7/title/编组 21.png';
 import title2x from '../../images/yiliao/part7/title/编组 21@2x.png';
@@ -47,6 +48,19 @@ const props = withDefaults(defineProps<Props>(), {
 const labels = computed(() => props.data.map(d => d.label));
 const males = computed(() => props.data.map(d => d.male));
 const females = computed(() => props.data.map(d => d.female));
+
+// 根据数据规模自动计算合理的网格步长，避免出现密集竖线
+const totals = computed(() => props.data.map(d => (Number(d.male) || 0) + (Number(d.female) || 0)));
+const axisMax = computed(() => niceMax(totals.value, 10));
+const axisStep = computed(() => {
+  // 目标 5~6 个分隔线
+  const step = Math.max(1, Math.ceil(axisMax.value / 6));
+  // 将步长四舍五入到“好看”的 1/2/5*10^n
+  const mag = Math.pow(10, Math.floor(Math.log10(step)));
+  const norm = step / mag;
+  const nice = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
+  return nice * mag;
+});
 </script>
 
 <style scoped lang="scss">
@@ -58,7 +72,8 @@ const females = computed(() => props.data.map(d => d.female));
 .legend__item { display: inline-grid; grid-auto-flow: column; align-items: center; gap: 8px; font-size: 14px; color: #4c5566; font-weight: 600; }
 .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .dot--male { background: #2a6ff0; }
-.dot--female { background: #FFA36B; }
+.dot--female { background: #ff6b97; }
 
-.chart { position: absolute; inset: 42px 8px 8px 0; }
+/* 与左侧留白保持一致 */
+.chart { position: absolute; inset: 40px 8px 8px 0; }
 </style>

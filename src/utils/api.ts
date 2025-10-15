@@ -86,6 +86,28 @@ export async function apiPost<T = any>(
   return json as unknown as T;
 }
 
+// POST and expect binary (blob/stream). Return the raw Response so callers
+// can read headers like Content-Disposition to infer filename.
+export async function apiPostBlob(
+  path: string,
+  body?: any,
+  init?: RequestInit
+): Promise<Response> {
+  const url = path.startsWith("http") ? path : API_BASE.replace(/\/$/, "") + path;
+  const res = await fetch(url, {
+    method: "POST",
+    body: body != null ? JSON.stringify(body) : undefined,
+    headers: withAuthHeaders({
+      Accept: "*/*",
+      "Content-Type": "application/json",
+      ...(init?.headers || {}),
+    }),
+    ...init,
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+  return res;
+}
+
 // Helpers
 export function niceMax(nums: number[], fallback = 10): number {
   const max = Math.max(0, ...(nums || []));

@@ -11,6 +11,7 @@
 </template>
 
 <script setup lang="ts">
+import { toRefs } from 'vue';
 import GridTable, { type ColumnDef } from '../GridTable.vue';
 
 interface Row { name: string; type: string; date: string }
@@ -36,7 +37,7 @@ const cols: ColumnDef[] = [
   { key: 'date', title: '时间' }
 ];
 
-const rows = props.rows;
+const { rows } = toRefs(props);
 </script>
 
 <style scoped lang="scss">

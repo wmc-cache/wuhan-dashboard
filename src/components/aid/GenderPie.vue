@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, toRefs } from 'vue';
 import HonorRingsChart from '../HonorRingsChart.vue';
 import centerIconUrl from '../../images/aid/icon5/位图.png';
 import centerIconUrl2x from '../../images/aid/icon5/位图@2x.png';
@@ -42,13 +42,13 @@ const props = withDefaults(defineProps<Props>(), {
   embedded: false
 });
 
-const data = props.data;
-const total = computed(() => data.reduce((s, i) => s + i.value, 0));
+const { data } = toRefs(props);
+const total = computed(() => (data.value || []).reduce((s, i) => s + i.value, 0));
 function pretty(n: number) { return n.toLocaleString('zh-CN'); }
 
 // HonorRingsChart 期望的 items（确保都有颜色）
 const defaultColors = ['#2a6ff0', '#ff6b97', '#4DD0E1'];
-const items = computed(() => data.map((d, i) => ({
+const items = computed(() => (data.value || []).map((d, i) => ({
   name: d.name,
   value: d.value,
   color: d.color || defaultColors[i % defaultColors.length]

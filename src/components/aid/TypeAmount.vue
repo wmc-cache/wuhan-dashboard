@@ -12,6 +12,7 @@
 </template>
 
 <script setup lang="ts">
+import { toRefs } from 'vue';
 import StripedBarChart from '../StripedBarChart.vue';
 
 interface Props {
@@ -28,7 +29,8 @@ const props = withDefaults(defineProps<Props>(), {
   yMax: 1300
 });
 
-const { title, categories, values, yMax } = props;
+// 保持响应式
+const { title, categories, values, yMax } = toRefs(props);
 </script>
 
 <style scoped lang="scss">

@@ -45,7 +45,10 @@ const props = withDefaults(defineProps<Props>(), {
 const rows = computed(() => props.items.slice(0, props.maxRows));
 const maxV = computed(() => Math.max(1, ...rows.value.map(r => r.value || 0)));
 function percent(v: number) { return Math.max(0, Math.min(1, v / maxV.value)); }
-function money(v: number) { return (Number(v) / 10000).toLocaleString('zh-CN', { maximumFractionDigits: 2 }) }
+// 数据单位按接口为“万元”，这里不再除以 10000；直接显示“万元”
+function money(v: number) {
+  return Number(v).toLocaleString('zh-CN', { maximumFractionDigits: 3, useGrouping: false }) + '万元';
+}
 
 // 根据行索引返回条形图颜色
 function getBarColor(index: number) {
@@ -158,4 +161,3 @@ const variantClass = computed(() => (props.variant === 'plain' ? 'rank-list--pla
   font-weight: 600;
 }
 </style>
-

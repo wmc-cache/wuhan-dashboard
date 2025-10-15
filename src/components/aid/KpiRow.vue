@@ -11,6 +11,7 @@
 </template>
 
 <script setup lang="ts">
+import { toRefs } from 'vue';
 interface KpiItem { label: string; value: number }
 interface Props { items?: KpiItem[] }
 
@@ -23,7 +24,8 @@ const props = withDefaults(defineProps<Props>(), {
   ])
 });
 
-const items = props.items;
+// 保持响应式：把 props.items 暴露为 ref，模板直接用 items
+const { items } = toRefs(props);
 function pretty(n: number) { return n.toLocaleString('zh-CN'); }
 </script>
 
