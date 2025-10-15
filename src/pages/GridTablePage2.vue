@@ -5,21 +5,18 @@
       <div class="flt-wrap">
         <el-form inline :model="q" label-position="left" label-width="auto" class="flt flt--center">
           <el-form-item label="所属工会：">
-            <el-input v-model="q.union" placeholder="请输入" clearable class="w180" />
+            <el-input v-model="q.unionName" placeholder="请输入" clearable class="w180" />
           </el-form-item>
           <el-form-item label="性别：">
-            <el-select v-model="q.gender" placeholder="选择" clearable class="w120">
-              <el-option label="男" value="男" />
-              <el-option label="女" value="女" />
+            <el-select v-model="q.sex" placeholder="选择" clearable class="w120">
+              <el-option v-for="d in genderOpts" :key="String(d.value)" :label="d.label" :value="d.value" />
             </el-select>
-          </el-form-item>
-          <el-form-item label="入会时间：">
-            <el-date-picker v-model="q.joinedAt" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" class="w180" />
           </el-form-item>
         </el-form>
         <div class="actions">
           <el-button type="primary" @click="onSearch">查询</el-button>
           <el-button @click="onReset">重置</el-button>
+          <el-button :loading="exporting" @click="onExport">导出</el-button>
           <el-button type="primary" link @click="goBack">返回</el-button>
         </div>
       </div>
@@ -34,7 +31,13 @@
         :visible-rows="20"
         :row-height="40"
         :show-header="false"
+        @cell-click="onCellClick"
       />
+      <!-- Loading -->
+      <div v-if="loading" class="loading-overlay" aria-live="polite" aria-busy="true">
+        <div class="spinner"></div>
+        <div class="loading-text">加载中...</div>
+      </div>
       <div class="pager">
         <el-pagination
           v-model:current-page="page"
@@ -47,10 +50,11 @@
       </div>
     </section>
   </main>
+  <MemberDetailDialog v-model="showMemberDlg" :data="memberDetail" :search-code="memberSearchCode" :default-tab="'med'" :width="1080" />
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import GridTable, { ColumnDef } from '../components/GridTable.vue';
 import { ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElDatePicker, ElButton, ElPagination } from 'element-plus';
@@ -62,12 +66,16 @@ import 'element-plus/es/components/option/style/css';
 import 'element-plus/es/components/date-picker/style/css';
 import 'element-plus/es/components/button/style/css';
 import 'element-plus/es/components/pagination/style/css';
+import { apiGet, apiPostBlob } from '../utils/api';
+import MemberDetailDialog, { type MemberDetail } from '../components/MemberDetailDialog.vue';
+import { getDict, labelOf, type DictItem as DItem } from '../utils/dict';
 
 const router = useRouter();
 function goBack() { router.back(); }
 
-// 查询条件
-const q = reactive({ union: '', gender: '', joinedAt: '' });
+// 查询条件（与接口字段一致）
+const q = reactive<{ unionName: string; sex: string | number | '' }>({ unionName: '', sex: '' });
+const genderOpts = ref<DItem[]>([]);
 
 // 列定义：序号、会员姓名、所属工会、性别、入会时间、年龄、工作单位、职务、联系电话、政治面貌、学历
 const gridTemplate = '64px 1.2fr 1.2fr .6fr 1.2fr .6fr 1.4fr 1fr 1.2fr 1fr .8fr';
@@ -85,47 +93,145 @@ const columns: ColumnDef[] = [
   { key: 'edu', title: '学历' },
 ];
 
-// 造数据
-const names = ['名称1','名称2','名称3','名称4','名称5','名称6','名称7','名称8','名称9','名称10','名称11','名称12','名称13','名称14','名称15'];
-const unions = ['名称1','名称2','名称3','名称4','名称5','名称6','名称7','名称8','名称9','名称10','名称11','名称12','名称13','名称14','名称15'];
-const positions = ['职务','组长','干事','文员'];
-const politicals = ['群众','团员','党员'];
-const edus = ['高中','大专','本科','硕士'];
-interface Row { index: number; name: string; union: string; gender: '男'|'女'; joinedAt: string; age: number; company: string; position: string; phone: string; political: string; edu: string; }
-const allRows = ref<Row[]>(Array.from({ length: 800 }, (_, i) => ({
-  index: i + 1,
-  name: names[i % names.length],
-  union: unions[(i+1) % unions.length],
-  gender: i % 2 === 0 ? '男' : '女',
-  joinedAt: '2024-03-02',
-  age: 22 + (i % 30),
-  company: '单位名称',
-  position: positions[i % positions.length],
-  phone: '18089432787',
-  political: politicals[i % politicals.length],
-  edu: edus[i % edus.length],
-})));
+// 行定义 + 服务端数据
+interface Row { index: number; name: string; union: string; gender: string; joinedAt: string; age: string | number; company: string; position: string; phone: string; political: string; edu: string; idNumber?: string }
+const rows = ref<Row[]>([]);
+const loading = ref(false);
+const exporting = ref(false);
 
-const filtered = computed(() => {
-  return allRows.value.filter(r =>
-    (!q.union || r.union.includes(q.union)) &&
-    (!q.gender || r.gender === q.gender) &&
-    (!q.joinedAt || r.joinedAt === q.joinedAt)
-  );
-});
-function onSearch() {}
-function onReset() { q.union = ''; q.gender = ''; q.joinedAt = ''; }
-
-// 分页
-const pageSize = 30;
+const pageSize = 20;
 const page = ref(1);
-const total = computed(() => filtered.value.length);
-const pageCount = computed(() => Math.max(1, Math.ceil(total.value / pageSize)));
-const pagedRows = computed(() => {
-  const start = (page.value - 1) * pageSize;
-  return filtered.value.slice(start, start + pageSize);
+const total = ref(0);
+
+function fmtDate(v?: string): string {
+  if (!v) return '';
+  const s = String(v);
+  if (s.toLowerCase().includes('invalid')) return '';
+  const d = s.replace(/[^0-9]/g, '');
+  if (d.length === 8) return `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`;
+  return s;
+}
+
+async function fetchList() {
+  try {
+    loading.value = true;
+    const qs = new URLSearchParams();
+    if (q.unionName?.trim()) qs.set('unionName', q.unionName.trim());
+    if (q.sex !== '') qs.set('sex', String(q.sex));
+    qs.set('pageNum', String(page.value));
+    qs.set('pageSize', String(pageSize));
+
+    const url = `/business/member/list?${qs.toString()}`;
+    const resp: any = await apiGet<any>(url).catch(() => ({}));
+    const totalVal = Number(resp?.total ?? resp?.count ?? 0) || 0;
+    const arr = Array.isArray(resp?.rows) ? resp.rows : Array.isArray(resp?.data) ? resp.data : [];
+    total.value = totalVal;
+    const start = (page.value - 1) * pageSize;
+    rows.value = (arr as any[]).map((r: any, i: number) => ({
+      index: start + i + 1,
+      name: r.name ?? '-',
+      union: r.unionName ?? r.unionFull ?? '-',
+      gender: labelOf('gender', r.sex, String(r.sex ?? '')),
+      joinedAt: fmtDate(r.joinDate),
+      age: r.age ?? '-',
+      company: r.workUnit ?? r.companyName ?? '-',
+      position: labelOf('memberPosition', r.unionJob, String(r.unionJob ?? '')),
+      phone: r.mobile ?? '-',
+      political: labelOf('politicalStatus', r.politicalStatus, String(r.politicalStatus ?? '')),
+      edu: labelOf('education', r.education, String(r.education ?? '')),
+      idNumber: r.idNumber ?? r.certificateNum ?? r.certificateNo,
+    } as Row));
+  } catch {
+    total.value = 0;
+    rows.value = [];
+  } finally { loading.value = false; }
+}
+
+function onSearch() { page.value = 1; fetchList(); }
+function onReset() { q.unionName = ''; q.sex = ''; page.value = 1; fetchList(); }
+
+const pageCount = computed(() => Math.max(1, Math.ceil((total.value || 0) / pageSize)));
+const pagedRows = computed(() => rows.value);
+function to(p: number) { page.value = Math.min(pageCount.value, Math.max(1, p)); fetchList(); }
+
+onMounted(async () => {
+  // 预拉取展示用字典
+  genderOpts.value = await getDict('gender');
+  await Promise.all([
+    getDict('memberPosition'),
+    getDict('politicalStatus'),
+    getDict('education'),
+  ]).catch(() => void 0);
+  await fetchList();
 });
-function to(p: number) { page.value = Math.min(pageCount.value, Math.max(1, p)); }
+
+// 点击姓名 -> 打开详情（使用身份证号查询）
+const showMemberDlg = ref(false);
+const memberDetail = ref<MemberDetail>({});
+const memberSearchCode = ref<string | undefined>(undefined);
+function onCellClick(payload: { row: Row; column: ColumnDef }) {
+  if (payload.column.key !== 'name') return;
+  memberDetail.value = {
+    name: payload.row.name,
+    union: payload.row.union,
+    gender: payload.row.gender,
+    age: payload.row.age,
+    company: payload.row.company,
+    phone: payload.row.phone,
+  };
+  memberSearchCode.value = payload.row.idNumber;
+  showMemberDlg.value = true;
+}
+
+// 导出：POST /business/member/export
+const MEMBER_EXPORT_FIELDS = [
+  'name',
+  'unionName',
+  'id',
+  'joinDate',
+  'sex',
+  'age',
+  'workUnit',
+  'unionJob',
+  'mobile',
+  'politicalStatus',
+  'education',
+];
+
+async function onExport() {
+  try {
+    exporting.value = true;
+    const body: Record<string, any> = {
+      unionName: q.unionName?.trim() || undefined,
+      sex: q.sex !== '' ? q.sex : undefined,
+      exportFields: MEMBER_EXPORT_FIELDS.join(','),
+    };
+    Object.keys(body).forEach((k) => {
+      const v = (body as any)[k];
+      if (v == null || v === '' || v === 'undefined' || v === 'null') delete (body as any)[k];
+    });
+    const res = await apiPostBlob('/business/member/export', body);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const ts = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const fallback = `会员列表_${ts.getFullYear()}${pad(ts.getMonth()+1)}${pad(ts.getDate())}_${pad(ts.getHours())}${pad(ts.getMinutes())}${pad(ts.getSeconds())}.xlsx`;
+    const a = document.createElement('a');
+    a.href = url;
+    const cd = res.headers.get('Content-Disposition') || res.headers.get('content-disposition');
+    const m = cd && /filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i.exec(cd);
+    const srv = m ? decodeURIComponent(m[1] || m[2]) : '';
+    a.download = srv || fallback;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    // 忽略错误；可按需接入 message 提示
+  } finally {
+    exporting.value = false;
+  }
+}
 </script>
 
 <style scoped lang="scss">
@@ -141,4 +247,8 @@ function to(p: number) { page.value = Math.min(pageCount.value, Math.max(1, p));
 
 .table-wrap { position: relative; border-radius: 10px; background: rgba(235,241,247,.74); box-shadow: inset 0 0 40px rgba(120,170,255,.08); padding: 12px; display: grid; grid-template-rows: 1fr auto; }
 .pager { display: flex; align-items: center; justify-content: flex-end; color: #2a6ff0; padding-top: 8px; }
+.loading-overlay { position: absolute; inset: 12px; background: rgba(255,255,255,.6); display: grid; place-items: center; z-index: 5; border-radius: 8px; }
+.spinner { width: 34px; height: 34px; border: 3px solid rgba(42,111,240,.25); border-top-color: #2a6ff0; border-radius: 50%; animation: spin 1s linear infinite; }
+.loading-text { margin-top: 8px; font-weight: 800; color: #2a6ff0; }
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>

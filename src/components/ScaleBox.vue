@@ -73,20 +73,21 @@ onUnmounted(() => {
 /* 顶部“标题横幅”需要横向撑满整个视口，否则宽屏下两侧会露底。
    这里在全屏容器上增加一个伪元素来绘制横幅，将其高度按缩放比例计算，
    与舞台顶部对齐。 */
+/*  */   
 .sb-wrap::before {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
-  /* 与舞台顶部对齐（当宽度成为限制维度时，舞台会在垂直方向留边） */
+ 
   top: var(--sb-stage-top, 0px);
   height: calc(110px * var(--sb-scale, 1));
   background-repeat: no-repeat;
   background-position: center top;
   background-size: 100% 100%;
-  /* 1x 回退 */
+  
   background-image: url('../images/top/top.png');
-  /* 视网膜屏/高分屏 */
+  
   background-image: -webkit-image-set(
     url('../images/top/top.png') 1x,
     url('../images/top/top@2x.png') 2x
@@ -96,7 +97,7 @@ onUnmounted(() => {
     url('../images/top/top@2x.png') 2x
   );
   pointer-events: none;
-  z-index: 0; /* 背景层，低于内容 */
+  z-index: 0;
 }
 .sb-stage {
   transform-origin: 50% 50%;

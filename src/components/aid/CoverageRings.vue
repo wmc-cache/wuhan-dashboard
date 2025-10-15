@@ -3,11 +3,11 @@
     <div v-for="(it, i) in items" :key="i" class="row" :style="{ '--c': it.color || '#4E8FFF' } as any">
       <div class="ring">
         <EChart :option="ringOption(it)" />
-        <!-- 中心百分比 -->
+      
         <div class="ring__center">{{ Math.round(it.percent) }}<small>%</small></div>
       </div>
 
-      <!-- 右侧数字卡片（带轻微高光背景） -->
+     
       <div class="box">
         <div class="num">{{ it.value.toLocaleString('zh-CN') }}<small class="unit">人</small></div>
         <div class="label">{{ it.label }}</div>

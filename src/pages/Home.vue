@@ -29,9 +29,13 @@
         <GridTable :columns="columns" :rows="pagedRows" :grid-template="gridTemplate" :visible-rows="15"
           :row-height="44" :show-header="false" :fill-placeholder="true" @cell-click="onCellClick" />
 
-        <div class="pager">
-          <el-pagination v-model:current-page="page" :page-size="pageSize" :total="total" background
-            layout="total, prev, pager, next, jumper" @current-change="(p: number) => to(p)" />
+        <!-- 底部：左侧“列表详情”，右侧分页（还原截图位置） -->
+        <div class="bottom-bar">
+          <button class="detail-link" type="button" @click="onListDetail">列表详情》</button>
+          <div class="pager">
+            <el-pagination v-model:current-page="page" :page-size="pageSize" :total="total" background
+              layout="total, prev, pager, next, jumper" @current-change="(p: number) => to(p)" />
+          </div>
         </div>
       </section>
     </section>
@@ -51,6 +55,7 @@ import { useRouter, useRoute } from 'vue-router';
 import UnionDetailDialog, { type UnionDetail } from '../components/UnionDetailDialog.vue';
 import MemberDetailDialog, { type MemberDetail } from '../components/MemberDetailDialog.vue';
 import { apiGet } from '../utils/api';
+import { getDict, labelOf } from '../utils/dict';
 import back1x from '../images/back/编组 4.png';
 import back2x from '../images/back/编组 4@2x.png';
 
@@ -80,6 +85,7 @@ const columns = ref<ColumnDef[]>([]);
 
 // 数据
 interface Row {
+  id?: number | string;
   index: number;
   fullname: string;
   memberCount?: number;
@@ -148,26 +154,38 @@ const showUnion = ref(false);
 const unionData = ref<UnionDetail | undefined>(undefined);
 const showMember = ref(false);
 const memberData = ref<MemberDetail | undefined>(undefined);
-function onCellClick(payload: { row: any; column: ColumnDef }) {
+async function onCellClick(payload: { row: any; column: ColumnDef }) {
   const r = payload.row as any;
   if (selCat.value === 'org' && payload.column.key === 'fullname') {
-    unionData.value = {
-      fullname: r.fullname,
-      unitDistrictSuffix: r.unitDistrictSuffix,
-      unitIndustry: r.unitIndustry || '-',
-      establishDate: r.establishDate,
-      memberCount: r.memberCount ?? Math.floor(100 + Math.random() * 500),
-      linkMan: r.linkMan || (Math.random() > 0.5 ? '刘丽' : '王勇'),
-      linkPhone: r.linkPhone || `18${Math.floor(1000 + Math.random() * 9000)}${Math.floor(1000 + Math.random() * 9000)}`,
-      chair: r.chair || '李厉程',
-      viceChair: r.viceChair || '王刚',
-      parentUnionName: r.parentUnionName || '湖北省总工会',
-      legalDuty: r.legalDuty || '工会主席',
-      isOpenSystem: typeof r.isOpenSystem === 'boolean' ? r.isOpenSystem : true,
-      isWorkerCongress: typeof r.isWorkerCongress === 'boolean' ? r.isWorkerCongress : false,
-      childOrgCount: r.childOrgCount ?? 3210,
-    } as UnionDetail;
-    showUnion.value = true;
+    // 优先使用行内 id；缺失则按名称检索一次拿到 id
+    let id = r.id ?? r.unionId ?? r.sourceId;
+    if (id == null && r.fullname) {
+      const search = await apiGet<any>(`/business/union/list?fullname=${encodeURIComponent(String(r.fullname))}&pageNum=1&pageSize=1`).catch(() => null);
+      const one = (search && (Array.isArray(search.rows) ? search.rows[0] : (Array.isArray(search.data) ? search.data[0] : undefined))) || undefined;
+      id = one?.id ?? one?.unionId ?? one?.sourceId;
+    }
+    if (id == null) return;
+    try {
+      const resp = await apiGet<any>(`/business/union/${encodeURIComponent(String(id))}`).catch(() => null);
+      const d = (resp && (resp.data || resp)) || {};
+      unionData.value = {
+        fullname: d.fullname ?? r.fullname ?? '-',
+        unitDistrictSuffix: d.unitDistrictSuffix || labelOf('sys_wuhan_quyu', d.orgDistrict, String(d.orgDistrict ?? '')),
+        unitIndustry: labelOf('unitIndustry', d.unitIndustry, String(d.unitIndustry ?? '')),
+        establishDate: normalizeDate(d.establishDate ?? d.createunionDate ?? r.establishDate),
+        memberCount: d.memberCount ?? d.membership ?? r.memberCount ?? '-',
+        linkMan: d.linkMan ?? r.linkMan ?? '-',
+        linkPhone: d.linkPhone ?? d.chairmanMobile ?? d.unitTel ?? r.linkPhone ?? '-',
+        chair: d.chair ?? d.chairmanName ?? d.chairman ?? r.chair ?? '-',
+        viceChair: d.viceResident ?? r.viceChair ?? '-',
+        parentUnionName: d.pName ?? d.parentUnionName ?? r.parentUnionName ?? '-',
+        legalDuty: d.legalDuty ?? '工会主席',
+        isOpenSystem: d.isConsult ?? r.isOpenSystem ?? '-',
+        isWorkerCongress: d.workersCongress ?? r.isWorkerCongress ?? '-',
+        childOrgCount: d.orgCount ?? r.childOrgCount ?? '-',
+      } as UnionDetail;
+      showUnion.value = true;
+    } catch {}
   } else if (selCat.value === 'member' && payload.column.key === 'name') {
     memberData.value = {
       name: r.name,
@@ -195,6 +213,13 @@ function onCellClick(payload: { row: any; column: ColumnDef }) {
     } as MemberDetail;
     showMember.value = true;
   }
+}
+
+// 底部“列表详情”点击，跳到表格详情页
+function onListDetail() {
+  // 需求：当顶部选择为“工会会员”时跳 GridTablePage2；否则跳工会组织列表
+  if (selCat.value === 'member') router.push({ name: 'grid-table-2' });
+  else router.push({ name: 'grid-table' });
 }
 
 function buildColumnsByData(sample?: Row | MemberRow) {
@@ -236,12 +261,19 @@ function buildColumnsByData(sample?: Row | MemberRow) {
 
 function mapRow(raw: any, i: number): Row {
   const r: Row = {
+    id: raw.id ?? raw.unionId ?? raw.sourceId,
     index: i + 1,
     fullname: raw.fullname ?? raw.name ?? raw.unionName ?? raw.orgName ?? '',
     memberCount: toNum(raw.memberCount ?? raw.members),
-    unitDistrictSuffix: raw.unitDistrictSuffix ?? raw.district ?? raw.area ?? raw.region,
+    unitDistrictSuffix: (() => {
+      const val = raw.unitDistrictSuffix ?? raw.orgDistrict ?? raw.district ?? raw.area ?? raw.region;
+      return labelOf('sys_wuhan_quyu', val, String(val ?? ''));
+    })(),
     establishDate: normalizeDate(raw.establishDate ?? raw.createdAt ?? raw.foundedAt ?? raw.createTime),
-    unitIndustry: raw.unitIndustry,
+    unitIndustry: (() => {
+      const code = raw.unitIndustry;
+      return labelOf('unitIndustry', code, String(code ?? '-'));
+    })(),
     linkMan: raw.linkMan ?? raw.contact,
     linkPhone: raw.linkPhone ?? raw.phone,
     chair: raw.chair ?? raw.chairman,
@@ -339,6 +371,12 @@ watch(selCat, async () => {
   buildColumnsByData(allRows.value[0]);
 });
 onMounted(async () => {
+  // 预加载常用字典（区域/行业），供 mapRow 转义
+  await getDict('sys_wuhan_quyu').catch(() => void 0);
+  await getDict('unitIndustry').catch(() => void 0);
+  // 容错：有些环境字典类型拼写为 unitlndustry
+  const inds = await getDict('unitIndustry').catch(() => [] as any);
+  if (!inds || inds.length === 0) await getDict('unitlndustry').catch(() => void 0);
   // 读取来自其他页面的查询参数：kw/cat
   const qKw = String(route.query.kw ?? '').trim();
   const qCat = String(route.query.cat ?? '');
@@ -510,7 +548,10 @@ onMounted(async () => {
   grid-template-rows: 1fr auto;
 }
 
-.pager { display: flex; align-items: center; justify-content: flex-end; color: #2a6ff0; padding-top: 8px; }
+.bottom-bar { display: flex; align-items: center; justify-content: space-between; color: #2a6ff0; padding-top: 8px; }
+.pager { display: flex; align-items: center; }
+.detail-link { cursor: pointer; color: #2a6ff0; font-weight: 700; background: rgba(255,255,255,.6); border: 1px solid rgba(42,111,240,.25); border-radius: 4px; padding: 4px 10px; }
+.detail-link:hover { background: rgba(255,255,255,.8); }
 
 /* Teleport 弹框挂在 body；组件在模板中挂载，这里无需额外处理 */
 </style>

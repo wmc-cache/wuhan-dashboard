@@ -4,7 +4,9 @@
     <!-- 全局 Element Plus 语言：中文 -->
     <el-config-provider :locale="zhCn">
       <div class="dash">
+        <!-- 背景/顶部动效层（置于所有内容之下） -->
         <HeaderBar />
+        <MotionLayer />
         <router-view />
       </div>
     </el-config-provider>
@@ -14,6 +16,7 @@
 <script setup lang="ts">
 import ScaleBox from './components/ScaleBox.vue';
 import HeaderBar from './components/HeaderBar.vue';
+import MotionLayer from './components/motion/MotionLayer.vue';
 // Element Plus 中文
 import { ElConfigProvider } from 'element-plus';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';

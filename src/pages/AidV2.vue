@@ -154,26 +154,29 @@ const coverageItems = [
   display: grid;
   grid-template-columns: 540px 1fr 540px;
   grid-template-rows: 1fr; /* 三列同高 */
-  gap: 8px; /* 列间距稍微缩小 */
+  /* 与 MemberV2 保持一致：主网格 gap 为 0，
+     由模块外框的负内边距来“吃掉”边缘，视觉更紧凑 */
+  gap: 0;
 }
 
-/* 三列容器：左/右为 50/50；中为 60/40。使用列内网格保证同列上下绝对等高 */
-.col { display: grid; grid-template-rows: 1fr 1fr; row-gap: 10px; min-height: 0; height: 100%; }
-/* 左/右列采用 flex 明确 50/50，彻底规避任何百分比/跨行带来的误差 */
-.col--l, .col--r { display: flex; flex-direction: column; gap: 8px; }
-.col--l > .mod, .col--r > .mod { flex: 1 0 0; min-height: 0; }
-.col--c { grid-template-rows: 6fr 4fr; }
+/* 三列容器：统一 6/4 比例，确保三列第二行的顶部对齐（参考 MemberV2 的行高固定策略） */
+.col { display: grid; grid-template-rows: 6fr 4fr; row-gap: 0; min-height: 0; height: 100%; }
+.col--l, .col--r, .col--c { display: grid; grid-template-rows: 6fr 4fr; }
 
 /* 模块外框与 Refund 一致 */
-.mod { position: relative; border: none; border-radius: 10px; background: none; padding: 24px; display: grid; grid-template-rows: auto 1fr; height: 100%; min-height: 0; box-sizing: border-box; }
-.mod::before { content: ''; position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-repeat: no-repeat; background-size: 100% 100%; background-image: -webkit-image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x); background-image: image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x); pointer-events: none; z-index: -1; }
+.mod { position: relative; border: none; border-radius: 10px; background: none; padding: 18px; display: grid; grid-template-rows: auto 1fr; height: 100%; min-height: 0; box-sizing: border-box; }
+/* 关键：外框切图向外扩 8px，覆盖主网格/列间距，
+   做法与 MemberV2 一致，从而减少视觉缝隙 */
+.mod::before { content: ''; position: absolute; left: -8px; right: -8px; top: -8px; bottom: -8px; background-repeat: no-repeat; background-size: 100% 100%; background-image: -webkit-image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x); background-image: image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x); pointer-events: none; z-index: -1; }
 .mod--tall::before { background-image: -webkit-image-set(url('../images/module-broder-height/矩形.png') 1x, url('../images/module-broder-height/矩形@2x.png') 2x); background-image: image-set(url('../images/module-broder-height/矩形.png') 1x, url('../images/module-broder-height/矩形@2x.png') 2x); }
 
 .mod__title { margin: 0 0 8px; font-size: 16px; font-weight: 800; color: #2a6ff0; letter-spacing: 1px; }
 .mod__body { overflow: hidden; display: grid; min-height: 0; }
+/* 统一给标题容器一点内边距，让切图与标题不要贴边（与其它页面观感一致） */
+.mod__head { padding: 6px 0 0 10px; }
 
 /* 统一标题切图样式 */
-.title-img { display: inline-block; height: 35px; background-repeat: no-repeat; background-size: 100% 100%; margin: 0 0 10px; }
+.title-img { display: inline-block; height: 35px; background-repeat: no-repeat; background-size: 100% 100%; margin: 0 0 6px; }
 .title-img--aid2-1 { width: 191px; background-image: -webkit-image-set(url('../images/aid2/title/1/编组 21.png') 1x, url('../images/aid2/title/1/编组 21@2x.png') 2x); background-image: image-set(url('../images/aid2/title/1/编组 21.png') 1x, url('../images/aid2/title/1/编组 21@2x.png') 2x); }
 .title-img--aid2-2 { width: 254px; background-image: -webkit-image-set(url('../images/aid2/title/2/编组 21.png') 1x, url('../images/aid2/title/2/编组 21@2x.png') 2x); background-image: image-set(url('../images/aid2/title/2/编组 21.png') 1x, url('../images/aid2/title/2/编组 21@2x.png') 2x); }
 .title-img--aid2-3 { width: 191px; background-image: -webkit-image-set(url('../images/aid2/title/3/编组 21.png') 1x, url('../images/aid2/title/3/编组 21@2x.png') 2x); background-image: image-set(url('../images/aid2/title/3/编组 21.png') 1x, url('../images/aid2/title/3/编组 21@2x.png') 2x); }
