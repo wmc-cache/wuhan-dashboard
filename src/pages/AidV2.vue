@@ -30,8 +30,9 @@
       <section class="mod">
         <div class="mod__head"><span class="title-img title-img--aid2-3" aria-hidden="true"></span></div>
         <div class="mod__body mod__body--full">
+          <!-- 饼图整体缩小到 86% 以贴近效果图占比 -->
           <HonorRingsChart :items="archiveItems" center-text="档案分类" :center="['50%','56%']" :gap-deg="10"
-            :base-start="20" :sweep-angle="260" />
+            :base-start="20" :sweep-angle="260" :scale="0.86" />
         </div>
         <button class="see-btn" type="button" title="查看更多" @click="onSee('archive')"></button>
       </section>
@@ -115,6 +116,7 @@ import StripedBarChart from '../components/StripedBarChart.vue';
 import HorizontalGenderStack from '../components/HorizontalGenderStack.vue';
 import CoverageRings from '../components/aid/CoverageRings.vue';
 import { apiGet } from '../utils/api';
+import { useRouter } from 'vue-router';
 
 // 颜色映射（与视觉保持统一）
 const colors: Record<string, string> = {
@@ -232,11 +234,12 @@ async function loadAll() {
   }
 }
 
+const router = useRouter();
 onMounted(() => { loadAll().catch(() => void 0); });
 
 function onSee(which: string) {
-  // TODO: 接入实际路由/弹框需求；默认仅打印
-  console.log('查看更多', which);
+  // 跳转到“职工帮扶列表”新页面
+  try { router.push({ name: 'aid-list' }); } catch {}
 }
 </script>
 
@@ -333,7 +336,8 @@ function onSee(which: string) {
   );
   filter: drop-shadow(0 6px 16px rgba(45,110,255,0.10));
 }
-.digits { display: flex; align-items: flex-end; justify-content: center; gap: 22px; transform: translateY(30px); }
+/* 让数字整体稍微左移，贴近效果图位置（向左 12px） */
+.digits { display: flex; align-items: flex-end; justify-content: center; gap: 22px; transform: translate(-20px, 30px); }
 .digits li {
   list-style: none;
   width: 54px; height: 74px; border-radius: 8px; box-shadow: 0 6px 14px rgba(45,110,255,0.10);

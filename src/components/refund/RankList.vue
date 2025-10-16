@@ -1,6 +1,6 @@
 <template>
   <ul class="rank-list" :class="variantClass">
-    <li v-for="(it, i) in rows" :key="it.name + i" class="row">
+    <li v-for="(it, i) in rows" :key="it.name + i" class="row" @click="emit('row-click', { item: it, index: i })">
       <div class="row__top">
         <div>
           <span class="no" v-if="showNo">NO.{{ i + 1 }}</span>
@@ -59,6 +59,7 @@ function getBarColor(index: number) {
 }
 
 import { computed } from 'vue';
+const emit = defineEmits<{ (e:'row-click', payload:{ item: Item; index:number }): void }>();
 
 // 根据 variant 选择不同的条宽和高度（右侧面板更窄）
 const barWidth = computed(() => (props.variant === 'plain' ? 180 : 220));
@@ -89,6 +90,7 @@ const variantClass = computed(() => (props.variant === 'plain' ? 'rank-list--pla
     justify-content: center;
     padding: 8px;
     border-radius: 6px;
+    cursor: pointer;
   }
   
   .row__top {

@@ -7,7 +7,7 @@
 
     <ul class="list">
       <!-- 收紧单行高度并把“数值盒子”的样式移动到末列，避免整行被额外 padding 撑高 -->
-      <li v-for="(it, i) in rows" :key="it.name + i" class="row val-box">
+      <li v-for="(it, i) in rows" :key="it.name + i" class="row val-box" @click="emit('row-click', { item: it, index: i })">
         <span class="no-badge" :class="'no-badge--' + (i + 1)"><span class="no-text">NO.{{ i + 1 }}</span></span>
         <span class="name" :title="it.name">{{ it.name }}</span>
 
@@ -25,6 +25,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import SegmentedBar from '../SegmentedBar.vue';
+const emit = defineEmits<{ (e:'row-click', payload:{ item: {name:string; value:number}; index:number }): void }>();
 
 interface Item { name: string; value: number }
 interface Props { items: Item[]; maxRows?: number }
@@ -97,6 +98,7 @@ function rowColor(i: number) {
     column-gap: 10px;
     min-height: 44px;
       position: relative;
+    cursor: pointer;
     }
     
     /* 分割横线（行与行之间） */

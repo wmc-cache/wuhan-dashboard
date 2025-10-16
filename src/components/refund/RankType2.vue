@@ -7,7 +7,7 @@
     </div>
 
     <ul class="list">
-      <li v-for="(it, i) in rows" :key="it.name + i" class="row">
+      <li v-for="(it, i) in rows" :key="it.name + i" class="row" @click="emit('row-click', { item: it, index: i })">
         <i class="medal" :class="'medal--' + (i + 1)" aria-hidden="true" />
         <span class="name" :title="it.name">{{ it.name }}</span>
         <SegmentedBar class="bar" mode="smooth" :percent="percent(it.value)" :color="barColor" :width="barWidth"
@@ -54,6 +54,8 @@ const props = withDefaults(defineProps<Props>(), {
   center: true,
   isShowTitleImg: true,
 });
+
+const emit = defineEmits<{ (e:'row-click', payload:{ item: Item; index:number }): void }>();
 
 const rows = computed(() => props.items.slice(0, props.maxRows));
 const maxV = computed(() => Math.max(1, ...rows.value.map(r => r.value || 0)));
@@ -135,6 +137,7 @@ const titleStyle = computed(() => {
   background: rgba(174, 203, 255, 0.23);
   border: 1px solid #6DA1FB;
   padding: 5px 10px;
+  cursor: pointer;
 }
 
 /* 名次圆形徽章（1~5） */

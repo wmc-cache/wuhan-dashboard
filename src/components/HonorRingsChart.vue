@@ -36,6 +36,8 @@ interface Props {
   sweepAngle?: number; // 每个环扫过的角度（非整圈，用于留白断口）
   baseStart?: number; // 主环起始角
   gapDeg?: number;    // 主环各段缝隙角度
+  // 整体缩放：用于在不同布局里“做小/做大”整个环图，默认 1（不缩放）
+  scale?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -75,10 +77,12 @@ function angleByValue(v: number) {
 // 说明：之前写死了 data[2] 等索引，导致只有两项时会越界。
 // 这里根据传入项数量自适应映射，保证 2 项也能正常显示。
 const rings = computed(() => {
+  const sc = Math.max(0.1, Number((props as any).scale ?? 1));
+  const s = (p: string) => `${(parseFloat(p) * sc).toFixed(2)}%`;
   const defs = [
-    { radius: ['60%', '74%'] as [string, string], startAngle: 30 },   // 外环
-    { radius: ['46%', '58%'] as [string, string], startAngle: 180 },  // 中环
-    { radius: ['32%', '44%'] as [string, string], startAngle: 315 }   // 内环
+    { radius: [s('60%'), s('74%')] as [string, string], startAngle: 30 },   // 外环
+    { radius: [s('46%'), s('58%')] as [string, string], startAngle: 180 },  // 中环
+    { radius: [s('32%'), s('44%')] as [string, string], startAngle: 315 }   // 内环
   ];
   const n = Math.max(0, Math.min(3, data.value.length));
   // 与旧版展示顺序保持一致：三项时为 [0,2,1]（省→国→市）
@@ -94,6 +98,8 @@ const rings = computed(() => {
 
 const option = computed(() => {
   const center = props.center as any;
+  const sc = Math.max(0.1, Number((props as any).scale ?? 1));
+  const s = (p: string) => `${(parseFloat(p) * sc).toFixed(2)}%`;
 
   // 背景轨道（可选：当前默认不加入最终 series，仅保留实现方便后续复用）
   const backSeries = rings.value.map((r) => ({
@@ -182,12 +188,12 @@ const option = computed(() => {
     });
     solidData.push({ value: gapValue, name: `gap-s-${i}`, itemStyle: { color: 'rgba(0,0,0,0)' }, tooltip: { show: false }, label: { show: false }, labelLine: { show: false } });
   });
-  const underRing = { name: 'under', type: 'pie' as const, hoverAnimation: false, legendHoverLink: false, radius: ['52%', '70%'], center, startAngle: props.baseStart, label: { show: false }, labelLine: { show: false }, tooltip: { show: false }, data: underData };
-  const solidRing = { name: 'solid', type: 'pie' as const, hoverAnimation: false, legendHoverLink: false, radius: ['60%', '70%'], center, startAngle: props.baseStart, label: { show: false }, labelLine: { show: false }, data: solidData };
+  const underRing = { name: 'under', type: 'pie' as const, hoverAnimation: false, legendHoverLink: false, radius: [s('52%'), s('70%')], center, startAngle: props.baseStart, label: { show: false }, labelLine: { show: false }, tooltip: { show: false }, data: underData };
+  const solidRing = { name: 'solid', type: 'pie' as const, hoverAnimation: false, legendHoverLink: false, radius: [s('60%'), s('70%')], center, startAngle: props.baseStart, label: { show: false }, labelLine: { show: false }, data: solidData };
 
   // 内环虚线刻度
   const tickRing: echarts.EChartsOption['series'] = {
-    type: 'gauge', center, radius: '26%', startAngle: 220, endAngle: -40, min: 0, max: 100, splitNumber: 12,
+    type: 'gauge', center, radius: s('26%'), startAngle: 220, endAngle: -40, min: 0, max: 100, splitNumber: 12,
     axisLine: { lineStyle: { width: 1, color: [[1, 'rgba(0,0,0,0)']] } }, axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false }, pointer: { show: false }, detail: { show: false }
   } as any;
 

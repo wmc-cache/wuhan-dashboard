@@ -6,7 +6,7 @@
     </div>
 
     <ul class="list">
-      <li v-for="(it, i) in rows" :key="it.name + i" class="row">
+      <li v-for="(it, i) in rows" :key="it.name + i" class="row" @click="emit('row-click', { item: it, index: i })">
         <i class="medal" :class="'medal--' + (i + 1)" aria-hidden="true" />
         <span class="name" :title="it.name">{{ it.name }}</span>
         <span class="val">{{ money(it.value) }}</span>
@@ -18,6 +18,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+const emit = defineEmits<{ (e:'row-click', payload:{ item: {name:string; value:number}; index:number }): void }>();
 
 interface Item { name: string; value: number }
 interface Props { items: Item[]; maxRows?: number }
@@ -43,7 +44,7 @@ function money(v: number) {
   display: grid;
   row-gap: 14px;
 }
-.row { position: relative; display: grid; grid-template-columns: 44px 1fr auto; align-items: center; column-gap: 16px; min-height: 52px; padding-bottom: 10px; }
+.row { position: relative; display: grid; grid-template-columns: 44px 1fr auto; align-items: center; column-gap: 16px; min-height: 52px; padding-bottom: 10px; cursor: pointer; }
 
 .medal { width: 32px; height: 38px; background-repeat: no-repeat; background-size: 100% 100%; }
 .medal--1 { background-image: -webkit-image-set(url('../../images/refund/rank-type1/1/位图.png') 1x, url('../../images/refund/rank-type1/1/位图@2x.png') 2x); background-image: image-set(url('../../images/refund/rank-type1/1/位图.png') 1x, url('../../images/refund/rank-type1/1/位图@2x.png') 2x); }

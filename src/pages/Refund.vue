@@ -4,19 +4,19 @@
     <!-- 左列 -->
     <section class="mod" style="grid-area: tl;">
       <div class="mod__body mod__body--full">
-        <RefundTopCards :items="topCards" />
+        <RefundTopCards :items="topCards" @more="goDetail('zje')" @item-click="onUnionClick('zje', $event?.name)" />
       </div>
     </section>
 
     <section class="mod" style="grid-area: ml;">
       <div class="mod__body">
-        <RefundRankType1 :items="provinceAmountTop" />
+        <RefundRankType1 :items="provinceAmountTop" @more="goDetail('szje')" @row-click="onUnionClick('szje', $event?.item?.name)" />
       </div>
     </section>
 
     <section class="mod" style="grid-area: bl;">
       <div class="mod__body">
-        <RefundRankType2 :items="feeTop" />
+        <RefundRankType2 :items="feeTop" @more="goDetail('sxf')" @row-click="onUnionClick('sxf', $event?.item?.name)" />
       </div>
     </section>
 
@@ -40,23 +40,27 @@
 
     <!-- 右列 -->
     <section class="mod" style="grid-area: tr;">
-      <span class="title-img title-img--refund-6" aria-hidden="true"></span>
+      <!-- 右上：市州金额 TOP4，补充右上角“查看更多”按钮 -->
+      <div class="mod__titlebar">
+        <span class="title-img title-img--refund-6" aria-hidden="true"></span>
+        <i class="more-img" role="button" aria-label="查看更多" @click="goDetail('dsje')"></i>
+      </div>
 
       <div class="mod__body">
-        <RefundRankList :items="districtTop4" :max-rows="4" bar-color="#52c41a" show-no variant="plain" />
+        <RefundRankList :items="districtTop4" :max-rows="4" bar-color="#52c41a" show-no variant="plain" @row-click="onUnionClick('dsje', $event?.item?.name)" />
       </div>
     </section>
 
     <section class="mod" style="grid-area: mr;">
       <div class="mod__body">
         <RefundRankType2 :items="districtTop5" :show-right-name="false" :bar-color="'#4E8FFF'" :title-img1x="titleImg1x"
-          :title-img2x="titleImg2x" />
+          :title-img2x="titleImg2x" @more="goDetail('xsje')" @row-click="onUnionClick('xsje', $event?.item?.name)" />
       </div>
     </section>
 
     <section class="mod" style="grid-area: br;">
       <div class="mod__body">
-        <RefundRankType3 :items="basicTop5" />
+        <RefundRankType3 :items="basicTop5" @more="goDetail('jcje')" @row-click="onUnionClick('jcje', $event?.item?.name)" />
       </div>
     </section>
   </main>
@@ -82,6 +86,7 @@ import NiceDialog from '../components/NiceDialog.vue';
 import RefundRankType2 from '../components/refund/RankType2.vue';
 import RefundRankType3 from '../components/refund/RankType3.vue';
 import { ref, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { apiGet } from '../utils/api';
 import titleImg1x from '../images/refund/title5/编组 21.png';
 import titleImg2x from '../images/refund/title5/编组 21@2x.png';
@@ -118,6 +123,21 @@ const dlgX = ref<number | null>(null);
 const dlgY = ref<number | null>(null);
 const dlgTitle = '汇总统计';
 const dlgItems = ref<{ name: string; value: number }[]>([]);
+
+// 路由
+const router = useRouter();
+function goDetail(orderName: string, unionName?: string){
+  try {
+    const q: Record<string, any> = { year: String(year.value), orderName };
+    if (unionName && unionName.trim()) q.unionName = unionName.trim();
+    router.push({ name: 'refund-detail-list', query: q });
+  } catch {}
+}
+
+// 列表行点击：根据被点击的工会名跳转，并在列表页自动选中上级工会
+function onUnionClick(orderName: string, unionName?: string){
+  goDetail(orderName, unionName);
+}
 
 function onOpenDetail(payload: { x: number; y: number }) {
   dlgX.value = payload.x;
@@ -314,11 +334,16 @@ watch(year, (y) => loadAll(y));
   font-weight: 800;
   color: #2a6ff0;
 }
-/* 图片标题（替换文字标题） */
-.mod>.title-img {
-  display: inline-block;
+/* 标题行：左侧标题切图 + 右侧“查看更多” */
+.mod__titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 8px;
 }
+
+/* 图片标题（替换文字标题） */
+.mod>.title-img { display: inline-block; margin-bottom: 8px; }
 
 .title-img {
   display: inline-block;
@@ -331,6 +356,17 @@ watch(year, (y) => loadAll(y));
   height: 35px;
   background-image: -webkit-image-set(url('../images/refund/title6/编组 21.png') 1x, url('../images/refund/title6/编组 21@2x.png') 2x);
   background-image: image-set(url('../images/refund/title6/编组 21.png') 1x, url('../images/refund/title6/编组 21@2x.png') 2x);
+}
+
+/* 右上角“查看更多”按钮（与其它模块保持一致尺寸与素材） */
+.more-img {
+  width: 59px;
+  height: 13px;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-image: -webkit-image-set(url('../images/refund/see-all/查看更多.png') 1x, url('../images/refund/see-all/查看更多@2x.png') 2x);
+  background-image: image-set(url('../images/refund/see-all/查看更多.png') 1x, url('../images/refund/see-all/查看更多@2x.png') 2x);
 }
 
 /* 弹窗表格（按图示配色）：

@@ -33,7 +33,8 @@ const props = withDefaults(defineProps<Props>(), {
     { name: '江汉区', value: 6189 },
     { name: '江夏区', value: 5230 }
   ],
-  maxRows: 6,
+  // 默认只展示前 5 条，和设计稿保持一致
+  maxRows: 5,
   barColor: '#4E8FFF',
   unit: '个'
 });
@@ -76,4 +77,3 @@ function medalClass(i: number) { return i < 5 ? `medal--${i + 1}` : 'medal--5'; 
 .bar { justify-self: start; }
 .val { font-weight: 800; font-size: 16px; color: #2a6ff0; text-align: right; }
 </style>
-

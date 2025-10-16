@@ -45,6 +45,12 @@ const routes: RouteRecordRaw[] = [
     name: "refund",
     component: () => import("../pages/Refund.vue"),
   },
+  // 下属工会详情列表（退款资金明细列表）
+  {
+    path: "/refund-detail-list",
+    name: "refund-detail-list",
+    component: () => import("../pages/RefundDetailListPage.vue"),
+  },
   // 表格演示（GridTable）
   {
     path: "/grid-table",
@@ -60,6 +66,11 @@ const routes: RouteRecordRaw[] = [
     path: "/laomo-list",
     name: "laomo-list",
     component: () => import("../pages/LaomoList.vue"),
+  },
+  {
+    path: "/aid-list",
+    name: "aid-list",
+    component: () => import("../pages/AidListPage.vue"),
   },
 ];
 

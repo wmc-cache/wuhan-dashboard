@@ -8,7 +8,7 @@
 
     <!-- 内容：四列卡片，底部对齐，不同高度体现排名差异 -->
     <div class="cards">
-      <div v-for="(it, i) in items.slice(0, 4)" :key="it.name + i" class="cell">
+      <div v-for="(it, i) in items.slice(0, 4)" :key="it.name + i" class="cell" @click="emit('item-click', { name: it.name, amount: it.amount, index: i })">
         <div class="amount">{{ money(it.amount) }}</div>
         <div class="name" :title="it.name">{{ it.name }}</div>
         <div class="pill" :class="pillClass(i)"></div>
@@ -40,6 +40,7 @@ const top42x = new URL('../../images/refund/top4/编组 8@2x.png', import.meta.u
 interface Item { name: string; amount: number }
 interface Props { items: Item[] }
 defineProps<Props>();
+const emit = defineEmits<{ (e:'more'):void; (e:'item-click', payload:{name:string; amount:number; index:number}):void }>();
 
 function money(n: number) {
   // 与设计参考更贴近：去掉千位分隔，不做单位换算
@@ -79,6 +80,7 @@ function pillClass(i: number) {
   align-content: end;
   row-gap: 12px;
   min-width: 0;
+  cursor: pointer;
 }
 
 .amount {

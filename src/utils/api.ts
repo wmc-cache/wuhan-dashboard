@@ -8,10 +8,31 @@ export interface ApiResponse<T = any> {
   [k: string]: any;
 }
 
-// 从 sessionStorage 优先获取 token，找不到再从 localStorage 获取
+// 优先从 Cookie 中读取 Admin-Token；若无，再从 sessionStorage/localStorage 兜底。
 // 兼容常见 key：'token'、'Token'、'Authorization'、'authorization'、'authToken'、'access_token'
+function readCookie(name: string): string | undefined {
+  try {
+    if (typeof document === 'undefined' || !document.cookie) return undefined;
+    const pairs = document.cookie.split(';');
+    for (const p of pairs) {
+      const [k, ...rest] = p.split('=');
+      if (!k) continue;
+      if (k.trim() === name) return decodeURIComponent(rest.join('=') || '').trim() || undefined;
+    }
+  } catch {
+    // ignore
+  }
+  return undefined;
+}
+
+// 统一解析 token：Cookie(Admin-Token) -> sessionStorage -> localStorage
 function resolveToken(): string | undefined {
   try {
+    // 1) Cookie: Admin-Token
+    const fromCookie = readCookie('Admin-Token');
+    if (fromCookie) return fromCookie;
+
+    // 2) Web Storage fallbacks
     const keys = ['token', 'Token', 'Authorization', 'authorization', 'authToken', 'access_token'];
     const pick = (store: Storage) => {
       for (const k of keys) {
@@ -37,6 +58,7 @@ function withAuthHeaders(base?: HeadersInit): HeadersInit {
     // 默认加上 Authorization 与常见自定义 token 头；允许调用处覆盖
     Authorization: bearer,
     token,
+    'Admin-Token': token,
     ...(base || {}),
   } as HeadersInit;
 }
