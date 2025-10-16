@@ -400,20 +400,22 @@ async function loadMedicalAllNum(year: number | string) {
     padding: 18px;
   }
   
-  /* 通用骨架屏覆盖层（3 条横向条形 + 斜向高光动画） */
+  /* 通用骨架屏覆盖层（3 条横向条形 + 斜向高光动画）
+   * 需求：去掉骨架屏的白色背景，只保留条形占位与高光动画。
+   */
   .loading-mask {
     position: absolute; inset: 0; z-index: 30; overflow: hidden; border-radius: inherit;
-    background: #f6f9ff;
+    /* 原为 #f6f9ff，会形成整块浅白背景；改为透明，露出面板底图 */
+    background: transparent;
   }
   .loading-mask::before {
     content: '';
     position: absolute; inset: 0;
+    /* 仅绘制三条横向骨架条，不再填充整块白底 */
     background:
-      /* 三条横向骨架条 */
       linear-gradient(#e8efff 20px, transparent 0) 10% 28%/80% 20px no-repeat,
       linear-gradient(#e8efff 20px, transparent 0) 10% 52%/90% 20px no-repeat,
-      linear-gradient(#e8efff 20px, transparent 0) 10% 76%/60% 20px no-repeat,
-      #f6f9ff;
+      linear-gradient(#e8efff 20px, transparent 0) 10% 76%/60% 20px no-repeat;
   }
   .loading-mask::after {
     content: '';
