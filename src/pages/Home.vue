@@ -22,6 +22,10 @@
             <span class="item-count">（{{ n.count }}）</span>
           </li>
         </ul>
+        <div v-if="loadingStats" class="loading-overlay" aria-live="polite" aria-busy="true">
+          <div class="spinner"></div>
+          <div class="loading-text">加载中...</div>
+        </div>
       </aside>
 
       <!-- 右：表格与分页 -->
@@ -37,11 +41,15 @@
               layout="total, prev, pager, next, jumper" @current-change="(p: number) => to(p)" />
           </div>
         </div>
+        <div v-if="loadingTable" class="loading-overlay" aria-live="polite" aria-busy="true">
+          <div class="spinner"></div>
+          <div class="loading-text">加载中...</div>
+        </div>
       </section>
     </section>
     <!-- Teleport 到 body，不占布局 -->
     <UnionDetailDialog v-model="showUnion" :data="unionData" title="工会详情" :width="1080" />
-    <MemberDetailDialog v-model="showMember" :data="memberData" title="会员详情" :width="1080" />
+    <MemberDetailDialog v-model="showMember" :data="memberData" :search-code="memberSearchCode" title="会员详情" :width="1080" />
   </main>
 </template>
 
@@ -107,12 +115,16 @@ interface MemberRow {
   unionName?: string;    // 所属工会
   gender?: string;       // 性别
   joinAt?: string;       // 入会时间
+  idNumber?: string;     // 身份证（用于详情接口）
 }
 
 const allRows = ref<any[]>([]); // 根据 selCat 切换 Row/MemberRow
 const total = ref(0);
 const pageSize = 15;
 const page = ref(1);
+// Loading states
+const loadingStats = ref(false);
+const loadingTable = ref(false);
 
 // 左侧统计分类
 type SegStat = { code: number; name: string; count: number };
@@ -147,13 +159,19 @@ function setActive(i: number) {
   fetchListFromApi();
 }
 
-async function onSearch() { page.value = 1; await Promise.all([fetchStats(), fetchListFromApi()]).catch(() => void 0); }
+async function onSearch() {
+  page.value = 1;
+  // 先拉取左侧菜单（获取 code），再用选中的 code 拉取右侧表格
+  await fetchStats().catch(() => void 0);
+  await fetchListFromApi().catch(() => void 0);
+}
 
 // 弹框：工会详情/会员详情
 const showUnion = ref(false);
 const unionData = ref<UnionDetail | undefined>(undefined);
 const showMember = ref(false);
 const memberData = ref<MemberDetail | undefined>(undefined);
+const memberSearchCode = ref<string | undefined>(undefined);
 async function onCellClick(payload: { row: any; column: ColumnDef }) {
   const r = payload.row as any;
   if (selCat.value === 'org' && payload.column.key === 'fullname') {
@@ -189,28 +207,17 @@ async function onCellClick(payload: { row: any; column: ColumnDef }) {
   } else if (selCat.value === 'member' && payload.column.key === 'name') {
     memberData.value = {
       name: r.name,
-      gender: r.gender || (Math.random() > 0.5 ? '女' : '男'),
-      joinAt: r.joinAt || '2024-02-02',
-      duty: r.duty || '职务名称',
-      politics: r.politics || '群众',
-      union: r.unionName || '武汉市某某工会',
-      age: r.age || 32,
-      company: r.company || '单位名称',
-      phone: r.phone || `18${Math.floor(1000 + Math.random() * 9000)}${Math.floor(1000 + Math.random() * 9000)}`,
-      education: r.education || '本科',
-      medInfo: { agency: '武钢集团有限公司工会', company: '武汉钢铁集团物流有限公司', startAt: '2024/01/01', endAt: '2024/12/31' },
-      medPlans: [
-        { type: '住院', count: '1份', money: '2,000元' },
-        { type: '综合', count: '1份', money: '2,000元' },
-        { type: '重疾', count: '1份', money: '2,000元' },
-      ],
-      medClaims: [
-        { payType: '综合', disease: '佔位', startAt: '2024/01/02', endAt: '2024/01/02', fee: '2,000元' },
-        { payType: '综合', disease: '佔位', startAt: '2024/01/02', endAt: '2024/01/02', fee: '2,000元' },
-        { payType: '重疾', disease: '佔位', startAt: '2024/01/02', endAt: '2024/01/02', fee: '2,000元' },
-      ],
-      years: [2024, 2023, 2022, 2021]
+      gender: r.gender,
+      joinAt: r.joinAt,
+      duty: r.duty,
+      politics: r.politics,
+      union: r.unionName,
+      age: r.age,
+      company: r.company,
+      phone: r.phone,
+      education: r.education,
     } as MemberDetail;
+    memberSearchCode.value = r.idNumberBright || r.certificateNumBright || r.idNumber || r.certificateNum || r.certificateNo;
     showMember.value = true;
   }
 }
@@ -292,6 +299,7 @@ function mapMemberRow(raw: any, i: number): MemberRow {
     unionName: raw.unionName ?? raw.orgName ?? raw.fullname,
     gender: raw.gender ?? raw.sex ?? (i % 2 ? '女' : '男'),
     joinAt: raw.joinAt ?? raw.joinDate ?? raw.joinTime ?? raw.createdAt ?? '2024-03-02',
+    idNumber: raw.idNumberBright ?? raw.certificateNumBright ?? raw.idNumber ?? raw.certificateNum ?? raw.certificateNo,
   } as MemberRow;
 }
 
@@ -311,6 +319,7 @@ async function fetchStats() {
   const statPath = selCat.value === 'member' ? API.memStats : API.segStats;
   if (!statPath) { segStats.value = []; return; }
   try {
+    loadingStats.value = true;
     const qs = new URLSearchParams();
     if (keyword.value?.trim()) qs.set('searchCode', keyword.value.trim());
     const url = `${statPath}?${qs.toString()}`;
@@ -331,12 +340,15 @@ async function fetchStats() {
     }
   } catch {
     segStats.value = [];
+  } finally {
+    loadingStats.value = false;
   }
 }
 
 async function fetchListFromApi() {
   page.value = Math.max(1, page.value);
   try {
+    loadingTable.value = true;
     const qs = new URLSearchParams();
     if (keyword.value?.trim()) qs.set('searchCode', keyword.value.trim());
     if (activeCode.value != null) qs.set('code', String(activeCode.value));
@@ -361,13 +373,16 @@ async function fetchListFromApi() {
     buildColumnsByData(allRows.value[0]);
   } catch (e) {
     // 失败时不抛出，保留当前视图
+  } finally {
+    loadingTable.value = false;
   }
 }
 
 watch(selCat, async () => {
-  // 切换分类：统一走服务端
+  // 切换分类：先拉左侧菜单（拿到 code），再拉右侧表格
   page.value = 1;
-  await Promise.all([fetchStats(), fetchListFromApi()]).catch(() => void 0);
+  await fetchStats().catch(() => void 0);
+  await fetchListFromApi().catch(() => void 0);
   buildColumnsByData(allRows.value[0]);
 });
 onMounted(async () => {
@@ -382,8 +397,9 @@ onMounted(async () => {
   const qCat = String(route.query.cat ?? '');
   if (qKw) keyword.value = qKw;
   if (qCat === 'org' || qCat === 'member') selCat.value = qCat as any;
-  // 初次加载：统一走服务端
-  await Promise.all([fetchStats(), fetchListFromApi()]).catch(() => void 0);
+  // 初次加载：先拉左侧菜单，再拉右侧表格
+  await fetchStats().catch(() => void 0);
+  await fetchListFromApi().catch(() => void 0);
   buildColumnsByData(allRows.value[0]);
 });
 </script>
@@ -424,6 +440,7 @@ onMounted(async () => {
 }
 
 .sidenav {
+  position: relative;
   border-radius: 10px;
   /* 左侧菜单背景替换：src/images/home/left-menu-bg/位图(1x/2x) */
   background-image: url('../images/home/left-menu-bg/位图.png');
@@ -552,6 +569,12 @@ onMounted(async () => {
 .pager { display: flex; align-items: center; }
 .detail-link { cursor: pointer; color: #2a6ff0; font-weight: 700; background: rgba(255,255,255,.6); border: 1px solid rgba(42,111,240,.25); border-radius: 4px; padding: 4px 10px; }
 .detail-link:hover { background: rgba(255,255,255,.8); }
+
+/* loading overlays for sidenav and table-area */
+.loading-overlay { position: absolute; inset: 12px; background: rgba(255,255,255,.6); display: grid; place-items: center; z-index: 5; border-radius: 8px; }
+.spinner { width: 34px; height: 34px; border: 3px solid rgba(42,111,240,.25); border-top-color: #2a6ff0; border-radius: 50%; animation: spin 1s linear infinite; }
+.loading-text { margin-top: 8px; font-weight: 800; color: #2a6ff0; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* Teleport 弹框挂在 body；组件在模板中挂载，这里无需额外处理 */
 </style>

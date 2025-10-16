@@ -7,7 +7,13 @@
         <div class="mod__head"><span class="title-img title-img--aid2-1" aria-hidden="true"></span></div>
         <div class="mod__body">
           <div class="aid2-left">
-            <div class="aid2-left__pillar" aria-hidden="true"></div>
+            <div class="aid2-left__pillarwrap">
+              <div class="aid2-left__pillar" aria-hidden="true"></div>
+              <!-- 动态百分比文本（居中到每段圆柱） -->
+              <ul class="aid2-left__pcts">
+                <li v-for="(p, i) in leftPercents" :key="i" class="pct" :style="{ top: leftPctPos[i] }">{{ p }}</li>
+              </ul>
+            </div>
             <ul class="aid2-left__list">
               <li v-for="(it, i) in leftItems" :key="i" class="aid2-left__item" :style="{ '--dot': it.color } as any">
                 <span class="dot" />
@@ -17,6 +23,7 @@
             </ul>
           </div>
         </div>
+        <button class="see-btn" type="button" title="查看更多" @click="onSee('poorType')"></button>
       </section>
 
       <!-- 左下：档案类别（使用 HonorRingsChart 实现环图） -->
@@ -26,13 +33,14 @@
           <HonorRingsChart :items="archiveItems" center-text="档案分类" :center="['50%','56%']" :gap-deg="10"
             :base-start="20" :sweep-angle="260" />
         </div>
+        <button class="see-btn" type="button" title="查看更多" @click="onSee('archive')"></button>
       </section>
     </div>
 
     <!-- 中列：60% / 40% -->
     <div class="col col--c">
       <!-- 中部：还原“总数+中心插画” -->
-      <section class="mod--tall">
+      <section class="">
         <div class="mod__body mod__body--full">
           <div class="aid2-center">
             <div class="aid2-center__counter">
@@ -54,11 +62,12 @@
         <div class="mod__head"><span class="title-img title-img--aid2-4" aria-hidden="true"></span></div>
         <div class="mod__body mod__body--full">
           <StripedBarChart :categories="causeCats" :values="causeVals" y-unit="人次"
-            :yMax="1200" :gridLeft="64" :gridRight="20" :gridTop="48" :gridBottom="40" :barWidth="40" :stripeWidth="28"
+            :yMax="yMax" :gridLeft="64" :gridRight="20" :gridTop="48" :gridBottom="40" :barWidth="40" :stripeWidth="28"
             :stripeHeight="14" :stripeGap="2" :showLabels="false" :enableTooltip="true" stripeColor="#6EA8FF"
             axisColor="rgba(67,127,255,0.35)" textColor="rgba(25, 90, 200, 0.95)"
             gridLineColor="rgba(67,127,255,0.22)" />
         </div>
+        <button class="see-btn" type="button" title="查看更多" @click="onSee('cause')"></button>
       </section>
     </div>
 
@@ -80,10 +89,11 @@
               </div>
             </div>
             <HorizontalGenderStack class="aid2-right__chart" :labels="ageLabels" :male="male" :female="female"
-              :min-total="90" :step="15" unit-text="万人" :grid-left="74" :grid-right="26" :grid-top="24"
+              :min-total="90" :step="15" unit-text="人" :grid-left="74" :grid-right="26" :grid-top="24"
               :grid-bottom="36" :bar-width="12" />
           </div>
         </div>
+        <button class="see-btn" type="button" title="查看更多" @click="onSee('age')"></button>
       </section>
 
       <!-- 右下：覆盖类别指标占位（竖排 3 个） -->
@@ -92,59 +102,142 @@
         <div class="mod__body mod__body--full">
           <CoverageRings :items="coverageItems" />
         </div>
+        <button class="see-btn" type="button" title="查看更多" @click="onSee('fileType')"></button>
       </section>
     </div>
   </main>
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
 import HonorRingsChart from '../components/HonorRingsChart.vue';
 import StripedBarChart from '../components/StripedBarChart.vue';
 import HorizontalGenderStack from '../components/HorizontalGenderStack.vue';
 import CoverageRings from '../components/aid/CoverageRings.vue';
+import { apiGet } from '../utils/api';
 
-// 档案类别环图数据（示例）
-const archiveItems = [
-  { name: '存量档案', value: 234546, color: '#FDB94E' },
-  { name: '增量档案', value: 47885, color: '#4E8FFF' },
-  { name: '返回档案', value: 47885, color: '#6FD9C9' }
-];
+// 颜色映射（与视觉保持统一）
+const colors: Record<string, string> = {
+  '深度困难': '#2a6ff0',
+  '相对困难': '#27b87a',
+  '意外致困': '#f6a03a',
+  '存量档案': '#FDB94E',
+  '增量档案': '#4E8FFF',
+  '返困档案': '#6FD9C9',
+  '城镇困难职工': '#4E8FFF',
+  '困难农民工': '#27b87a',
+};
 
-// 致困原因柱状图
-const causeCats = ['本人失业', '供养直系亲属负担', '本人疾病', '家属疾病'];
-const causeVals = [1080, 720, 860, 1180];
+// 左上：帮扶职工档案类型
+const leftItems = ref<Array<{ name: string; value: number; color: string }>>([]);
+// 百分比文本 & 位置（相对柱体高度）
+const leftPercents = computed(() => {
+  const sum = leftItems.value.reduce((s, d) => s + d.value, 0) || 1;
+  return leftItems.value.map(d => (d.value / sum * 100).toFixed(2) + '%');
+});
+const leftPctPos = computed(() => {
+  const sum = leftItems.value.reduce((s, d) => s + d.value, 0) || 1;
+  let acc = 0;
+  return leftItems.value.map(d => {
+    const mid = acc + d.value / sum / 2; // 0~1 中点
+    acc += d.value / sum;
+    return `calc(${(mid * 100).toFixed(2)}% - 9%)`;
+  });
+});
 
-// 右上“年龄分布（男女堆叠）”示例数据
-const ageLabels = ['80岁以上', '60-80岁', '40-60岁', '20-40岁', '20岁以下'];
-const male = [6, 20, 42, 18, 4];
-const female = [8, 26, 48, 28, 7];
+// 左下：档案类别环图
+const archiveItems = ref<Array<{ name: string; value: number; color: string }>>([]);
 
-// 中部计数器（假数据）
-const total = 111211; // 总数（假数据）
-const lastMonthAdd = 10; // 本月新增（假数据）
-// 将数字填充为 6 位，便于与底图 6 个盒子对齐
-const counterDigits = Array.from(String(total).padStart(6, '0'));
+// 中下：致困原因
+const causeCats = ref<string[]>([]);
+const causeVals = ref<number[]>([]);
+const yMax = ref<number>(0);
 
-// 左上三项文案 + 数值（假数据）
-const leftItems = [
-  { name: '深度困难', value: 500, color: '#2a6ff0' },
-  { name: '相对困难', value: 100, color: '#27b87a' },
-  { name: '意外致困', value: 50, color: '#f6a03a' }
-];
+// 中部计数器
+const total = ref<number>(0);
+const lastMonthAdd = ref<number>(0);
+const counterDigits = computed(() => Array.from(String(total.value).padStart(6, '0')));
+const deltaPercent = computed(() => {
+  const all = total.value || 1;
+  return Math.min(1, Math.max(0, lastMonthAdd.value / all));
+});
 
-// 右上男女总数（假数据）
-const maleTotal = 5237;
-const femaleTotal = 5237;
+// 右上：年龄分布
+const ageLabels = ref<string[]>([]);
+const male = ref<number[]>([]);
+const female = ref<number[]>([]);
+const maleTotal = ref<number>(0);
+const femaleTotal = ref<number>(0);
 
-// 环比进度条占比（0~1），仅用于装饰
-const deltaPercent = 0.58;
+// 右下：覆盖类别（困难类别）
+const coverageItems = ref<Array<{ percent: number; value: number; label: string; color: string }>>([]);
 
-// 右下：覆盖类别三项（假数据）
-const coverageItems = [
-  { percent: 80, value: 2347, label: '城镇困难职工', color: '#4E8FFF' },
-  { percent: 80, value: 2347, label: '困难农民工', color: '#27b87a' },
-  { percent: 80, value: 2347, label: '职工涵盖', color: '#f6a03a' },
-];
+async function loadAll() {
+  // 并行请求
+  const [poorType, helpOutType, fileTypeName, poorCause, ages, allNum] = await Promise.all([
+    apiGet<any>('/difficultAssistance/poorType').catch(() => null),
+    apiGet<any>('/difficultAssistance/helpOutType').catch(() => null),
+    apiGet<any>('/difficultAssistance/fileTypeName').catch(() => null),
+    apiGet<any>('/difficultAssistance/poorCause').catch(() => null),
+    apiGet<any>('/difficultAssistance/age').catch(() => null),
+    apiGet<any>('/difficultAssistance/allNum').catch(() => null),
+  ]);
+
+  // 左上三项：档案类型
+  if (Array.isArray(poorType)) {
+    // 按目标顺序：深度困难 -> 相对困难 -> 意外致困
+    const order = ['深度困难', '相对困难', '意外致困'];
+    const mapped = poorType.map((it: any) => ({ name: String(it.name), value: Number(it.value) || 0, color: colors[it.name] || '#4E8FFF' }));
+    mapped.sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name));
+    leftItems.value = mapped;
+  }
+
+  // 左下：档案类别
+  if (Array.isArray(helpOutType)) {
+    archiveItems.value = helpOutType.map((it: any) => ({ name: String(it.name), value: Number(it.value) || 0, color: colors[it.name] || '#4E8FFF' }));
+  }
+
+  // 中下：致困原因
+  if (poorCause) {
+    const d = poorCause;
+    causeCats.value = Array.isArray(d.categories) ? d.categories.map((s: any) => String(s)) : [];
+    causeVals.value = Array.isArray(d.values) ? d.values.map((n: any) => Number(n) || 0) : [];
+    yMax.value = Number(d.ymax) || Math.max(0, ...causeVals.value);
+  }
+
+  // 右上：年龄分布
+  if (ages) {
+    const d = ages;
+    maleTotal.value = Number(d.manSum) || 0;
+    femaleTotal.value = Number(d.womanSum) || 0;
+    ageLabels.value = Array.isArray(d.ageName) ? d.ageName.map((s: any) => String(s)) : [];
+    male.value = Array.isArray(d.man) ? d.man.map((n: any) => Number(n) || 0) : [];
+    female.value = Array.isArray(d.woman) ? d.woman.map((n: any) => Number(n) || 0) : [];
+  }
+
+  // 中部计数器
+  if (allNum) {
+    total.value = Number(allNum.allNum) || 0;
+    lastMonthAdd.value = Number(allNum.addNum) || 0;
+  }
+
+  // 右下：困难类别（覆盖环）
+  if (Array.isArray(fileTypeName)) {
+    coverageItems.value = fileTypeName.map((it: any) => ({
+      percent: Number(String(it.region || '').replace(/%$/, '')) || 0,
+      value: Number(it.value) || 0,
+      label: String(it.name),
+      color: colors[it.name] || '#4E8FFF',
+    }));
+  }
+}
+
+onMounted(() => { loadAll().catch(() => void 0); });
+
+function onSee(which: string) {
+  // TODO: 接入实际路由/弹框需求；默认仅打印
+  console.log('查看更多', which);
+}
 </script>
 
 <style scoped lang="scss">
@@ -159,15 +252,16 @@ const coverageItems = [
   gap: 0;
 }
 
-/* 三列容器：统一 6/4 比例，确保三列第二行的顶部对齐（参考 MemberV2 的行高固定策略） */
-.col { display: grid; grid-template-rows: 6fr 4fr; row-gap: 0; min-height: 0; height: 100%; }
-.col--l, .col--r, .col--c { display: grid; grid-template-rows: 6fr 4fr; }
+/* 三列容器：左右 50/50；中列 60/40。这样六个模块高度按 50% | 60% | 50% 及 50% | 40% | 50% 排列 */
+.col { display: grid; grid-template-rows: 1fr 1fr; row-gap: 0; min-height: 0; height: 100%; }
+.col--c { grid-template-rows: 6fr 4fr; }
 
-/* 模块外框与 Refund 一致 */
-.mod { position: relative; border: none; border-radius: 10px; background: none; padding: 18px; display: grid; grid-template-rows: auto 1fr; height: 100%; min-height: 0; box-sizing: border-box; }
+/* 模块外框与 Refund 一致（高模块也继承相同基线样式） */
+.mod, .mod--tall { position: relative; border: none; border-radius: 10px; background: none; padding: 18px; display: grid; grid-template-rows: auto 1fr; height: 100%; min-height: 0; box-sizing: border-box; }
 /* 关键：外框切图向外扩 8px，覆盖主网格/列间距，
    做法与 MemberV2 一致，从而减少视觉缝隙 */
-.mod::before { content: ''; position: absolute; left: -8px; right: -8px; top: -8px; bottom: -8px; background-repeat: no-repeat; background-size: 100% 100%; background-image: -webkit-image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x); background-image: image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x); pointer-events: none; z-index: -1; }
+.mod::before, .mod--tall::before { content: ''; position: absolute; left: -8px; right: -8px; top: -8px; bottom: -8px; background-repeat: no-repeat; background-size: 100% 100%; pointer-events: none; z-index: -1; }
+.mod::before { background-image: -webkit-image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x); background-image: image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x); }
 .mod--tall::before { background-image: -webkit-image-set(url('../images/module-broder-height/矩形.png') 1x, url('../images/module-broder-height/矩形@2x.png') 2x); background-image: image-set(url('../images/module-broder-height/矩形.png') 1x, url('../images/module-broder-height/矩形@2x.png') 2x); }
 
 .mod__title { margin: 0 0 8px; font-size: 16px; font-weight: 800; color: #2a6ff0; letter-spacing: 1px; }
@@ -183,6 +277,12 @@ const coverageItems = [
 .title-img--aid2-4 { width: 191px; background-image: -webkit-image-set(url('../images/aid2/title/4/编组 21.png') 1x, url('../images/aid2/title/4/编组 21@2x.png') 2x); background-image: image-set(url('../images/aid2/title/4/编组 21.png') 1x, url('../images/aid2/title/4/编组 21@2x.png') 2x); }
 .title-img--aid2-5 { width: 191px; background-image: -webkit-image-set(url('../images/aid2/title/5/编组 21.png') 1x, url('../images/aid2/title/5/编组 21@2x.png') 2x); background-image: image-set(url('../images/aid2/title/5/编组 21.png') 1x, url('../images/aid2/title/5/编组 21@2x.png') 2x); }
 
+/* 查看更多按钮（右上角） */
+.see-btn { position: absolute; top: 30px; right: 25px; width: 59px; height: 13px; cursor: pointer; border: 0; padding: 0; background: transparent; background-repeat: no-repeat; background-size: 100% 100%;
+  background-image: -webkit-image-set(url('../images/aid2/see/查看更多备份 2.png') 1x, url('../images/aid2/see/查看更多备份 2@2x.png') 2x);
+  background-image: image-set(url('../images/aid2/see/查看更多备份 2.png') 1x, url('../images/aid2/see/查看更多备份 2@2x.png') 2x);
+}
+
 /* 占位图形：用中性颜色 + 虚线边框表达结构 */
 .ph { border: 2px dashed rgba(0, 120, 255, .35); border-radius: 10px; background: rgba(80, 150, 255, .06); }
 .ph--bars { height: 100%; }
@@ -197,7 +297,10 @@ const coverageItems = [
 
 /* --- Aid2: 左上模块（柱体 + 右侧 3 条卡片） --- */
 .aid2-left { height: 100%; display: grid; grid-template-columns: 128px 1fr; column-gap: 16px; align-items: center; }
-.aid2-left__pillar { align-self: stretch; background-repeat: no-repeat; background-position: left center; background-size: contain; background-image: -webkit-image-set(url('../images/aid2/part1/1/编组 23.png') 1x, url('../images/aid2/part1/1/编组 23@2x.png') 2x); background-image: image-set(url('../images/aid2/part1/1/编组 23.png') 1x, url('../images/aid2/part1/1/编组 23@2x.png') 2x); }
+.aid2-left__pillarwrap { position: relative; align-self: stretch; }
+.aid2-left__pillar { position: absolute; inset: 0; background-repeat: no-repeat; background-position: left center; background-size: contain; background-image: -webkit-image-set(url('../images/aid2/part1/1/编组 23.png') 1x, url('../images/aid2/part1/1/编组 23@2x.png') 2x); background-image: image-set(url('../images/aid2/part1/1/编组 23.png') 1x, url('../images/aid2/part1/1/编组 23@2x.png') 2x); }
+.aid2-left__pcts { position: absolute; left: 0; right: 0; top: 8%; bottom: 10%; list-style: none; margin: 0; padding: 0; }
+.aid2-left__pcts .pct { position: absolute; left: 42%; transform: translate(-50%, -40%); color: #fff; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
 .aid2-left__list { list-style: none; margin: 0; padding: 0; display: grid; row-gap: 14px; }
 .aid2-left__item { height: 72px; border-radius: 8px; background-repeat: no-repeat; background-size: 100% 100%; background-position: center; background-image: -webkit-image-set(url('../images/aid2/part1/2/矩形.png') 1x, url('../images/aid2/part1/2/矩形@2x.png') 2x); background-image: image-set(url('../images/aid2/part1/2/矩形.png') 1x, url('../images/aid2/part1/2/矩形@2x.png') 2x); display: grid; grid-template-columns: 18px 1fr auto; align-items: center; column-gap: 10px; padding: 0 16px; }
 .aid2-left__item .dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 0 3px rgba(255,255,255,.7) inset; background: var(--dot); }

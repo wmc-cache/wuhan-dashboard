@@ -73,7 +73,7 @@
           <!-- 医疗互助 -->
           <template v-else-if="tab==='med'">
             <!-- 年份子 tabs -->
-            <div class="years">
+            <div v-if="years.length" class="years">
               <button v-for="y in years" :key="y" class="year" :class="{active: y===curYear}" @click="curYear=y">{{ y }}年</button>
             </div>
 
@@ -143,6 +143,7 @@
                 <li class="info__row"><span class="lab">审核人</span><span class="val">{{ help.archive.auditUser || '-' }}</span></li>
                 <li class="info__row"><span class="lab">建档时间</span><span class="val">{{ help.archive.createTime || '-' }}</span></li>
                 <li class="info__row"><span class="lab">建档工会</span><span class="val">{{ help.archive.creatorOrg || '-' }}</span></li>
+                <li class="info__row"><span class="lab">建档人</span><span class="val">{{ help.archive.creator || '-' }}</span></li>
                 <li class="info__row"><span class="lab">困难类别</span><span class="val">{{ help.archive.poorTypeNew || '-' }}</span></li>
               </ul>
             </div>
@@ -226,7 +227,7 @@
 import { computed, ref, watch } from 'vue';
 import title1x from '../images/dialog-module/title/小标题.png';
 import title2x from '../images/dialog-module/title/小标题@2x.png';
-import { apiPost } from '../utils/api';
+import { apiPostForm } from '../utils/api';
 import { getDict, labelOf } from '../utils/dict';
 
 interface MedPlan { type: string; count: string | number; money: string }
@@ -247,20 +248,12 @@ function close() { emit('update:modelValue', false); }
 const d = computed(() => props.data || {});
 
 // Tabs
-const tab = ref<'med' | 'laomo'>(props.defaultTab || 'med');
-const years = ref<(string|number)[]>([2024, 2023, 2022, 2021]);
-const curYear = ref(years.value[0] as number);
-const medInfo = ref<MedInfo>({ agency: '武钢集团有限公司工会', company: '武汉钢铁集团物流有限公司', startAt: '2024/01/01', endAt: '2024/12/31' });
-const medPlans = ref<MedPlan[]>([
-  { type: '住院', count: '1份', money: '2,000元' },
-  { type: '综合', count: '1份', money: '2,000元' },
-  { type: '重疾', count: '1份', money: '2,000元' },
-]);
-const medClaims = ref<MedClaim[]>([
-  { payType: '综合', disease: '佔位', startAt: '2024/01/02', endAt: '2024/01/02', fee: '2,000元' },
-  { payType: '综合', disease: '佔位', startAt: '2024/01/02', endAt: '2024/01/02', fee: '2,000元' },
-  { payType: '重疾', disease: '佔位', startAt: '2024/01/02', endAt: '2024/01/02', fee: '2,000元' },
-]);
+const tab = ref<'med' | 'laomo' | 'org' | 'rescue' | 'help'>(props.defaultTab || 'med');
+const years = ref<(string|number)[]>([]);
+const curYear = ref<number | undefined>(undefined);
+const medInfo = ref<MedInfo>({ agency: '', company: '', startAt: '', endAt: '' });
+const medPlans = ref<MedPlan[]>([]);
+const medClaims = ref<MedClaim[]>([]);
 
 // Remote detail loading
 const loading = ref(false);
@@ -288,7 +281,7 @@ async function fetchDetail(code: number) {
   if (!props.searchCode) return;
   try {
     loading.value = true;
-    const resp: any = await apiPost<any>(`/business/member/allDetail`, { searchCode: props.searchCode, code }).catch(() => null);
+    const resp: any = await apiPostForm<any>(`/business/member/allDetail`, { searchCode: props.searchCode, code }).catch(() => null);
     const raw = resp?.data ?? resp;
     const obj = Array.isArray(raw) ? raw[0] : raw;
     if (!obj) return;
@@ -336,6 +329,12 @@ async function fetchDetail(code: number) {
       medPlans.value = joins.map((it: any) => ({ type: it.type, count: it.piece, money: String(it.bid ?? '') }));
       const pay = y.memberPay || {};
       medClaims.value = Object.keys(pay).length ? [{ payType: pay.type, disease: pay.illName, startAt: normDate(pay.startTime), endAt: normDate(pay.endTime), fee: String(pay.bid ?? '') }] : [];
+    } else {
+      years.value = [];
+      curYear.value = undefined;
+      medInfo.value = { agency: '', company: '', startAt: '', endAt: '' };
+      medPlans.value = [];
+      medClaims.value = [];
     }
 
     // 困难救助
@@ -353,14 +352,18 @@ async function fetchDetail(code: number) {
     // 困难帮扶
     if (obj.knbfMemberVo) {
       const kv = obj.knbfMemberVo;
+      // 兼容后端两种大小写命名：KnbfArchivesVo / knbfArchivesVo
+      const arc = kv?.knbfArchivesVo || kv?.KnbfArchivesVo || {};
       help.value = {
         archive: {
-          auditOrg: kv?.KnbfArchivesVo?.auditOrg,
-          auditTime: normDate(kv?.KnbfArchivesVo?.auditTime),
-          auditUser: kv?.KnbfArchivesVo?.auditUser,
-          createTime: normDate(kv?.KnbfArchivesVo?.createTime),
-          creatorOrg: kv?.KnbfArchivesVo?.creatorOrg,
-          poorTypeNew: kv?.KnbfArchivesVo?.poorTypeNew,
+          auditOrg: arc.auditOrg,
+          auditTime: normDate(arc.auditTime),
+          auditUser: arc.auditUser,
+          // 建档时间/工会/人：优先备案(file*)，其次建档(create*/creator*)
+          createTime: normDate(arc.fileTime || arc.createTime),
+          creatorOrg: arc.fileOrg || arc.creatorOrg,
+          creator: arc.fileUser || arc.creator,
+          poorTypeNew: arc.poorTypeNew,
         },
         families: Array.isArray(kv?.knbfFamilyVoList) ? kv.knbfFamilyVoList : [],
         helps: Array.isArray(kv?.knbfHelpVoList) ? kv.knbfHelpVoList : [],
@@ -415,7 +418,11 @@ watch(curYear, async (y) => {
   border-radius: 10px;
   box-shadow: 0 18px 48px rgba(30, 70, 160, .28);
   color: #333;
-  overflow: visible;
+  /* 让主体可滚动：容器限定 80% 视口高度，内部 body 滚动 */
+  max-height: 80vh;
+  display: grid;
+  grid-template-rows: 0 1fr; /* 头部占位为 0，高度全部给 body */
+  overflow: visible; /* 允许标题牌溢出 */
   /* 再整体缩一号 */
   font-size: 13px;
 }
@@ -429,7 +436,7 @@ watch(curYear, async (y) => {
   background-image: image-set(url('../images/dialog-module/close/关闭实心.png') 1x, url('../images/dialog-module/close/关闭实心@2x.png') 2x);
 }
 .mdlg__close:hover { filter: brightness(1.1) drop-shadow(0 1px 1px rgba(0,0,0,.35)); }
-.mdlg__body { padding: 12px; }
+.mdlg__body { padding: 12px; position: relative; overflow: auto; }
 
 .mdlg__sub { margin: 0 0 10px; font-size: 0; }
 .mdlg__sub-bg { display: inline-grid; place-items: center; height: 36px; min-width: 130px; padding: 0 14px; background-repeat: no-repeat; background-size: 100% 100%; background-position: center; 

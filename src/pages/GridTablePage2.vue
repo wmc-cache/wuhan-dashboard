@@ -139,8 +139,8 @@ async function fetchList() {
       phone: r.mobile ?? '-',
       political: labelOf('politicalStatus', r.politicalStatus, String(r.politicalStatus ?? '')),
       edu: labelOf('education', r.education, String(r.education ?? '')),
-      // 身份证优先使用明文字段 certificateNumBright
-      idNumber: r.certificateNumBright ?? r.idNumber ?? r.certificateNum ?? r.certificateNo,
+      // 身份证优先使用明文字段 idNumberBright（其次 certificateNumBright）
+      idNumber: r.idNumberBright ?? r.certificateNumBright ?? r.idNumber ?? r.certificateNum ?? r.certificateNo,
     } as Row));
   } catch {
     total.value = 0;

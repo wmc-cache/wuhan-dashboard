@@ -86,6 +86,36 @@ export async function apiPost<T = any>(
   return json as unknown as T;
 }
 
+// POST application/x-www-form-urlencoded helper
+export async function apiPostForm<T = any>(
+  path: string,
+  body?: Record<string, any>,
+  init?: RequestInit
+): Promise<T> {
+  const url = path.startsWith("http") ? path : API_BASE.replace(/\/$/, "") + path;
+  const params = new URLSearchParams();
+  if (body && typeof body === 'object') {
+    Object.entries(body).forEach(([k, v]) => {
+      if (v == null) return;
+      params.set(k, String(v));
+    });
+  }
+  const res = await fetch(url, {
+    method: "POST",
+    body: params,
+    headers: withAuthHeaders({
+      Accept: "application/json",
+      "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+      ...(init?.headers || {}),
+    }),
+    ...init,
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+  const json: ApiResponse<T> = await res.json().catch(() => ({} as any));
+  if (json && typeof json === "object" && "data" in json) return json.data as T;
+  return json as unknown as T;
+}
+
 // POST and expect binary (blob/stream). Return the raw Response so callers
 // can read headers like Content-Disposition to infer filename.
 export async function apiPostBlob(

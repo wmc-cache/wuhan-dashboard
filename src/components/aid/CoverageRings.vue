@@ -41,8 +41,9 @@ function ringOption(it: Item) {
       {
         type: 'gauge',
         min: 0, max: 100, startAngle: 90, endAngle: -270, radius: '100%',
-        progress: { show: true, roundCap: true, width: 10, itemStyle: { color } },
-        axisLine: { lineStyle: { width: 10, color: [[1, 'rgba(120,160,255,.15)']] } },
+        // 略微缩窄环宽，整体更轻巧
+        progress: { show: true, roundCap: true, width: 8, itemStyle: { color } },
+        axisLine: { lineStyle: { width: 8, color: [[1, 'rgba(120,160,255,.15)']] } },
         axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false }, pointer: { show: false },
         detail: { show: false }, data: [{ value: pct }]
       },
@@ -52,8 +53,8 @@ function ringOption(it: Item) {
         min: 0, max: 100, startAngle: 90, endAngle: -270, radius: '72%',
         progress: { show: false },
         axisLine: { lineStyle: { width: 0 } },
-        axisTick: { show: true, splitNumber: 6, length: 5, distance: -8, lineStyle: { color: 'rgba(42,111,240,0.35)', width: 1 } },
-        splitLine: { show: true, length: 8, distance: -8, lineStyle: { color: 'rgba(42,111,240,0.22)', width: 1 } },
+        axisTick: { show: true, splitNumber: 6, length: 5, distance: -6, lineStyle: { color: 'rgba(42,111,240,0.35)', width: 1 } },
+        splitLine: { show: true, length: 8, distance: -6, lineStyle: { color: 'rgba(42,111,240,0.22)', width: 1 } },
         axisLabel: { show: false }, pointer: { show: false }, detail: { show: false }, data: [{ value: 100 }]
       }
     ]
@@ -63,13 +64,22 @@ function ringOption(it: Item) {
 
 <style scoped lang="scss">
 .cov3 { height: 100%; display: grid; align-content: center; row-gap: 18px; }
-.row { display: grid; grid-template-columns: 126px 1fr; align-items: center; column-gap: 16px; }
-.ring { position: relative; width: 126px; height: 126px; }
+.row { display: grid; grid-template-columns: 110px 1fr; align-items: center; column-gap: 16px; }
+.ring { position: relative; width: 110px; height: 110px; }
 .ring :deep(canvas), .ring :deep(div[style*="position: relative"]) { border-radius: 50%; }
 .ring__center { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-weight: 900; color: var(--c, #2a6ff0); text-shadow: 0 2px 8px rgba(38,112,255,.25); font-size: 22px; }
 .ring__center small { font-size: 12px; margin-left: 2px; }
 .box { display: grid; align-content: center; row-gap: 8px; padding: 10px 14px; border-radius: 10px; background: linear-gradient(90deg, rgba(255,255,255,.35) 0%, rgba(255,255,255,.7) 40%, rgba(255,255,255,.35) 100%); box-shadow: 0 8px 18px rgba(30,100,220,.08) inset; }
-.num { font-size: 44px; font-weight: 900; line-height: 1; background: linear-gradient(180deg, var(--c, #2a6ff0) 0%, #1c60ea 85%); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 4px 12px rgba(38,112,255,.18); }
-.num .unit { font-size: 20px; margin-left: 6px; color: var(--c, #2a6ff0); -webkit-text-fill-color: initial; }
+.num { font-size: 44px; font-weight: 900; line-height: 1; 
+  color: #1c60ea;
+  background: linear-gradient(180deg, var(--c, #2a6ff0) 0%, #1c60ea 85%);
+   -webkit-background-clip: text; 
+   background-clip: text; 
+   color: transparent; 
+   text-shadow: 0 4px 12px rgba(38,112,255,.18); }
+.num .unit { 
+  font-size: 20px; margin-left: 6px;
+   color: #2a6ff0; 
+   -webkit-text-fill-color: initial; }
 .label { font-size: 18px; color: #3f5d8f; font-weight: 800; }
 </style>
