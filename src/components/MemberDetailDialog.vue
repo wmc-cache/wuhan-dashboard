@@ -265,6 +265,18 @@ const medClaims = ref<MedClaim[]>([
 // Remote detail loading
 const loading = ref(false);
 
+// 省总会员信息（基础扩展）
+const org = ref<{ joinAt?: string; joinWorkTime?: string; unionJob?: string; political?: string; education?: string; memberType?: string; marriage?: string; nation?: string; nativePlace?: string; memberCard?: string }>({});
+
+// 困难救助列表
+const rescueList = ref<Array<{ hospitalName?: string; diseaseType?: string; sign?: string; cyTime?: string; reportDate?: string; paymentsMoney?: string }>>([]);
+
+// 困难帮扶
+const help = ref<{ archive: any; families: any[]; helps: any[]; people: any }>({ archive: {}, families: [], helps: [], people: {} });
+
+// 劳模信息
+const model = ref<any>({});
+
 function normDate(s?: string): string {
   if (!s) return '';
   const d = String(s).replace(/[^0-9]/g, '');
@@ -297,6 +309,18 @@ async function fetchDetail(code: number) {
       (props.data as any).joinAt = normDate(bm.joinDate) || (props.data as any).joinAt;
       (props.data as any).duty = labelOf('memberPosition', bm.unionJob, bm.unionJob) || (props.data as any).duty;
       (props.data as any).politics = labelOf('politicalStatus', bm.politicalStatus, bm.politicalStatus) || (props.data as any).politics;
+      org.value = {
+        joinAt: (props.data as any).joinAt,
+        joinWorkTime: normDate(bm.joinWorkTime),
+        unionJob: (props.data as any).duty,
+        political: (props.data as any).politics,
+        education: (props.data as any).education,
+        memberType: bm.memberType,
+        marriage: bm.marriage,
+        nation: bm.nation,
+        nativePlace: bm.nativePlace,
+        memberCard: bm.memberCard,
+      };
     }
 
     // 医疗互助
@@ -313,23 +337,64 @@ async function fetchDetail(code: number) {
       const pay = y.memberPay || {};
       medClaims.value = Object.keys(pay).length ? [{ payType: pay.type, disease: pay.illName, startAt: normDate(pay.startTime), endAt: normDate(pay.endTime), fee: String(pay.bid ?? '') }] : [];
     }
+
+    // 困难救助
+    if (Array.isArray(obj.rescueDistressMemberVo)) {
+      rescueList.value = obj.rescueDistressMemberVo.map((it: any) => ({
+        hospitalName: it.hospitalName,
+        diseaseType: it.diseaseType,
+        sign: it.sign,
+        cyTime: normDate(it.cyTime),
+        reportDate: normDate(it.reportDate),
+        paymentsMoney: it.paymentsMoney,
+      }));
+    } else rescueList.value = [];
+
+    // 困难帮扶
+    if (obj.knbfMemberVo) {
+      const kv = obj.knbfMemberVo;
+      help.value = {
+        archive: {
+          auditOrg: kv?.KnbfArchivesVo?.auditOrg,
+          auditTime: normDate(kv?.KnbfArchivesVo?.auditTime),
+          auditUser: kv?.KnbfArchivesVo?.auditUser,
+          createTime: normDate(kv?.KnbfArchivesVo?.createTime),
+          creatorOrg: kv?.KnbfArchivesVo?.creatorOrg,
+          poorTypeNew: kv?.KnbfArchivesVo?.poorTypeNew,
+        },
+        families: Array.isArray(kv?.knbfFamilyVoList) ? kv.knbfFamilyVoList : [],
+        helps: Array.isArray(kv?.knbfHelpVoList) ? kv.knbfHelpVoList : [],
+        people: kv?.knbfPeopleVo || {},
+      } as any;
+    } else {
+      help.value = { archive: {}, families: [], helps: [], people: {} } as any;
+    }
+
+    // 劳模
+    if (obj.modelWorkerDetailVo) {
+      model.value = obj.modelWorkerDetailVo;
+    } else model.value = {};
   } finally {
     loading.value = false;
   }
+}
+
+function tabCode(t: 'org'|'med'|'rescue'|'help'|'laomo'): number {
+  return t === 'org' ? 3 : t === 'med' ? 4 : t === 'rescue' ? 5 : t === 'help' ? 6 : 7;
 }
 
 watch(() => props.modelValue, async (v) => {
   if (!v) return;
   if (props.searchCode) {
     await Promise.all([getDict('gender'), getDict('education'), getDict('memberPosition'), getDict('politicalStatus')]).catch(()=>void 0);
-    const code = tab.value === 'med' ? 4 : tab.value === 'laomo' ? 7 : 3;
+    const code = tabCode(tab.value as any);
     await fetchDetail(code);
   }
 });
 
 watch(tab, async (t) => {
   if (!props.modelValue || !props.searchCode) return;
-  const code = t === 'med' ? 4 : t === 'laomo' ? 7 : 3;
+  const code = tabCode(t as any);
   await fetchDetail(code);
 });
 
