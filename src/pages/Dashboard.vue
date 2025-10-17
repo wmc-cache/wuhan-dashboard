@@ -20,7 +20,7 @@
       <div class="panel h214">
         <span class="title-img title-img--dash-3" aria-hidden="true"></span>
         <template v-if="!memberLoading">
-          <OrgTotal :total="aidTotal" :deep="veryDifficult" :relative="difficultCount" :accident="accidentCount" />
+          <OrgTotal style="margin-top: 36px;" :total="aidTotal" :deep="veryDifficult" :relative="difficultCount" :accident="accidentCount" />
         </template>
         <div v-else class="loading-mask"></div>
       </div>

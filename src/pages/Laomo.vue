@@ -245,7 +245,7 @@ async function fetchAllNum() {
     'tl tc tr'
     'ml mc mr'
     'bl br br';
-  gap: 8px;
+  gap: 0px;
 }
 
 .mod {
