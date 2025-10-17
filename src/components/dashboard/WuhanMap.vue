@@ -48,6 +48,7 @@ interface Props {
   labelHeight?: number;
   showInfoCard?: boolean;
   showLabels?: boolean;
+  infoCardOffsetByName?: Record<DistrictName, [number, number]>;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -76,7 +77,8 @@ const props = withDefaults(defineProps<Props>(), {
   labelWidth: 72,
   labelHeight: 26,
   showInfoCard: true,
-  showLabels: true
+  showLabels: true,
+  infoCardOffsetByName: () => ({})
 });
 
 const root = ref<HTMLDivElement | null>(null);
@@ -96,9 +98,10 @@ function placeInfoAtPixel(px: [number, number]) {
   const w = el.clientWidth || 0; const h = el.clientHeight || 0;
   // 弹框背景切图尺寸（map-tip/编组 14备份 7.png 1x: 279x161）
   const CARD_W = 279; const CARD_H = 161; const GAP = 12; const PAD = 8;
+  const EXTRA_RIGHT = 240; const EXTRA_BOTTOM = 120;
   let x = (px?.[0] ?? 0) + GAP; let y = (px?.[1] ?? 0) + GAP;
-  x = Math.min(Math.max(PAD, x), Math.max(PAD, w - CARD_W - PAD));
-  y = Math.min(Math.max(PAD, y), Math.max(PAD, h - CARD_H - PAD));
+  x = Math.min(Math.max(PAD, x), Math.max(PAD, w - CARD_W - PAD + EXTRA_RIGHT));
+  y = Math.min(Math.max(PAD, y), Math.max(PAD, h - CARD_H - PAD + EXTRA_BOTTOM));
   infoPos.value = { x: x-12, y: y-28};
 }
 
@@ -178,7 +181,11 @@ function selectDistrict(name: DistrictName, opts: { silent?: boolean } = {}) {
     const centerPx = (center && chart.value)
       ? (chart.value.convertToPixel({ geoIndex: 0 }, center) as number[])
       : [16, 16];
-    const anchor = (centerPx || [16, 16]) as [number, number];
+    const offset = props.infoCardOffsetByName?.[name] || [0, 0];
+    const anchor = [
+      (centerPx?.[0] ?? 0) + (offset?.[0] ?? 0),
+      (centerPx?.[1] ?? 0) + (offset?.[1] ?? 0)
+    ] as [number, number];
     placeInfoAtPixel(anchor);
   } else {
     infoVisible.value = false;
@@ -410,7 +417,7 @@ onBeforeUnmount(() => {
 });
 
 // 如果父组件覆盖 data 或初始选中，动态更新
-watch(() => [props.dataByDistrict, props.showNetwork, props.labelOffsetByName, props.labelWidth, props.labelHeight, props.showLabels], () => {
+watch(() => [props.dataByDistrict, props.showNetwork, props.labelOffsetByName, props.labelWidth, props.labelHeight, props.showLabels, props.infoCardOffsetByName], () => {
   if (!chart.value) return;
   chart.value.setOption(buildOption(), { notMerge: true });
   setTimeout(() => {

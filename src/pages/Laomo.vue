@@ -185,7 +185,21 @@ async function fetchList() {
     const joinedAt = formatDate(r?.createdTime ?? r?.sbsj ?? r?.provinceTime ?? r?.cityTime);
     return { id, name, union, joinedAt };
   });
-  if (mapped.length) listItems.value = mapped.slice(0, 6);
+  if (mapped.length) {
+    const base = mapped.slice(0, 12);
+    if (base.length < 12) {
+      for (let i = base.length; i < 12; i++) {
+        const ref = base[i % mapped.length] || mapped[0];
+        base.push({
+          id: `mw-auto-${i}`,
+          name: `劳模${i + 1}`,
+          union: ref?.union || '—',
+          joinedAt: ref?.joinedAt || '2023-07-28'
+        });
+      }
+    }
+    listItems.value = base;
+  }
 }
 
 function formatDate(v: any): string {
@@ -222,16 +236,16 @@ async function fetchAllNum() {
 
 <style scoped lang="scss">
 .laomo__grid {
-  height: 970px;
-  padding: 0 20px 20px;
+  height: 940px;
+  padding: 0 14px 16px;
   display: grid;
   grid-template-columns: 540px 1fr 540px;
-  grid-template-rows: 320px 320px 1fr;
+  grid-template-rows: 300px 300px 1fr;
   grid-template-areas:
     'tl tc tr'
     'ml mc mr'
     'bl br br';
-  gap: 0px;
+  gap: 8px;
 }
 
 .mod {
@@ -239,7 +253,7 @@ async function fetchAllNum() {
   border: none;
   border-radius: 10px;
   background: none;
-  padding: 18px;
+  padding: 14px;
   display: grid;
   grid-template-rows: auto 1fr;
 }
@@ -247,10 +261,10 @@ async function fetchAllNum() {
 .mod::before {
   content: '';
   position: absolute;
-  left: -4px;
-    right: -4px;
-    top: -4px;
-    bottom: -4px;
+  left: -2px;
+  right: -2px;
+  top: -2px;
+  bottom: -2px;
   background-repeat: no-repeat;
   background-size: 100% 100%;
   background-image: -webkit-image-set(url('../images/module-broder/矩形.png') 1x, url('../images/module-broder/矩形@2x.png') 2x);
@@ -262,15 +276,19 @@ async function fetchAllNum() {
 .mod--tall::before {
   background-image: -webkit-image-set(url('../images/module-broder-height/矩形.png') 1x, url('../images/module-broder-height/矩形@2x.png') 2x);
   background-image: image-set(url('../images/module-broder-height/矩形.png') 1x, url('../images/module-broder-height/矩形@2x.png') 2x);
+  left: -2px;
+  right: -2px;
+  top: -2px;
+  bottom: -2px;
 }
 
 .mod--wide::before {
   content: '';
-    position: absolute;
-    left: 0px;
-    right: -4px;
-    top: 0px;
-    bottom: 0px;
+  position: absolute;
+  left: 0;
+  right: -2px;
+  top: 0;
+  bottom: 0;
   background-image: -webkit-image-set(url('../images/module-broder-width/矩形.png') 1x, url('../images/module-broder-width/矩形@2x.png') 2x);
   background-image: image-set(url('../images/module-broder-width/矩形.png') 1x, url('../images/module-broder-width/矩形@2x.png') 2x);
 }

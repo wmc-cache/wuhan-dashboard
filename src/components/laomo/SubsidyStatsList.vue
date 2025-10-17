@@ -1,20 +1,25 @@
 <template>
-  <div class="subsidy-stats" :style="rootVars">
-    <ul class="list" role="list">
-      <li v-for="(it, i) in rows" :key="it.name + i" class="row">
-        <span class="no" :class="noClass(i)">{{ i + 1 }}</span>
-        <span class="name" :title="it.name">{{ it.name }}</span>
-        <span class="people">{{ people(it.people) }}</span>
-        <span class="amount">{{ money(it.amount) }}</span>
+  <div
+    class="subsidy-stats"
+    :style="rootVars"
+    @mouseenter="onHover(true)"
+    @mouseleave="onHover(false)"
+  >
+    <TransitionGroup name="scroll" tag="ul" class="list" role="list">
+      <li v-for="row in visibleRows" :key="row.__key" class="row">
+        <span class="no" :class="noClass(row.__index)">{{ row.__index + 1 }}</span>
+        <span class="name" :title="row.name">{{ row.name }}</span>
+        <span class="people">{{ people(row.people) }}</span>
+        <span class="amount">{{ money(row.amount) }}</span>
         <i class="underline" aria-hidden="true" />
       </li>
-    </ul>
+    </TransitionGroup>
   </div>
 </template>
 
 <script setup lang="ts">
 // 按参考图：左侧序号（1/2/3/4）、中间“人数”、右侧“金额（万元）”，底部蓝色粗横线
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 interface Item { name: string; people: number; amount: number }
 interface Props { items?: Item[]; maxRows?: number; rowHeight?: number; widthPercent?: number; center?: boolean }
@@ -32,7 +37,26 @@ const props = withDefaults(defineProps<Props>(), {
   center: false,
 });
 
-const rows = computed(() => props.items.slice(0, props.maxRows));
+const itemsList = computed(() => props.items ?? []);
+const maxVisible = computed(() => Math.max(1, props.maxRows));
+const needsScroll = computed(() => itemsList.value.length > maxVisible.value);
+const scrollIndex = ref(0);
+const hovering = ref(false);
+let timer: ReturnType<typeof setInterval> | null = null;
+
+const visibleRows = computed(() => {
+  const list = itemsList.value;
+  if (!list.length) return [];
+  const size = Math.min(maxVisible.value, list.length);
+  const rows = [];
+  for (let i = 0; i < size; i++) {
+    const idx = needsScroll.value ? (scrollIndex.value + i) % list.length : i;
+    const item = list[idx] || { name: '', people: 0, amount: 0 };
+    rows.push({ ...item, __index: idx, __key: `${idx}-${item.name}` });
+  }
+  return rows;
+});
+
 const rootVars = computed(() => {
   const st: Record<string, string> = { ['--row-h']: (props.rowHeight || 44) + 'px' } as any;
   if (props.widthPercent && props.widthPercent > 0) st.width = props.widthPercent + '%';
@@ -52,6 +76,47 @@ function noClass(i: number) {
   // 1/3 蓝色，2/4 橙色
   return i % 2 === 0 ? 'no--blue' : 'no--orange';
 }
+
+function advance() {
+  if (!needsScroll.value) return;
+  scrollIndex.value = (scrollIndex.value + 1) % itemsList.value.length;
+}
+
+function stop() {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+}
+
+function start() {
+  stop();
+  if (!needsScroll.value) return;
+  timer = setInterval(() => {
+    if (!hovering.value) advance();
+  }, 3000);
+}
+
+function onHover(state: boolean) {
+  hovering.value = state;
+}
+
+function resetAndStart() {
+  scrollIndex.value = 0;
+  start();
+}
+
+onMounted(() => {
+  start();
+});
+
+onBeforeUnmount(() => {
+  stop();
+});
+
+watch([needsScroll, itemsList], () => {
+  resetAndStart();
+});
 </script>
 
 <style scoped lang="scss">
@@ -90,4 +155,20 @@ function noClass(i: number) {
 
 /* 蓝色粗横线（与退款 RankType1 相同切图） */
 .underline { position: absolute; left: 0; right: 0; bottom: 0; height: 10px; background-repeat: no-repeat; background-size: 100% 100%; background-image: -webkit-image-set(url('../../images/refund/line/编组 14.png') 1x, url('../../images/refund/line/编组 14@2x.png') 2x); background-image: image-set(url('../../images/refund/line/编组 14.png') 1x, url('../../images/refund/line/编组 14@2x.png') 2x); pointer-events: none; }
+
+.scroll-enter-active,
+.scroll-leave-active {
+  transition: all 0.4s ease;
+}
+.scroll-enter-from {
+  opacity: 0;
+  transform: translateY(15px);
+}
+.scroll-leave-to {
+  opacity: 0;
+  transform: translateY(-15px);
+}
+.scroll-leave-active {
+  position: absolute;
+}
 </style>
