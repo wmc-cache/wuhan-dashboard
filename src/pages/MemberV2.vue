@@ -10,8 +10,8 @@
 
     <section style="grid-area: tc;">
       <div class="mod__body">
-        <!-- 顶部中间搜索：也支持跳转到二级搜索结果页（Home） -->
-        <TopSearchKpis v-model="keyword" :items="kpiItems" @search="goToHome" />
+        <!-- 顶部中间搜索：跳转至会员列表页 -->
+        <TopSearchKpis v-model="keyword" :items="kpiItems" @search="goToList" />
       </div>
     </section>
 
@@ -74,7 +74,6 @@ import MonthTrend from '../components/member/MonthTrend.vue';
 import PoliticsList from '../components/member/PoliticsList.vue';
 import SearchTodayTotal from '../components/member/SearchTodayTotal.vue';
 import StripedBarChart from '../components/StripedBarChart.vue';
-import OrgSearchKpis from '../components/org/SearchKpis.vue';
 import TopSearchKpis from '../components/member/TopSearchKpis.vue';
 
 import icon31x from '../images/org/title3/位图.png';
@@ -146,10 +145,12 @@ onMounted(async () => {
 // 搜索跳转：带上分类 cat=member，关键词从 v-model 读取
 const router = useRouter();
 const keyword = ref('');
-function goToHome(kw?: string) {
-  // 当同时使用 ?? 与 || 时，需加括号避免解析歧义
+function goToList(kw?: string) {
   const k = (((kw ?? keyword.value) || '') as string).trim();
-  router.push({ path: '/home', query: { kw: k, cat: 'member' } });
+  router.push({
+    name: 'grid-table-2',
+    query: k ? { kw: k } : {}
+  }).catch(() => void 0);
 }
 
 // 会员总览与性别分布

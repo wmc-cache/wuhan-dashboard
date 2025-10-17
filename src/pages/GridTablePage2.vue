@@ -54,8 +54,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import GridTable, { ColumnDef } from '../components/GridTable.vue';
 import { ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElDatePicker, ElButton, ElPagination } from 'element-plus';
 import 'element-plus/es/components/form/style/css';
@@ -71,6 +71,7 @@ import MemberDetailDialog, { type MemberDetail } from '../components/MemberDetai
 import { getDict, labelOf, type DictItem as DItem } from '../utils/dict';
 
 const router = useRouter();
+const route = useRoute();
 function goBack() { router.back(); }
 
 // 查询条件（与接口字段一致）
@@ -98,6 +99,12 @@ interface Row { index: number; name: string; union: string; gender: string; join
 const rows = ref<Row[]>([]);
 const loading = ref(false);
 const exporting = ref(false);
+const dictReady = ref(false);
+function normalizeKw(v: unknown): string {
+  if (Array.isArray(v)) return String(v[0] ?? '');
+  if (v == null) return '';
+  return String(v);
+}
 
 const pageSize = 20;
 const page = ref(1);
@@ -163,8 +170,29 @@ onMounted(async () => {
     getDict('politicalStatus'),
     getDict('education'),
   ]).catch(() => void 0);
+  dictReady.value = true;
+  const kw = normalizeKw(route.query.kw).trim();
+  if (kw && !q.unionName) q.unionName = kw;
+  const sex = normalizeKw(route.query.sex).trim();
+  if (sex && !Number.isNaN(Number(sex))) q.sex = Number(sex);
   await fetchList();
 });
+
+watch(
+  () => [route.query.kw, route.query.sex],
+  () => {
+    if (!dictReady.value) return;
+    const prevKw = q.unionName;
+    const prevSex = q.sex;
+    const kw = normalizeKw(route.query.kw).trim();
+    const sex = normalizeKw(route.query.sex).trim();
+    q.unionName = kw || '';
+    q.sex = sex ? (Number.isNaN(Number(sex)) ? '' : Number(sex)) : '';
+    if (q.unionName === prevKw && q.sex === prevSex) return;
+    page.value = 1;
+    fetchList();
+  }
+);
 
 // 点击姓名 -> 打开详情（使用身份证号查询）
 const showMemberDlg = ref(false);

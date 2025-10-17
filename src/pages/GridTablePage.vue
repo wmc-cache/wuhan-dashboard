@@ -63,8 +63,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import GridTable, { ColumnDef } from '../components/GridTable.vue';
 import UnionDetailDialog, { type UnionDetail } from '../components/UnionDetailDialog.vue';
 // Element Plus 组件与样式（按需引入）
@@ -81,6 +81,7 @@ import { apiGet, apiPostBlob } from '../utils/api';
 import { getDict, labelOf, type DictItem as DItem } from '../utils/dict';
 
 const router = useRouter();
+const route = useRoute();
 
 // 简易筛选条件
 // 查询条件：区域/行业使用字典 code 作为值
@@ -125,6 +126,18 @@ const loading = ref(false);
 const showUnion = ref(false);
 const unionDetail = ref<UnionDetail | undefined>(undefined);
 const exporting = ref(false);
+const dictReady = ref(false);
+
+function resolveKw(val: unknown): string {
+  if (Array.isArray(val)) return String(val[0] ?? '');
+  if (val == null) return '';
+  return String(val);
+}
+
+function syncRouteToForm() {
+  const kw = resolveKw(route.query.kw).trim();
+  if (q.name !== kw) q.name = kw;
+}
 
 // 将 UI 查询条件转换为 API 参数
 const API_PATH = '/business/union/list';
@@ -303,8 +316,21 @@ onMounted(async () => {
   regionOpts.value = await getDict('sys_wuhan_quyu');
   industryOpts.value = await getDict('unitIndustry');
   if (!industryOpts.value?.length) industryOpts.value = await getDict('unitlndustry');
+  dictReady.value = true;
+  syncRouteToForm();
   await fetchList();
 });
+
+watch(
+  () => route.query.kw,
+  () => {
+    const prev = q.name;
+    syncRouteToForm();
+    if (q.name === prev) return;
+    page.value = 1;
+    if (dictReady.value) fetchList();
+  }
+);
 </script>
 
 <style scoped lang="scss">

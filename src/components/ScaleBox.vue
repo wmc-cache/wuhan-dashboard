@@ -7,16 +7,32 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, withDefaults } from 'vue';
 
-const props = defineProps<{ baseWidth: number; baseHeight: number }>();
+const props = withDefaults(defineProps<{
+  baseWidth: number;
+  baseHeight: number;
+  /**
+   * fit="contain"（默认）保持舞台完整可见；
+   * fit="width" 在超宽屏下横向拉伸舞台，减少两侧留白。
+   */
+  fit?: 'contain' | 'width';
+  /**
+   * 限制横向拉伸的最大倍数（1 表示不拉伸，1.2 表示最多额外拉宽 20%）。
+   */
+  maxStretchX?: number;
+}>(), {
+  fit: 'contain',
+  maxStretchX: 1.2,
+});
 const wrap = ref<HTMLDivElement | null>(null);
 const scale = ref(1);
 const stageTop = ref(0); // 顶部与视口的间距，便于让顶部横幅与舞台对齐
-
+const viewportWidth = ref(Number.POSITIVE_INFINITY);
 const calc = () => {
   const w = window.innerWidth;
   const h = window.innerHeight;
+  viewportWidth.value = w;
   const sx = w / props.baseWidth;
   const sy = h / props.baseHeight;
   scale.value = Math.min(sx, sy);
@@ -25,14 +41,26 @@ const calc = () => {
   stageTop.value = Math.max(0, (h - props.baseHeight * scale.value) / 2);
 };
 
+const stretchX = computed(() => {
+  if (props.fit !== 'width') return 1;
+  const sx = viewportWidth.value / props.baseWidth;
+  const base = scale.value;
+  if (!Number.isFinite(sx) || sx <= 0 || sx <= base) return 1;
+  const ratio = sx / base;
+  return Math.min(ratio, props.maxStretchX);
+});
+
 const stageStyle = computed(() => ({
   width: props.baseWidth + 'px',
   height: props.baseHeight + 'px',
   position: 'absolute',
   left: '50%',
   top: '50%',
-  // 绝对居中 + 等比缩放，任何情况下都几何中心对齐
-  transform: `translate(-50%, -50%) scale(${scale.value})`,
+  transformOrigin: '50% 50%',
+  // fit="width" 时额外进行横向 scaleX 拉伸以减少留白
+  transform: stretchX.value > 1
+    ? `translate(-50%, -50%) scale(${scale.value}) scaleX(${stretchX.value})`
+    : `translate(-50%, -50%) scale(${scale.value})`,
 }));
 
 // 把缩放比例与舞台顶部偏移暴露给 CSS，用于绘制“贯穿全屏”的顶部横幅

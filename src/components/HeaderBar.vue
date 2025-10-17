@@ -101,6 +101,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick));
   align-items: center;
   padding: 0;
   position: relative;
+  z-index: 1500;
 }
 
 .title { position: relative; height: 88px; display: grid; place-items: center; z-index: 1; }
@@ -148,7 +149,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick));
 .tab__img--worker-aid { width: 74px; height: 16px; background-image: -webkit-image-set(url('../images/font/职工帮扶/职工帮扶.png') 1x, url('../images/font/职工帮扶/职工帮扶@2x.png') 2x); background-image: image-set(url('../images/font/职工帮扶/职工帮扶.png') 1x, url('../images/font/职工帮扶/职工帮扶@2x.png') 2x); }
 
 /* 下拉菜单 */
-.more-menu { position: absolute; right: 0; top: 100%; margin-top: 8px; min-width: 160px; background: rgba(255,255,255,.96); box-shadow: 0 6px 20px rgba(20,80,200,.18); border: 1px solid rgba(120,170,255,.35); border-radius: 8px; padding: 6px; backdrop-filter: blur(6px); z-index: 10; }
+.more-menu { position: absolute; right: 0; top: 100%; margin-top: 8px; min-width: 160px; background: rgba(255,255,255,.96); box-shadow: 0 6px 20px rgba(20,80,200,.18); border: 1px solid rgba(120,170,255,.35); border-radius: 8px; padding: 6px; backdrop-filter: blur(6px); z-index: 1200; }
 .more-item { display: block; padding: 10px 12px; border-radius: 6px; color: #2a6ff0; font-weight: 700; text-decoration: none; }
 .more-item:hover { background: rgba(88,151,255,.1); }
 

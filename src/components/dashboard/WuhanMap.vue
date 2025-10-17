@@ -47,6 +47,7 @@ interface Props {
   labelWidth?: number;
   labelHeight?: number;
   showInfoCard?: boolean;
+  showLabels?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -74,7 +75,8 @@ const props = withDefaults(defineProps<Props>(), {
   labelOffsetByName: () => ({}),
   labelWidth: 72,
   labelHeight: 26,
-  showInfoCard: true
+  showInfoCard: true,
+  showLabels: true
 });
 
 const root = ref<HTMLDivElement | null>(null);
@@ -84,6 +86,10 @@ const active = ref<DistrictName>(props.initialActive);
 // 信息卡显示开关：默认不显示，点击地图或标签后显示
 const infoVisible = ref(false);
 const infoPos = ref({ x: 16, y: 16 });
+const autoIndex = ref(0);
+let autoTimer: ReturnType<typeof setInterval> | null = null;
+let resumeTimer: ReturnType<typeof setTimeout> | null = null;
+const AUTO_PLAY_INTERVAL = 5000;
 
 function placeInfoAtPixel(px: [number, number]) {
   const el = root.value; if (!el) return;
@@ -102,6 +108,86 @@ function isLngLat(pt: any): pt is [number, number] {
   return Array.isArray(pt) && pt.length === 2 &&
     typeof pt[0] === 'number' && typeof pt[1] === 'number' &&
     pt[0] > 100 && pt[0] < 130 && pt[1] > 20 && pt[1] < 40;
+}
+
+function getOrderedNames(): DistrictName[] {
+  return featureNames.filter((n): n is DistrictName => typeof n === 'string' && n.length > 0);
+}
+
+function ensureAutoIndex(name: DistrictName | undefined) {
+  if (!name) return;
+  const idx = getOrderedNames().indexOf(name);
+  if (idx >= 0) autoIndex.value = idx;
+}
+
+function stopAutoLoop() {
+  if (autoTimer != null) {
+    clearInterval(autoTimer);
+    autoTimer = null;
+  }
+  if (resumeTimer != null) {
+    clearTimeout(resumeTimer);
+    resumeTimer = null;
+  }
+}
+
+function scheduleAutoResume(delay = AUTO_PLAY_INTERVAL) {
+  if (resumeTimer != null) {
+    clearTimeout(resumeTimer);
+    resumeTimer = null;
+  }
+  resumeTimer = setTimeout(() => {
+    resumeTimer = null;
+    startAutoLoop();
+  }, delay);
+}
+
+function startAutoLoop() {
+  stopAutoLoop();
+  const names = getOrderedNames();
+  if (!names.length) return;
+  ensureAutoIndex(active.value || names[0]);
+  autoTimer = setInterval(() => {
+    const list = getOrderedNames();
+    if (!list.length) return;
+    autoIndex.value = (autoIndex.value + 1) % list.length;
+    const nextName = list[autoIndex.value];
+    if (nextName) selectDistrict(nextName);
+  }, AUTO_PLAY_INTERVAL);
+}
+
+function selectDistrict(name: DistrictName, opts: { silent?: boolean } = {}) {
+  if (!name) return;
+  const prev = active.value;
+  active.value = name;
+  ensureAutoIndex(name);
+
+  if (chart.value) {
+    try {
+      if (prev) {
+        chart.value.dispatchAction({ type: 'mapUnSelect', seriesName: 'wuhan', name: prev });
+      }
+      chart.value.dispatchAction({ type: 'mapSelect', seriesName: 'wuhan', name });
+    } catch { /* ignore */ }
+  }
+  setTimeout(drawLabels, 0);
+
+  if (props.showInfoCard) {
+    infoVisible.value = true;
+    const center = featureCenters[name];
+    const centerPx = (center && chart.value)
+      ? (chart.value.convertToPixel({ geoIndex: 0 }, center) as number[])
+      : [16, 16];
+    const anchor = (centerPx || [16, 16]) as [number, number];
+    placeInfoAtPixel(anchor);
+  } else {
+    infoVisible.value = false;
+  }
+
+  if (!opts.silent) {
+    const info = props.dataByDistrict[name] || { name, orgCount: 0, memberCount: 0, unitCount: 0 };
+    emit('select-change', name, info);
+  }
 }
 
 function centroidOfFirstRing(geom: any): [number, number] | null {
@@ -171,6 +257,7 @@ function buildOption(): echarts.EChartsOption {
   const areaNormal2 = '#DDEBFF';
   const borderColor = '#5A9EFF';
   const selectedColor = '#1672FF';
+  const mapLayout = { layoutCenter: ['50%', '53%'], layoutSize: '128%' };
 
   const selectedSet = new Set([active.value]);
 
@@ -194,7 +281,7 @@ function buildOption(): echarts.EChartsOption {
   return {
     geo: {
       map: 'wuhan', roam: false, selectedMode: 'single',
-      left: '2%', right: '2%', top: '2%', bottom: '6%',
+      ...mapLayout,
       itemStyle: { areaColor: areaNormal, borderColor, borderWidth: 1 },
       emphasis: { itemStyle: { areaColor: areaNormal2 } },
       select: { itemStyle: { areaColor: selectedColor } },
@@ -205,7 +292,6 @@ function buildOption(): echarts.EChartsOption {
       // 阴影（稍微偏移制造立体感）
       {
         name: 'shadow', type: 'map', map: 'wuhan', geoIndex: 0, z: 1, silent: true,
-        left: '2%', right: '2%', top: '2%', bottom: '6%',
         itemStyle: { areaColor: 'rgba(80,140,255,0.18)', borderColor: 'rgba(0,0,0,0)', shadowBlur: 24, shadowColor: 'rgba(30,90,200,0.35)', shadowOffsetX: 8, shadowOffsetY: 10 },
         emphasis: { disabled: true }
       },
@@ -232,6 +318,10 @@ function buildOption(): echarts.EChartsOption {
 
 function drawLabels() {
   if (!chart.value) return;
+  if (!props.showLabels) {
+    chart.value.setOption({ graphic: [] } as any, { replaceMerge: ['graphic'] });
+    return;
+  }
   const graphics: echarts.GraphicComponentOption[] = [];
   const geoCoordSys = { geoIndex: 0 } as any;
   const makeLabel = (name: string) => {
@@ -250,13 +340,9 @@ function drawLabels() {
         { type: 'rect', shape: { x: w / 2 - 3, y: h + 8, width: 6, height: 10 }, style: { fill: isActive ? '#5A9EFF' : 'rgba(90,158,255,0.8)' } }
       ],
       onclick: () => {
-        active.value = name;
-        chart.value?.setOption(buildOption());
-        setTimeout(drawLabels, 0);
-        infoVisible.value = true;
-        placeInfoAtPixel([x, y]);
-        const info = props.dataByDistrict[name] || { name, orgCount: 0, memberCount: 0, unitCount: 0 };
-        emit('select-change', name, info);
+        stopAutoLoop();
+        selectDistrict(name);
+        scheduleAutoResume(2000);
       }
     });
   };
@@ -272,18 +358,17 @@ function init() {
   // 点击选中
   chart.value.on('click', { seriesType: 'map' }, (p: any) => {
     if (!p || !p.name) return;
-    active.value = p.name;
-    chart.value?.setOption(buildOption());
-    // 重绘标签
-    setTimeout(drawLabels, 0);
-    infoVisible.value = true;
-    // 尝试使用点击像素位置；兜底为区中心
-    const pixel = p?.event?.offsetX != null ? [p.event.offsetX, p.event.offsetY] : undefined;
-    const center = featureCenters[p.name];
-    const centerPx = center && chart.value ? (chart.value.convertToPixel({ geoIndex: 0 }, center) as number[]) : [16, 16];
-    placeInfoAtPixel((pixel as any) || (centerPx as any));
-    const info = props.dataByDistrict[p.name] || { name: p.name, orgCount: 0, memberCount: 0, unitCount: 0 };
-    emit('select-change', p.name, info);
+    stopAutoLoop();
+    selectDistrict(p.name);
+    scheduleAutoResume(2000);
+  });
+  chart.value.on('mouseover', { seriesType: 'map' }, (p: any) => {
+    if (!p || !p.name) return;
+    stopAutoLoop();
+    selectDistrict(p.name);
+  });
+  chart.value.on('mouseout', { seriesType: 'map' }, () => {
+    scheduleAutoResume(2000);
   });
 
   // 点击空白处隐藏信息卡
@@ -292,8 +377,21 @@ function init() {
       infoVisible.value = false;
     }
   });
+  chart.value.getZr().on('globalout', () => {
+    scheduleAutoResume(1500);
+  });
   // 初次绘制标签
   setTimeout(drawLabels, 0);
+  setTimeout(() => {
+    const names = getOrderedNames();
+    const initial = (props.initialActive && names.includes(props.initialActive))
+      ? props.initialActive
+      : (active.value || names[0]);
+    if (initial) {
+      selectDistrict(initial);
+    }
+    startAutoLoop();
+  }, 0);
 }
 
 onMounted(() => {
@@ -307,17 +405,37 @@ onMounted(() => {
 onBeforeUnmount(() => {
   const ro: ResizeObserver | undefined = (root as any)?._ro;
   if (ro && root.value) ro.unobserve(root.value);
+  stopAutoLoop();
   if (chart.value) { chart.value.dispose(); chart.value = null; }
 });
 
 // 如果父组件覆盖 data 或初始选中，动态更新
-watch(() => [props.dataByDistrict, props.showNetwork, props.labelOffsetByName, props.labelWidth, props.labelHeight], () => {
+watch(() => [props.dataByDistrict, props.showNetwork, props.labelOffsetByName, props.labelWidth, props.labelHeight, props.showLabels], () => {
   if (!chart.value) return;
   chart.value.setOption(buildOption(), { notMerge: true });
-  setTimeout(drawLabels, 0);
+  setTimeout(() => {
+    drawLabels();
+    if (active.value) selectDistrict(active.value, { silent: true });
+  }, 0);
 }, { deep: true });
 
-watch(() => props.initialActive, (n) => { if (n) { active.value = n; chart.value?.setOption(buildOption()); setTimeout(drawLabels, 0); } });
+watch(() => props.initialActive, (n) => {
+  if (!n) return;
+  if (!getOrderedNames().length) { active.value = n; return; }
+  stopAutoLoop();
+  setTimeout(() => {
+    selectDistrict(n);
+    startAutoLoop();
+  }, 0);
+});
+
+watch(() => props.showInfoCard, (val) => {
+  if (!val) {
+    infoVisible.value = false;
+  } else if (active.value) {
+    setTimeout(() => selectDistrict(active.value, { silent: true }), 0);
+  }
+});
 </script>
 
 <style scoped lang="scss">
@@ -341,7 +459,7 @@ watch(() => props.initialActive, (n) => { if (n) { active.value = n; chart.value
 
 .info-card .stats { list-style: none; margin: 0; padding: 0; }
 .info-card .stats li { display: grid; grid-template-columns: 1fr auto auto; align-items: baseline; color: #ffffff;margin-left: 70px;padding: 6px 10px; }
-.info-card .stats span { font-weight: 700; }
+.info-card .stats span { font-weight: 700; white-space: nowrap;}
 .info-card .stats b { color: #ffffff; font-weight: 900; font-size: 14px; margin: 0 6px; text-shadow: 0 1px 2px rgba(0,0,0,0.15); }
 .info-card .stats i { color: rgba(255,255,255,0.85); font-style: normal; }
 </style>

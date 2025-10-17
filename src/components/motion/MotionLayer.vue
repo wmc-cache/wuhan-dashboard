@@ -37,8 +37,8 @@ const isDashboard = computed(() => (route.name as string) === 'dashboard');
 // 将“背景.json”定位在底部中间的大矩形区域（近似红框）。
 const bgW = 820; // 宽度
 const bgH = 240;  // 高度
-const bgX = Math.round((1920 - bgW) / 2); // 居中
-const bgY = 1080 - bgH - 40;               // 底部留 40px 边距
+const bgX = Math.round((1920 - bgW) / 2-12); // 居中
+const bgY = 1080 - bgH + 40;               // 底部留 40px 边距
 </script>
 
 <style scoped>

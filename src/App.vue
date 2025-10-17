@@ -1,6 +1,6 @@
 <template>
   <!-- 等比缩放容器，基于 1920x1080 设计稿 -->
-  <ScaleBox :base-width="1920" :base-height="1080">
+  <ScaleBox :base-width="1920" :base-height="1080" fit="width">
     <!-- 全局 Element Plus 语言：中文 -->
     <el-config-provider :locale="zhCn">
       <div class="dash">

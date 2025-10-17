@@ -4,7 +4,8 @@
       <div class="panel h214">
         <!-- 顶部左侧双 KPI 卡（工会总数/今年新增） -->
         <template v-if="!unionLoading">
-          <KpiPair :items="leftKpis" left-bg="top-1" right-bg="top-2" />
+          <KpiPair :items="leftKpis" left-bg="top-1" right-bg="top-2" left-clickable right-clickable
+            @left-click="goToUnionList" @right-click="goToUnionList" />
         </template>
         <div v-else class="loading-mask"></div>
       </div>
@@ -34,13 +35,13 @@
     </section>
 
     <section class="col col--center">
-      <div class="panel panel--map h860">
+      <div class="panel panel--map h920">
         <!-- 中央搜索：放在地图上方，点击跳到 Home 页面（复用 TopSearch） -->
         <div class="map-tools">
           <TopSearch v-model="keyword" v-model:category="selCat" @search="goToHome" />
         </div>
         <template v-if="!mapLoading">
-          <WuhanMap :show-network="false" :data-by-district="mapData" />
+          <WuhanMap :show-network="false" :show-labels="false" :data-by-district="mapData" />
         </template>
         <div v-else class="loading-mask"></div>
       </div>
@@ -50,7 +51,15 @@
       <div class="panel h180">
         <!-- 顶部右侧双 KPI 卡（会员总数/省总金额合计） -->
         <template v-if="!memberLoading">
-          <KpiPair :items="rightKpis" left-bg="top-3" right-bg="top-4" />
+          <KpiPair
+            :items="rightKpis"
+            left-bg="top-3"
+            right-bg="top-4"
+            left-clickable
+            right-clickable
+            @left-click="goToMemberList"
+            @right-click="goToRefundDetail"
+          />
         </template>
         <div v-else class="loading-mask"></div>
       </div>
@@ -65,9 +74,9 @@
       <!-- 红框（右中）：经费返还代收金额统计，复用 refund/RankType2 -->
       <div class="panel h360">
         <!-- 组件自带标题切图，替换为 dashboard/title/4 -->
-      
+
         <template v-if="!refundLoading">
-          <RefundRankType2 style="margin-left: 60px;"  :width-percent="90" :img-width="293" :rowHeight="40"
+          <RefundRankType2 style="margin-left: 60px;" :width-percent="90" :img-width="293" :rowHeight="40"
             :show-more="false" :items="refundTop" :title-img1x="dashTitle4_1x" :title-img2x="dashTitle4_2x"
             :bar-color="'#4E8FFF'" />
         </template>
@@ -107,6 +116,19 @@ const router = useRouter();
 const selCat = ref<'org' | 'member'>('org');
 const keyword = ref('');
 function goToHome() { router.push({ path: '/home', query: { kw: keyword.value || '', cat: selCat.value } }); }
+function goToUnionList() {
+  router.push({ name: 'grid-table' }).catch(() => void 0);
+}
+function goToMemberList() {
+  router.push({ name: 'grid-table-2' }).catch(() => void 0);
+}
+function goToRefundDetail() {
+  const year = new Date().getFullYear();
+  router.push({
+    name: 'refund-detail-list',
+    query: { year: String(year), orderName: 'zje' },
+  }).catch(() => void 0);
+}
 // GridTable 的“查看更多”已在组件内部处理跳转
 
 // 接口数据：
@@ -144,7 +166,7 @@ const leftKpis = ref<[KItem, KItem]>([
 ]);
 const rightKpis = ref<[KItem, KItem]>([
   { title: '工会会员总数(人)', value: 0, unit: '' },
-  { title: '省总金额合计(亿)', value: 0, unit: '' },
+  { title: '本年度代收金额（亿元）', value: 0, unit: '' },
 ]);
 
 // 会员性别（用于右侧性别概览）
@@ -316,7 +338,7 @@ async function loadMemberAllNum() {
     const szje = Number((d as any)?.szje || 0);
     rightKpis.value = [
       { title: '工会会员总数(人)', value: total, unit: '' },
-      { title: '省总金额合计(亿)', value: szje, unit: '' },
+      { title: '本年度代收金额（亿元）', value: szje, unit: '' },
     ];
     memberMale.value = Number(d?.manNum || 0);
     memberFemale.value = Number(d?.womanNum || 0);
@@ -367,12 +389,12 @@ async function loadMedicalAllNum(year: number | string) {
 <style scoped lang="scss">
 .dash__main {
   display: grid;
-  grid-template-columns: 620px 1fr 620px; /* 左右固定，中间地图自适应 */
+  grid-template-columns: 600px minmax(0, 1fr) 600px; /* 左右近似原尺寸，中间再放大 */
   /* 模块间距统一为 10px */
   gap: 10px;
-  padding: 0 20px 20px;
-  /* 页面总高 = 1080 - 头部 110 = 970 */
-  height: 970px;
+  padding: 0 50px 20px 10px;
+  /* 页面总高调增，预留更高地图 */
+  height: 1010px;
   /* 把 padding 纳入总高，确保不被算作额外高度导致出界 */
   box-sizing: border-box;
 }
@@ -386,7 +408,7 @@ async function loadMedicalAllNum(year: number | string) {
 
 /* 精确控制右列每个模块高度，相加并含 3 处 10px 间距 = 970，刚好不出界 */
 .col--right { grid-template-rows: 120px 210px 300px 220px; }
-.col--center { grid-template-rows: 860px; }
+.col--center { grid-template-rows: 920px; }
 .panel {
   /* 去掉模块背景面板，仅保留内边距与布局 */
     position: relative;
@@ -430,6 +452,7 @@ async function loadMedicalAllNum(year: number | string) {
     display: grid;
     grid-template-rows: auto 1fr;
     align-items: start;
+    padding: 6px 6px 12px;
   }
 .panel > .title-img { display: inline-block; margin-bottom: 8px; }
 .h180 { height: 180px; }
@@ -437,6 +460,7 @@ async function loadMedicalAllNum(year: number | string) {
 .h360 { height: 360px; }
 .h220 { height: 220px; }
 .h860 { height: 860px; }
+.h920 { height: 920px; }
 .h214 { height: 214px; }
 
 .title-img { display: inline-block; background-repeat: no-repeat; background-size: 100% 100%; }
@@ -449,7 +473,7 @@ async function loadMedicalAllNum(year: number | string) {
 .title-img--dash-6 { width: 212px; height: 35px; background-image: -webkit-image-set(url('../images/dashboard/title/6/编组 25.png') 1x, url('../images/dashboard/title/6/编组 25@2x.png') 2x); background-image: image-set(url('../images/dashboard/title/6/编组 25.png') 1x, url('../images/dashboard/title/6/编组 25@2x.png') 2x); }
 
 /* 中央搜索条容器：宽度与 Home 页相似并居中 */
-.map-tools { max-width: 760px; margin: 0 auto 10px; width: 100%; }
+.map-tools { max-width: 760px; margin: 0 auto 6px; width: 100%; }
 
 /* 左下模块标题（与劳模页面保持一致） */
 .title-img--laomo-8 { width: 253px; height: 35px; background-image: -webkit-image-set(url('../images/laomo/font-title/8/编组 21.png') 1x, url('../images/laomo/font-title/8/编组 21@2x.png') 2x); background-image: image-set(url('../images/laomo/font-title/8/编组 21.png') 1x, url('../images/laomo/font-title/8/编组 21@2x.png') 2x); }

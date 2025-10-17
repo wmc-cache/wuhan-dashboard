@@ -18,7 +18,7 @@
 
     <section style="grid-area: tc;">
       <div class="mod__body" style="margin-top: 10px;">
-        <!-- 顶部中间搜索：也支持跳转到二级搜索结果页（Home） -->
+        <!-- 顶部中间搜索：跳转至工会列表页（GridTable） -->
         <OrgSearchKpis
           v-model="keyword"
           style="margin-top: 10px;"
@@ -181,13 +181,16 @@ const searchKpiItems = ref([
   { title: '下辖工会(个)', value: 0, icon1x: icon51x, icon2x: icon52x }
 ]);
 
-// 搜索框关键词；点击“搜索”或回车后跳到 Home 页面，并携带 kw/cat
+// 搜索框关键词；点击“搜索”或回车后跳到工会列表页（GridTable），并携带 kw
 const router = useRouter();
 const keyword = ref('');
 function goToHome(kw?: string) {
   const raw = kw ?? keyword.value ?? '';
   const k = String(raw).trim();
-  router.push({ path: '/home', query: { kw: k, cat: 'org' } });
+  router.push({
+    name: 'grid-table',
+    query: k ? { kw: k } : {}
+  }).catch(() => void 0);
 }
 
 // 顶部右：工会概况三项（来自 /business/union/allNum）
