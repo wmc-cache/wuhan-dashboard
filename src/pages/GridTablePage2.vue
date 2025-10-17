@@ -241,7 +241,7 @@ async function onExport() {
 .flt-wrap { position: relative; }
 .flt { display: flex; gap: 8px 12px; }
 .flt--center { align-items: center; }
-.flt :deep(.el-form-item__label) { color: #2a6ff0; font-weight: 700; }
+.flt :deep(.el-form-item__label) { color: #333; font-weight: 700; }
 .actions { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: inline-flex; gap: 8px; }
 .w180 { width: 180px; }
 .w120 { width: 120px; }

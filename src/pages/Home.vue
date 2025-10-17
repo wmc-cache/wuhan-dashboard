@@ -49,7 +49,7 @@
     </section>
     <!-- Teleport 到 body，不占布局 -->
     <UnionDetailDialog v-model="showUnion" :data="unionData" title="工会详情" :width="1080" />
-    <MemberDetailDialog v-model="showMember" :data="memberData" :search-code="memberSearchCode" title="会员详情" :width="1080" />
+    <MemberDetailDialog v-model="showMember" :data="memberData" :search-code="memberSearchCode" title="会员详情" :width="1080" :default-tab="memberDefaultTab" />
   </main>
 </template>
 
@@ -61,7 +61,7 @@ import { ElPagination } from 'element-plus';
 import 'element-plus/es/components/pagination/style/css';
 import { useRouter, useRoute } from 'vue-router';
 import UnionDetailDialog, { type UnionDetail } from '../components/UnionDetailDialog.vue';
-import MemberDetailDialog, { type MemberDetail } from '../components/MemberDetailDialog.vue';
+import MemberDetailDialog, { type MemberDetail, type MemberDetailTab } from '../components/MemberDetailDialog.vue';
 import { apiGet } from '../utils/api';
 import { getDict, labelOf } from '../utils/dict';
 import back1x from '../images/back/编组 4.png';
@@ -156,6 +156,7 @@ function setActive(i: number) {
   // 同步选中 code 并重新加载（组织/会员均使用服务端分页）
   const it = navItems.value[i] as any;
   activeCode.value = it?.code;
+  if (selCat.value === 'member') memberDefaultTab.value = tabFromCodeToMember(activeCode.value);
   fetchListFromApi();
 }
 
@@ -172,6 +173,17 @@ const unionData = ref<UnionDetail | undefined>(undefined);
 const showMember = ref(false);
 const memberData = ref<MemberDetail | undefined>(undefined);
 const memberSearchCode = ref<string | undefined>(undefined);
+const memberDefaultTab = ref<MemberDetailTab>('med');
+function tabFromCodeToMember(code?: number): MemberDetailTab {
+  switch (Number(code)) {
+    case 3: return 'org';
+    case 4: return 'med';
+    case 5: return 'rescue';
+    case 6: return 'help';
+    case 7: return 'laomo';
+    default: return 'med';
+  }
+}
 async function onCellClick(payload: { row: any; column: ColumnDef }) {
   const r = payload.row as any;
   if (selCat.value === 'org' && payload.column.key === 'fullname') {
@@ -205,6 +217,7 @@ async function onCellClick(payload: { row: any; column: ColumnDef }) {
       showUnion.value = true;
     } catch {}
   } else if (selCat.value === 'member' && payload.column.key === 'name') {
+    memberDefaultTab.value = tabFromCodeToMember(activeCode.value);
     memberData.value = {
       name: r.name,
       gender: r.gender,
@@ -321,8 +334,10 @@ async function fetchStats() {
   try {
     loadingStats.value = true;
     const qs = new URLSearchParams();
-    if (keyword.value?.trim()) qs.set('searchCode', keyword.value.trim());
-    const url = `${statPath}?${qs.toString()}`;
+    const searchCode = keyword.value?.trim() ?? '';
+    qs.set('searchCode', searchCode);
+    const query = qs.toString();
+    const url = query ? `${statPath}?${query}` : statPath;
     const resp = await apiGet<any>(url).catch(() => null);
     const arr = Array.isArray((resp as any)?.data) ? (resp as any).data : Array.isArray(resp) ? resp : [];
     const mapped: SegStat[] = arr.map((it: any) => ({
@@ -334,12 +349,15 @@ async function fetchStats() {
       segStats.value = mapped;
       activeIndex.value = 0;
       activeCode.value = mapped[0].code;
+      if (selCat.value === 'member') memberDefaultTab.value = tabFromCodeToMember(activeCode.value);
     } else {
       segStats.value = [];
       activeCode.value = undefined;
+      if (selCat.value === 'member') memberDefaultTab.value = 'med';
     }
   } catch {
     segStats.value = [];
+    if (selCat.value === 'member') memberDefaultTab.value = 'med';
   } finally {
     loadingStats.value = false;
   }
@@ -350,7 +368,8 @@ async function fetchListFromApi() {
   try {
     loadingTable.value = true;
     const qs = new URLSearchParams();
-    if (keyword.value?.trim()) qs.set('searchCode', keyword.value.trim());
+    const searchCode = keyword.value?.trim() ?? '';
+    qs.set('searchCode', searchCode);
     if (activeCode.value != null) qs.set('code', String(activeCode.value));
     qs.set('pageNum', String(page.value));
     qs.set('pageSize', String(pageSize));
@@ -381,6 +400,7 @@ async function fetchListFromApi() {
 watch(selCat, async () => {
   // 切换分类：先拉左侧菜单（拿到 code），再拉右侧表格
   page.value = 1;
+  memberDefaultTab.value = selCat.value === 'member' ? tabFromCodeToMember(activeCode.value) : 'med';
   await fetchStats().catch(() => void 0);
   await fetchListFromApi().catch(() => void 0);
   buildColumnsByData(allRows.value[0]);
@@ -400,6 +420,7 @@ onMounted(async () => {
   // 初次加载：先拉左侧菜单，再拉右侧表格
   await fetchStats().catch(() => void 0);
   await fetchListFromApi().catch(() => void 0);
+  if (selCat.value === 'member') memberDefaultTab.value = tabFromCodeToMember(activeCode.value);
   buildColumnsByData(allRows.value[0]);
 });
 </script>

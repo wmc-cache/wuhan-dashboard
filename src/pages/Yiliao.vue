@@ -2,6 +2,9 @@
   <main class="yiliao__grid">
     <!-- 顶部三块：参助性别 / 总指标概览 / 给付性别 -->
     <section class="mod" style="grid-area: tl;">
+      <button @click="goToMore" class="mod__show-all" type="button" aria-label="查看更多">
+        <img :src="showAll1x" :srcset="showAll2x + ' 2x'" alt="查看更多" />
+      </button>
       <div class="mod__body mod__body--full">
         <GenderStat :male-count="joinMale" :female-count="joinFemale" />
       </div>
@@ -10,12 +13,17 @@
     <!-- 中央大卡：合并原“总指标概览 + （预留）”两块，纵向跨两行 -->
     <section class="mod mod--tall metrics" style="grid-column: 2; grid-row: 1 / span 2;">
       <div></div>
+
       <div class="mod__body mod__body--full">
-        <OverallOverview :years="years" :initial-year="year" :left-metrics="leftMetrics" :right-metrics="rightMetrics" @year-change="onYearChange" />
+        <OverallOverview :years="years" :initial-year="year" :left-metrics="leftMetrics" :right-metrics="rightMetrics"
+          @year-change="onYearChange" />
       </div>
     </section>
 
     <section class="mod" style="grid-area: tr;">
+      <button @click="goToMore" class="mod__show-all" type="button" aria-label="查看更多">
+        <img :src="showAll1x" :srcset="showAll2x + ' 2x'" alt="查看更多" />
+      </button>
       <div class="mod__body mod__body--full">
         <PayoutGenderStat :male-count="payMale" :female-count="payFemale" />
       </div>
@@ -71,12 +79,16 @@ import PayoutAgeDist from '../components/yiliao/PayoutAgeDist.vue';
 import DiseaseCategoryDist from '../components/yiliao/DiseaseCategoryDist.vue';
 import OverallOverview from '../components/yiliao/OverallOverview.vue';
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { apiGet, niceMax } from '../utils/api';
+import showAll1x from '../images/show-all/查看更多.png';
+import showAll2x from '../images/show-all/查看更多@2x.png';
 
 // ---------------- 年份 ----------------
 const now = new Date().getFullYear();
-const years = ref<number[]>([now, now - 1, now - 2]);
-const year = ref<number>(now);
+const fallbackYears = [now, now - 1, now - 2];
+const years = ref<number[]>([...fallbackYears]);
+const year = ref<number>(fallbackYears[0]);
 
 // ---------------- 总体概览（左/右三项） ----------------
 type Metric = { label: string; value: number };
@@ -96,6 +108,10 @@ const joinMale = ref<number>(0);   // 参加 男性
 const joinFemale = ref<number>(0); // 参加 女性
 const payMale = ref<number>(0);    // 给付 男性
 const payFemale = ref<number>(0);  // 给付 女性
+const router = useRouter();
+function goToMore() {
+  router.push({ name: 'grid-table-2' });
+}
 
 // ---------------- 年龄分布 ----------------
 interface AgeRow { label: string; male: number; female: number }
@@ -113,7 +129,10 @@ const illCats = ref<string[]>([]);
 const illVals = ref<number[]>([]);
 const illMax = ref<number>(0);
 
-onMounted(() => loadAll(year.value));
+onMounted(async () => {
+  await loadYears();
+  await loadAll(year.value);
+});
 
 function onYearChange(y: number) { year.value = y; loadAll(y); }
 
@@ -126,6 +145,45 @@ async function loadAll(y: number) {
     loadPayType(y),
     loadPayIll(y)
   ]);
+}
+
+async function loadYears() {
+  const raw = await apiGet<any>('/medicalMutual/getYear').catch(() => null);
+  const parsed = normalizeYearList(raw);
+  if (parsed.length) {
+    years.value = parsed;
+    if (!parsed.includes(year.value)) {
+      year.value = parsed[0];
+    }
+  } else {
+    years.value = [...fallbackYears];
+    if (!years.value.includes(year.value)) {
+      year.value = years.value[0];
+    }
+  }
+}
+
+function normalizeYearList(raw: any): number[] {
+  const list = Array.isArray(raw)
+    ? raw
+    : Array.isArray(raw?.years)
+      ? raw.years
+      : Array.isArray(raw?.yearList)
+        ? raw.yearList
+        : Array.isArray(raw?.year)
+          ? raw.year
+          : Array.isArray(raw?.list)
+            ? raw.list
+            : typeof raw === 'string'
+              ? raw.split(/[,;\s]+/)
+              : [];
+  const normalized = list
+    .map((v) => {
+      const num = Number(v);
+      return Number.isFinite(num) ? Math.floor(num) : undefined;
+    })
+    .filter((v): v is number => typeof v === 'number' && v > 1900 && v < 3000);
+  return Array.from(new Set(normalized)).sort((a, b) => b - a);
 }
 
 // 中部总体概览 + 顶部左右性别
@@ -261,4 +319,21 @@ async function loadPayIll(y: number) {
 
 /* 去除左上模块默认居中与文案颜色影响，让子组件占满 */
 .mod__body--full { place-items: stretch; color: inherit; }
+
+.mod__show-all {
+  position: absolute;
+  top: 30px;
+  right: 22px;
+  padding: 10px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.mod__show-all img {
+  display: block;
+  width: 59px;
+  height: 13px;
+}
 </style>

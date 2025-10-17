@@ -54,6 +54,9 @@
     <!-- 中部：左-排行 | 中-工会类型统计 | 右-企业性质占比 -->
     <section class="mod" style="grid-area: ml;">
       <img class="mod__title-img" :src="titleImgRank1x" :srcset="titleImgRank2x + ' 2x'" alt="下辖工会组织排行统计" />
+      <button class="mod__show-all" type="button" aria-label="查看更多" @click="goToHome()">
+        <img :src="showAll1x" :srcset="showAll2x + ' 2x'" alt="查看更多" />
+      </button>
       <div class="mod__body">
         <OrgAreaRank :items="rankList" />
       </div>
@@ -88,6 +91,9 @@
       <!-- 左半：各行政区组织分布统计（堆叠柱） -->
       <section class="mod mod--wide">
         <img class="mod__title-img" :src="titleImgRegion1x" :srcset="titleImgRegion2x + ' 2x'" alt="各行政区组织分布统计" />
+        <button class="mod__show-all" type="button" aria-label="查看更多" @click="goToHome()">
+          <img :src="showAll1x" :srcset="showAll2x + ' 2x'" alt="查看更多" />
+        </button>
         <div class="mod__body">
           <StackedColumnChart :categories="rdCategories" :series="districtStackSeries" :yMax="rdYMax"
             :xLabelInterval="0" :ySplitNumber="4" />
@@ -131,6 +137,8 @@ import icon41x from '../images/org/title4/位图.png';
 import icon42x from '../images/org/title4/位图@2x.png';
 import icon51x from '../images/org/title5/位图.png';
 import icon52x from '../images/org/title5/位图@2x.png';
+import showAll1x from '../images/show-all/查看更多.png';
+import showAll2x from '../images/show-all/查看更多@2x.png';
 
 // 标题切图（新提供）：src/images/org-v2/1..7/编组 21[ @2x].png
 // 顺序：按页面模块从左到右、从上到下（跳过顶部中间无标题的搜索区）
@@ -177,8 +185,8 @@ const searchKpiItems = ref([
 const router = useRouter();
 const keyword = ref('');
 function goToHome(kw?: string) {
-  // 同时使用 ?? 与 || 需要外层括号
-  const k = (((kw ?? keyword.value) || '') as string).trim();
+  const raw = kw ?? keyword.value ?? '';
+  const k = String(raw).trim();
   router.push({ path: '/home', query: { kw: k, cat: 'org' } });
 }
 
@@ -453,6 +461,23 @@ async function fetchThreeDept() {
 .mod__body>* {
   min-width: 0;
   min-height: 0;
+}
+
+.mod__show-all {
+  position: absolute;
+  top: 28px;
+  right: 18px;
+  border: none;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.mod__show-all img {
+  display: block;
+  width: 59px;
+  height: 13px;
 }
 
 /* 合并的半宽容器：左侧仪表（占30%），右侧条形（占70%） */

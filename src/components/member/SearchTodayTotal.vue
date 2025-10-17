@@ -13,7 +13,6 @@
     <!-- 辅助信息：环比/进度条 -->
     <div class="meta">
       <div class="incr">
-        <span class="dash-icon" aria-hidden="true"></span>
         比上周新增 <span class="num">{{ weeklyIncrease }}</span> 人
       </div>
       <div class="progress">

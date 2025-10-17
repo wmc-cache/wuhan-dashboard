@@ -107,12 +107,29 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const year = ref(props.initialYear);
-const years = props.years;
+const years = computed(() => props.years ?? []);
 const leftMetrics = computed(() => props.leftMetrics || []);
 const rightMetrics = computed(() => props.rightMetrics || []);
 
 const emit = defineEmits<{ 'year-change': [year: number] }>();
-watch(year, (y) => emit('year-change', Number(y)));
+let suppressNextEmit = false;
+
+watch(
+  () => props.initialYear,
+  (val) => {
+    if (val == null || val === year.value) return;
+    suppressNextEmit = true;
+    year.value = val;
+  }
+);
+
+watch(year, (y) => {
+  if (suppressNextEmit) {
+    suppressNextEmit = false;
+    return;
+  }
+  emit('year-change', Number(y));
+});
 
 function pretty(n: number) { return n.toLocaleString('zh-CN'); }
 </script>

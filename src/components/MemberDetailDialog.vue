@@ -240,7 +240,9 @@ export interface MemberDetail {
   medInfo?: MedInfo; medPlans?: MedPlan[]; medClaims?: MedClaim[]; years?: (string|number)[];
 }
 
-interface Props { modelValue: boolean; title?: string; width?: number; data?: MemberDetail; searchCode?: string; defaultTab?: 'med'|'laomo' }
+type DetailTab = 'org' | 'med' | 'rescue' | 'help' | 'laomo';
+export type MemberDetailTab = DetailTab;
+interface Props { modelValue: boolean; title?: string; width?: number; data?: MemberDetail; searchCode?: string; defaultTab?: DetailTab }
 const props = withDefaults(defineProps<Props>(), { title: '会员详情', width: 1080, data: () => ({}), defaultTab: 'med' });
 const emit = defineEmits<{ 'update:modelValue': [boolean] }>();
 function close() { emit('update:modelValue', false); }
@@ -248,7 +250,7 @@ function close() { emit('update:modelValue', false); }
 const d = computed(() => props.data || {});
 
 // Tabs
-const tab = ref<'med' | 'laomo' | 'org' | 'rescue' | 'help'>(props.defaultTab || 'med');
+const tab = ref<DetailTab>(props.defaultTab || 'med');
 const years = ref<(string|number)[]>([]);
 const curYear = ref<number | undefined>(undefined);
 const medInfo = ref<MedInfo>({ agency: '', company: '', startAt: '', endAt: '' });
@@ -322,7 +324,7 @@ async function fetchDetail(code: number) {
     if (yearKeys.length) {
       const yrs = yearKeys.map(k => parseInt(k)).sort((a,b)=>b-a);
       years.value = yrs;
-      if (!curYear.value) curYear.value = yrs[0];
+      if (!curYear.value || !yrs.includes(Number(curYear.value))) curYear.value = yrs[0];
       const y = mv[`${curYear.value}年`] || {};
       medInfo.value = { agency: y.unionName || '', company: y.unit || '', startAt: normDate(y.startTime), endAt: normDate(y.endTime) };
       const joins = Array.isArray(y.memberJoin) ? y.memberJoin : [];
@@ -386,17 +388,35 @@ function tabCode(t: 'org'|'med'|'rescue'|'help'|'laomo'): number {
   return t === 'org' ? 3 : t === 'med' ? 4 : t === 'rescue' ? 5 : t === 'help' ? 6 : 7;
 }
 
+let suppressTabFetch = false;
+watch(
+  () => props.defaultTab,
+  (val) => {
+    if (!val || val === tab.value) return;
+    tab.value = val;
+  }
+);
+
 watch(() => props.modelValue, async (v) => {
   if (!v) return;
-  if (props.searchCode) {
-    await Promise.all([getDict('gender'), getDict('education'), getDict('memberPosition'), getDict('politicalStatus')]).catch(()=>void 0);
-    const code = tabCode(tab.value as any);
+  if (!props.searchCode) return;
+  await Promise.all([getDict('gender'), getDict('education'), getDict('memberPosition'), getDict('politicalStatus')]).catch(()=>void 0);
+  const base = (props.defaultTab || 'med') as DetailTab;
+  if (tab.value !== base) {
+    suppressTabFetch = true;
+    tab.value = base;
+  }
+  try {
+    const code = tabCode((tab.value || base) as DetailTab);
     await fetchDetail(code);
+  } finally {
+    suppressTabFetch = false;
   }
 });
 
 watch(tab, async (t) => {
   if (!props.modelValue || !props.searchCode) return;
+  if (suppressTabFetch) return;
   const code = tabCode(t as any);
   await fetchDetail(code);
 });

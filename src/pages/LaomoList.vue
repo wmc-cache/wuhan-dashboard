@@ -7,10 +7,8 @@
           <el-form-item label="姓名：">
             <el-input v-model="q.kw" placeholder="请输入" clearable class="w180" />
           </el-form-item>
-          <el-form-item label="申报年份：">
-            <el-select v-model="q.year" placeholder="全部" clearable class="w120">
-              <el-option v-for="y in years" :key="y" :label="y" :value="y" />
-            </el-select>
+          <el-form-item label="主管单位：">
+            <el-input v-model="q.dept" placeholder="请输入" clearable class="w180" />
           </el-form-item>
         </el-form>
         <div class="actions">
@@ -51,12 +49,10 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import GridTable, { type ColumnDef } from '../components/GridTable.vue';
 import { apiGet, apiPostBlob } from '../utils/api';
-import { ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElButton, ElPagination } from 'element-plus';
+import { ElForm, ElFormItem, ElInput, ElButton, ElPagination } from 'element-plus';
 import 'element-plus/es/components/form/style/css';
 import 'element-plus/es/components/form-item/style/css';
 import 'element-plus/es/components/input/style/css';
-import 'element-plus/es/components/select/style/css';
-import 'element-plus/es/components/option/style/css';
 import 'element-plus/es/components/button/style/css';
 import 'element-plus/es/components/pagination/style/css';
 
@@ -64,7 +60,7 @@ const router = useRouter();
 function goBack() { router.back(); }
 
 // 查询条件
-const q = reactive<{ kw: string; year: string | number | '' }>({ kw: '', year: '' });
+const q = reactive<{ kw: string; dept: string }>({ kw: '', dept: '' });
 
 // 列定义：序号、劳模姓名、主管单位、推荐单位
 const gridTemplate = '64px 1.6fr 1.8fr 1.6fr';
@@ -75,28 +71,16 @@ const columns: ColumnDef[] = [
   { key: 'unit', title: '推荐单位', align: 'right' }
 ];
 
-interface Row { index: number; id: string | number; name: string; year: string; dept: string; unit: string }
+interface Row { index: number; id: string | number; name: string; dept: string; unit: string }
 const rows = ref<Row[]>([]);         // 当前页数据
 const total = ref<number>(0);        // 后端总数
-const years = ref<string[]>([]);     // 申报年份下拉（从首批数据提取；若后端提供列表可替换）
 
 onMounted(async () => {
   await loadPage();
 });
 
-function pickYear(r: any): string {
-  const cands = [r?.cityTime, r?.provinceTime, r?.createdTime, r?.sbsj];
-  for (const v of cands) {
-    if (!v) continue;
-    const s = String(v);
-    const m = s.match(/(\d{4})/);
-    if (m) return m[1];
-  }
-  return '';
-}
-
 function onSearch() { page.value = 1; loadPage(); }
-function onReset() { q.kw = ''; q.year = ''; page.value = 1; loadPage(); }
+function onReset() { q.kw = ''; q.dept = ''; page.value = 1; loadPage(); }
 
 // 分页
 const pageSize = 30;
@@ -150,7 +134,7 @@ async function loadPage() {
   params.set('pageNum', String(page.value));
   params.set('pageSize', String(pageSize));
   if (q.kw) params.set('name', q.kw);
-  if (q.year) params.set('year', String(q.year));
+  if (q.dept) params.set('dept', q.dept);
   const url = `/modelWorker/list?${params.toString()}`;
   const res = await apiGet<any>(url).catch(() => null);
   const list: any[] = Array.isArray(res?.rows) ? res.rows : Array.isArray(res?.data?.rows) ? res.data.rows : [];
@@ -159,17 +143,10 @@ async function loadPage() {
     index: (page.value - 1) * pageSize + i + 1,
     id: r?.id ?? i,
     name: String(r?.name ?? r?.fullname ?? `劳模${i+1}`),
-    year: pickYear(r),
     dept: String(r?.streetUnion ?? r?.workUnit ?? r?.union ?? ''),
     unit: String(r?.tjdw ?? r?.union ?? r?.streetUnion ?? '')
   }));
   rows.value = mapped;
-  // 补充年份选项（首次加载时）
-  if (years.value.length === 0) {
-    const ys = new Set<string>();
-    mapped.forEach(r => { if (r.year) ys.add(r.year); });
-    years.value = Array.from(ys).sort().reverse();
-  }
 }
 </script>
 
@@ -182,7 +159,6 @@ async function loadPage() {
 .flt :deep(.el-form-item__label) { color: #2a6ff0; font-weight: 700; }
 .actions { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: inline-flex; gap: 8px; }
 .w180 { width: 180px; }
-.w120 { width: 120px; }
 
 .table-wrap { position: relative; border-radius: 10px; background: rgba(235,241,247,.74); box-shadow: inset 0 0 40px rgba(120,170,255,.08); padding: 12px; display: grid; grid-template-rows: 1fr auto; }
 .pager { display: flex; align-items: center; justify-content: flex-end; color: #2a6ff0; padding-top: 8px; }
