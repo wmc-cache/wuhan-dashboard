@@ -69,7 +69,11 @@ const inputPlaceholder = computed(() =>
 function onInput(e: Event) { emit('update:modelValue', (e.target as HTMLInputElement).value); }
 function pick(v: string) { emit('update:category', v); open.value = false; }
 function toggleCats() { open.value = !open.value; }
-function fireSearch() { emit('search', { keyword: props.modelValue, category: props.category }); }
+function fireSearch() {
+  const kw = (props.modelValue || '').trim();
+  if (!kw) return;
+  emit('search', { keyword: kw, category: props.category });
+}
 
 function onDocClick(e: MouseEvent) {
   const t = e.target as HTMLElement | null;

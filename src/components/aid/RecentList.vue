@@ -1,17 +1,25 @@
 <template>
-  <section class="mod">
+  <section class="mod" @mouseenter="onHover(true)" @mouseleave="onHover(false)">
     <h3 class="mod__title">
       <span class="title-img title-img--aid-title5" aria-hidden="true"></span>
     </h3>
     <div class="mod__body">
-      <GridTable :columns="cols" :rows="rows" :grid-template="'1fr 1.2fr 1fr'" :visible-rows="8" :row-height="36"
-        :show-header="false" empty-text="暂无记录" />
+      <GridTable
+        :columns="cols"
+        :rows="displayRows"
+        :grid-template="'1fr 1.2fr 1fr'"
+        :visible-rows="visibleCount"
+        :row-height="36"
+        :show-header="false"
+        empty-text="暂无记录"
+        row-key="__key"
+      />
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { toRefs } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, toRefs, watch } from 'vue';
 import GridTable, { type ColumnDef } from '../GridTable.vue';
 
 interface Row { name: string; type: string; date: string }
@@ -38,13 +46,71 @@ const cols: ColumnDef[] = [
 ];
 
 const { rows } = toRefs(props);
+
+const visibleCount = 8;
+const list = computed(() => rows.value ?? []);
+const needsScroll = computed(() => list.value.length > 1);
+const scrollIndex = ref(0);
+const hovering = ref(false);
+let timer: ReturnType<typeof setInterval> | null = null;
+
+const displayRows = computed(() => {
+  const data = list.value;
+  if (!data.length) return [];
+  const size = Math.min(visibleCount, data.length);
+  const out: Array<Row & { __key: string }> = [];
+  for (let i = 0; i < size; i++) {
+    const idx = needsScroll.value ? (scrollIndex.value + i) % data.length : i;
+    const item = data[idx] || ({} as Row);
+    const key = [`idx-${idx}`, item.name ?? '', item.type ?? '', item.date ?? ''].filter(Boolean).join('|');
+    out.push({
+      ...item,
+      __key: key || `idx-${idx}`
+    });
+  }
+  return out;
+});
+
+function advance() {
+  if (!needsScroll.value) return;
+  scrollIndex.value = (scrollIndex.value + 1) % list.value.length;
+}
+
+function stop() {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+}
+
+function start() {
+  stop();
+  if (!needsScroll.value) return;
+  timer = setInterval(() => {
+    if (!hovering.value) advance();
+  }, 3000);
+}
+
+function onHover(state: boolean) {
+  hovering.value = state;
+}
+
+function reset() {
+  scrollIndex.value = 0;
+  start();
+}
+
+onMounted(() => start());
+onBeforeUnmount(() => stop());
+watch([list, needsScroll], () => reset());
 </script>
 
 <style scoped lang="scss">
 .mod { position: relative; border: none; border-radius: 10px; background: none; padding: 18px; display: grid; grid-template-rows: auto 1fr; }
 .mod::before { content: ''; position: absolute; left: -8px; right: -8px; top: -8px; bottom: -8px; background-repeat: no-repeat; background-size: 100% 100%; background-image: -webkit-image-set(url('../../images/module-broder/矩形.png') 1x, url('../../images/module-broder/矩形@2x.png') 2x); background-image: image-set(url('../../images/module-broder/矩形.png') 1x, url('../../images/module-broder/矩形@2x.png') 2x); pointer-events: none; z-index: -1; }
 .mod__title { margin: 0 0 10px; font-size: 16px; font-weight: 800; letter-spacing: 1px; color: #2a6ff0; }
-.mod__body { overflow: auto; }
+.mod__body { overflow: hidden; }
+.mod__body :deep(.tbody) { overflow-y: hidden !important; }
 /* 标题切图（1x/2x） */
 .title-img {
   display: inline-block;

@@ -1,12 +1,17 @@
 <template>
-  <div class="rank-type1">
+  <div class="rank-type1" @mouseenter="onHover(true)" @mouseleave="onHover(false)">
     <div class="header">
       <i class="title-img" aria-hidden="true" />
       <i class="more-img" role="button" aria-label="查看更多" @click="$emit('more')" />
     </div>
 
     <ul class="list">
-      <li v-for="(it, i) in rows" :key="it.name + i" class="row" @click="emit('row-click', { item: it, index: i })">
+      <li
+        v-for="(it, i) in displayRows"
+        :key="it.__key"
+        class="row"
+        @click="emit('row-click', { item: it, index: it.__index })"
+      >
         <i class="medal" :class="'medal--' + (i + 1)" aria-hidden="true" />
         <span class="name" :title="it.name">{{ it.name }}</span>
         <span class="val">{{ money(it.value) }}</span>
@@ -17,17 +22,74 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 const emit = defineEmits<{ (e:'row-click', payload:{ item: {name:string; value:number}; index:number }): void }>();
 
 interface Item { name: string; value: number }
 interface Props { items: Item[]; maxRows?: number }
 const props = withDefaults(defineProps<Props>(), { items: () => [], maxRows: 4 });
 
-const rows = computed(() => props.items.slice(0, props.maxRows));
+const list = computed<Item[]>(() => props.items ?? []);
+const maxRows = computed(() => Math.max(1, props.maxRows ?? 4));
+const visibleCount = computed(() => {
+  if (!list.value.length) return 0;
+  return Math.min(maxRows.value, list.value.length);
+});
+const needsScroll = computed(() => list.value.length > 1);
+const scrollIndex = ref(0);
+const hovering = ref(false);
+let timer: ReturnType<typeof setInterval> | null = null;
+
+const displayRows = computed(() => {
+  const data = list.value;
+  const size = visibleCount.value;
+  if (!data.length || size === 0) return [];
+  const rows: Array<Item & { __key: string; __index: number }> = [];
+  for (let i = 0; i < size; i++) {
+    const idx = needsScroll.value ? (scrollIndex.value + i) % data.length : i;
+    const item = data[idx] || { name: '', value: 0 };
+    const key = [`idx-${idx}`, item.name ?? '', item.value ?? ''].filter(Boolean).join('|');
+    rows.push({ ...item, __index: idx, __key: key || `idx-${idx}` });
+  }
+  return rows;
+});
+
 function money(v: number) {
   return Number(v).toLocaleString('zh-CN', { maximumFractionDigits: 3, useGrouping: false }) + '万元';
 }
+
+function advance() {
+  if (!needsScroll.value) return;
+  scrollIndex.value = (scrollIndex.value + 1) % list.value.length;
+}
+
+function stop() {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+}
+
+function start() {
+  stop();
+  if (!needsScroll.value) return;
+  timer = setInterval(() => {
+    if (!hovering.value) advance();
+  }, 3000);
+}
+
+function onHover(state: boolean) {
+  hovering.value = state;
+}
+
+function reset() {
+  scrollIndex.value = 0;
+  start();
+}
+
+onMounted(() => start());
+onBeforeUnmount(() => stop());
+watch([list, visibleCount], () => reset(), { deep: true });
 </script>
 
 <style scoped lang="scss">
@@ -43,6 +105,7 @@ function money(v: number) {
   padding: 2px 6px 10px 2px; /* 底部更紧凑 */
   display: grid;
   row-gap: 14px;
+  overflow: hidden;
 }
 .row { position: relative; display: grid; grid-template-columns: 44px 1fr auto; align-items: center; column-gap: 16px; min-height: 52px; padding-bottom: 10px; cursor: pointer; }
 

@@ -46,7 +46,11 @@
       <div class="panel panel--map h920">
         <!-- 中央搜索：放在地图上方，点击跳到 Home 页面（复用 TopSearch） -->
         <div class="map-tools">
-          <TopSearch v-model="keyword" v-model:category="selCat" @search="goToHome" />
+          <TopSearch
+            v-model="keyword"
+            v-model:category="selCat"
+            @search="goToHome"
+          />
         </div>
         <template v-if="!mapLoading">
           <WuhanMap
@@ -145,6 +149,7 @@ const selCat = ref<'org' | 'member'>('org');
 const keyword = ref('');
 function goToHome(payload?: { keyword: string; category: string }) {
   const kw = (payload?.keyword ?? keyword.value ?? '').trim();
+  if (!kw) return;
   const cat = (payload?.category as 'org' | 'member' | undefined) ?? selCat.value;
   if (cat === 'member') {
     const query = kw ? { name: kw } : undefined;
@@ -599,7 +604,7 @@ function onGenderClick(type: GenderKey) {
 .title-img--dash-2 { width: 191px; height: 35px; background-image: -webkit-image-set(url('../images/dashboard/title/2/编组 17备份 2.png') 1x, url('../images/dashboard/title/2/编组 17备份 2@2x.png') 2x); background-image: image-set(url('../images/dashboard/title/2/编组 17备份 2.png') 1x, url('../images/dashboard/title/2/编组 17备份 2@2x.png') 2x); }
 .title-img--dash-3 { width: 151px; height: 35px; background-image: -webkit-image-set(url('../images/dashboard/title/3/编组 17.png') 1x, url('../images/dashboard/title/3/编组 17@2x.png') 2x); background-image: image-set(url('../images/dashboard/title/3/编组 17.png') 1x, url('../images/dashboard/title/3/编组 17@2x.png') 2x); }
 .title-img--dash-4 { width: 293px; height: 35px; background-image: -webkit-image-set(url('../images/dashboard/title/4/编组 22.png') 1x, url('../images/dashboard/title/4/编组 22@2x.png') 2x); background-image: image-set(url('../images/dashboard/title/4/编组 22.png') 1x, url('../images/dashboard/title/4/编组 22@2x.png') 2x); }
-.title-img--dash-5 { width: 171px; height: 35px; background-image: -webkit-image-set(url('../images/dashboard/title/5/编组 18.png') 1x, url('../images/dashboard/title/5/编组 18@2x.png') 2x); background-image: image-set(url('../images/dashboard/title/5/编组 18.png') 1x, url('../images/dashboard/title/5/编组 18@2x.png') 2x); }
+.title-img--dash-5 { width: 151px; height: 35px; background-image: -webkit-image-set(url('../images/dashboard/title/5/编组 18.png') 1x, url('../images/dashboard/title/5/编组 18@2x.png') 2x); background-image: image-set(url('../images/dashboard/title/5/编组 18.png') 1x, url('../images/dashboard/title/5/编组 18@2x.png') 2x); }
 .title-img--dash-6 { width: 212px; height: 35px; background-image: -webkit-image-set(url('../images/dashboard/title/6/编组 25.png') 1x, url('../images/dashboard/title/6/编组 25@2x.png') 2x); background-image: image-set(url('../images/dashboard/title/6/编组 25.png') 1x, url('../images/dashboard/title/6/编组 25@2x.png') 2x); }
 
 /* 中央搜索条容器：宽度与 Home 页相似并居中 */

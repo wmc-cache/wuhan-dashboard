@@ -70,7 +70,13 @@ const displayRows = computed<DisplayRow[]>(() => {
   for (let i = 0; i < size; i++) {
     const idx = needsScroll.value ? (scrollIndex.value + i) % list.length : i;
     const item = list[idx];
-    rows.push({ ...item, __origIndex: idx, __key: `${idx}-${item.id ?? i}` });
+    const keyParts = [
+      `idx-${idx}`,
+      item?.id != null ? String(item.id) : '',
+      item?.name ?? '',
+      item?.joinedAt ?? ''
+    ].filter(Boolean);
+    rows.push({ ...item, __origIndex: idx, __key: keyParts.join('|') || `idx-${idx}` });
   }
   return rows;
 });

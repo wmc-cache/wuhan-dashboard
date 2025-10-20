@@ -1,15 +1,23 @@
 <template>
-  <section class="mod">
+  <section class="mod" @mouseenter="onHover(true)" @mouseleave="onHover(false)">
     <h3 class="mod__title"><span class="title-img title-img--aid-title2" aria-hidden="true"></span></h3>
     <div class="mod__body">
-      <GridTable :columns="cols" :rows="rows" :grid-template="'64px 1.6fr .8fr 1.1fr 1fr'" :visible-rows="6"
-        :row-height="38" :show-header="false" empty-text="暂无数据" />
+      <GridTable
+        :columns="cols"
+        :rows="displayRows"
+        :grid-template="'64px 1.6fr .8fr 1.1fr 1fr'"
+        :visible-rows="visibleCount"
+        :row-height="38"
+        :show-header="false"
+        empty-text="暂无数据"
+        row-key="__key"
+      />
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { toRefs } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, toRefs, watch } from 'vue';
 import GridTable, { type ColumnDef } from '../GridTable.vue';
 
 interface Row { lv?: string | number; name: string; count: number; amount: number; union: string }
@@ -37,6 +45,72 @@ const cols: ColumnDef[] = [
 
 // 响应式接入
 const { rows } = toRefs(props);
+
+const visibleCount = 6;
+const list = computed(() => rows.value ?? []);
+const needsScroll = computed(() => list.value.length > 1);
+const scrollIndex = ref(0);
+const hovering = ref(false);
+let timer: ReturnType<typeof setInterval> | null = null;
+
+const displayRows = computed(() => {
+  const data = list.value;
+  if (!data.length) return [];
+  const size = Math.min(visibleCount, data.length);
+  const out: Array<Row & { __key: string }> = [];
+  for (let i = 0; i < size; i++) {
+    const idx = needsScroll.value ? (scrollIndex.value + i) % data.length : i;
+    const item = data[idx] || ({} as Row);
+    const key = [`idx-${idx}`, item.name ?? '', item.union ?? '', item.count ?? '', item.amount ?? ''].filter(Boolean).join('|');
+    out.push({
+      ...item,
+      lv: item.lv ?? idx + 1,
+      __key: key || `idx-${idx}`
+    });
+  }
+  return out;
+});
+
+function advance() {
+  if (!needsScroll.value) return;
+  scrollIndex.value = (scrollIndex.value + 1) % list.value.length;
+}
+
+function stop() {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+}
+
+function start() {
+  stop();
+  if (!needsScroll.value) return;
+  timer = setInterval(() => {
+    if (!hovering.value) advance();
+  }, 3000);
+}
+
+function onHover(state: boolean) {
+  hovering.value = state;
+}
+
+function reset() {
+  scrollIndex.value = 0;
+  start();
+}
+
+onMounted(() => {
+  start();
+});
+
+onBeforeUnmount(() => {
+  stop();
+});
+
+watch([list, needsScroll], () => {
+  reset();
+});
 </script>
 
 <style scoped lang="scss">
@@ -48,7 +122,11 @@ const { rows } = toRefs(props);
 }
 
 .mod__body {
-  overflow: auto;
+  overflow: hidden;
+}
+
+.mod__body :deep(.tbody) {
+  overflow-y: hidden !important;
 }
 
 /* 标题切图（1x/2x） */

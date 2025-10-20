@@ -89,48 +89,57 @@
               </div>
               <!-- 右：参加情况表 -->
               <div class="card">
-                <table class="table">
-                  <thead>
-                    <tr><th>参加类型</th><th>参加份数</th><th>每份金额</th></tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(r,i) in medPlans" :key="i"><td>{{ r.type }}</td><td>{{ r.count }}</td><td>{{ r.money }}</td></tr>
-                  </tbody>
-                </table>
+                <template v-if="medPlans.length">
+                  <table class="table">
+                    <thead>
+                      <tr><th>参加类型</th><th>参加份数</th><th>每份金额</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(r,i) in medPlans" :key="i"><td>{{ r.type }}</td><td>{{ r.count }}</td><td>{{ r.money }}</td></tr>
+                    </tbody>
+                  </table>
+                </template>
+                <p v-else class="empty-tip">暂无参保记录</p>
               </div>
             </div>
 
             <!-- 底部：互助给付明细 -->
             <div class="card">
-              <table class="table">
-                <thead>
-                  <tr><th>给付类型</th><th>疾病名称</th><th>互助开始时间</th><th>互助结束时间</th><th>费用</th></tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(r,i) in medClaims" :key="i"><td>{{ r.payType }}</td><td>{{ r.disease }}</td><td>{{ r.startAt }}</td><td>{{ r.endAt }}</td><td>{{ r.fee }}</td></tr>
-                </tbody>
-              </table>
+              <template v-if="medClaims.length">
+                <table class="table">
+                  <thead>
+                    <tr><th>给付类型</th><th>疾病名称</th><th>互助开始时间</th><th>互助结束时间</th><th>费用</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(r,i) in medClaims" :key="i"><td>{{ r.payType }}</td><td>{{ r.disease }}</td><td>{{ r.startAt }}</td><td>{{ r.endAt }}</td><td>{{ r.fee }}</td></tr>
+                  </tbody>
+                </table>
+              </template>
+              <p v-else class="empty-tip">暂无给付记录</p>
             </div>
           </template>
 
           <!-- 困难救助 -->
           <template v-else-if="tab==='rescue'">
             <div class="card">
-              <table class="table">
-                <thead>
-                  <tr><th>医院名称</th><th>疾病名称</th><th>疾病类型</th><th>出院时间</th><th>申请时间</th><th>救助金额</th></tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(r,i) in rescueList" :key="i">
-                    <td>{{ r.hospitalName || '-' }}</td>
-                    <td>{{ r.diseaseType || '-' }}</td>
-                    <td>{{ r.sign || '-' }}</td>
-                    <td>{{ r.cyTime || '-' }}</td>
-                    <td>{{ r.reportDate || '-' }}</td>
-                    <td>{{ r.paymentsMoney || '-' }}</td>
-                  </tr>
-                </tbody>
-              </table>
+              <template v-if="rescueList.length">
+                <table class="table">
+                  <thead>
+                    <tr><th>医院名称</th><th>疾病名称</th><th>疾病类型</th><th>出院时间</th><th>申请时间</th><th>救助金额</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(r,i) in rescueList" :key="i">
+                      <td>{{ r.hospitalName || '-' }}</td>
+                      <td>{{ r.diseaseType || '-' }}</td>
+                      <td>{{ r.sign || '-' }}</td>
+                      <td>{{ r.cyTime || '-' }}</td>
+                      <td>{{ r.reportDate || '-' }}</td>
+                      <td>{{ r.paymentsMoney || '-' }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </template>
+              <p v-else class="empty-tip">暂无救助记录</p>
             </div>
           </template>
 
@@ -148,42 +157,48 @@
               </ul>
             </div>
             <div class="card" style="margin-top:8px;">
-              <table class="table">
-                <thead>
-                  <tr><th>姓名</th><th>关系</th><th>性别</th><th>出生日期</th><th>健康状态</th><th>单位/学校</th><th>人员身份</th><th>月收入</th></tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(r,i) in help.families" :key="i">
-                    <td>{{ r.name || '-' }}</td>
-                    <td>{{ r.kindred || '-' }}</td>
-                    <td>{{ r.gender || '-' }}</td>
-                    <td>{{ r.birthday || '-' }}</td>
-                    <td>{{ r.health || '-' }}</td>
-                    <td>{{ r.company || '-' }}</td>
-                    <td>{{ r.personStatus || '-' }}</td>
-                    <td>{{ r.earning || '-' }}</td>
-                  </tr>
-                </tbody>
-              </table>
+              <template v-if="help.families.length">
+                <table class="table">
+                  <thead>
+                    <tr><th>姓名</th><th>关系</th><th>性别</th><th>出生日期</th><th>健康状态</th><th>单位/学校</th><th>人员身份</th><th>月收入</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(r,i) in help.families" :key="i">
+                      <td>{{ r.name || '-' }}</td>
+                      <td>{{ r.kindred || '-' }}</td>
+                      <td>{{ r.gender || '-' }}</td>
+                      <td>{{ r.birthday || '-' }}</td>
+                      <td>{{ r.health || '-' }}</td>
+                      <td>{{ r.company || '-' }}</td>
+                      <td>{{ r.personStatus || '-' }}</td>
+                      <td>{{ r.earning || '-' }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </template>
+              <p v-else class="empty-tip">暂无家庭成员信息</p>
             </div>
             <div class="card" style="margin-top:8px;">
-              <table class="table">
-                <thead>
-                  <tr><th>上报单位</th><th>资金类型</th><th>帮扶日期</th><th>帮扶形式</th><th>帮扶措施</th><th>状态</th><th>联系方式</th><th>帮扶单位</th></tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(r,i) in help.helps" :key="i">
-                    <td>{{ r.currentDept || '-' }}</td>
-                    <td>{{ r.incomingType || '-' }}</td>
-                    <td>{{ r.salvationDate || '-' }}</td>
-                    <td>{{ r.salvationForm || '-' }}</td>
-                    <td>{{ r.salvationMethod || '-' }}</td>
-                    <td>{{ r.stateStr || '-' }}</td>
-                    <td>{{ r.tel || '-' }}</td>
-                    <td>{{ r.userDept || '-' }}</td>
-                  </tr>
-                </tbody>
-              </table>
+              <template v-if="help.helps.length">
+                <table class="table">
+                  <thead>
+                    <tr><th>上报单位</th><th>资金类型</th><th>帮扶日期</th><th>帮扶形式</th><th>帮扶措施</th><th>状态</th><th>联系方式</th><th>帮扶单位</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(r,i) in help.helps" :key="i">
+                      <td>{{ r.currentDept || '-' }}</td>
+                      <td>{{ r.incomingType || '-' }}</td>
+                      <td>{{ r.salvationDate || '-' }}</td>
+                      <td>{{ r.salvationForm || '-' }}</td>
+                      <td>{{ r.salvationMethod || '-' }}</td>
+                      <td>{{ r.stateStr || '-' }}</td>
+                      <td>{{ r.tel || '-' }}</td>
+                      <td>{{ r.userDept || '-' }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </template>
+              <p v-else class="empty-tip">暂无帮扶记录</p>
             </div>
             <div class="card" style="margin-top:8px;">
               <ul class="info info--flat">
@@ -487,6 +502,7 @@ watch(curYear, async (y) => {
 .med-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
 .card { border: 1px solid rgba(80,140,230,.35); border-radius: 6px; background: rgba(255,255,255,.95); overflow: hidden; }
 .empty-card { display: grid; place-items: center; height: 160px; color: #2a6ff0; font-weight: 800; }
+.empty-tip { margin: 0; padding: 28px 0; text-align: center; color: #2a6ff0; font-weight: 800; font-size: 13px; letter-spacing: 1px; }
 
 .table { width: 100%; border-collapse: collapse; }
 .table { font-size: 13px; }
