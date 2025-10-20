@@ -20,7 +20,15 @@
       <div class="panel h214">
         <span class="title-img title-img--dash-3" aria-hidden="true"></span>
         <template v-if="!memberLoading">
-          <OrgTotal style="margin-top: 36px;" :total="aidTotal" :deep="veryDifficult" :relative="difficultCount" :accident="accidentCount" />
+          <OrgTotal
+            style="margin-top: 36px;"
+            :total="aidTotal"
+            :deep="veryDifficult"
+            :relative="difficultCount"
+            :accident="accidentCount"
+            @total-click="goToAidList()"
+            @type-click="onAidTypeClick"
+          />
         </template>
         <div v-else class="loading-mask"></div>
       </div>
@@ -72,7 +80,12 @@
       <div class="panel h180">
         <span class="title-img title-img--dash-2" style="margin-left: 60px;" aria-hidden="true"></span>
         <template v-if="!memberLoading">
-          <GenderOverview :male-count="memberMale" :female-count="memberFemale" />
+          <GenderOverview
+            style="margin-left: 100px;"
+            :male-count="memberMale"
+            :female-count="memberFemale"
+            @gender-click="onGenderClick"
+          />
         </template>
         <div v-else class="loading-mask"></div>
       </div>
@@ -81,9 +94,18 @@
         <!-- 组件自带标题切图，替换为 dashboard/title/4 -->
 
         <template v-if="!refundLoading">
-          <RefundRankType2 style="margin-left: 60px;" :width-percent="90" :img-width="293" :rowHeight="40"
-            :show-more="false" :items="refundTop" :title-img1x="dashTitle4_1x" :title-img2x="dashTitle4_2x"
-            :bar-color="'#4E8FFF'" />
+          <RefundRankType2
+            style="margin-left: 60px;"
+            :width-percent="90"
+            :img-width="293"
+            :rowHeight="40"
+            :show-more="false"
+            :items="refundTop"
+            :title-img1x="dashTitle4_1x"
+            :title-img2x="dashTitle4_2x"
+            :bar-color="'#4E8FFF'"
+            @row-click="onRefundRowClick"
+          />
         </template>
         <div v-else class="loading-mask"></div>
       </div>
@@ -92,7 +114,7 @@
         <span class="title-img title-img--dash-6" style="margin-left: 60px;" aria-hidden="true"></span>
         <!-- 通过属性控制宽度/中心区域/右侧文字左移量 -->
         <template v-if="!medicalLoading">
-          <AidCircleStats :items="aidCircleSix" :width="520" :center-width="280" :right-shift="-10" />
+          <AidCircleStats style="margin-left: 80px;" :items="aidCircleSix" :width="520" :center-width="280" :right-shift="-10" />
         </template>
         <div v-else class="loading-mask"></div>
       </div>
@@ -117,22 +139,65 @@ import dashTitle4_2x from '../images/dashboard/title/4/编组 22@2x.png';
 import { onMounted, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { apiGet } from '../utils/api';
+import { getDict, type DictItem } from '../utils/dict';
 const router = useRouter();
 const selCat = ref<'org' | 'member'>('org');
 const keyword = ref('');
-function goToHome() { router.push({ path: '/home', query: { kw: keyword.value || '', cat: selCat.value } }); }
+function goToHome(payload?: { keyword: string; category: string }) {
+  const kw = (payload?.keyword ?? keyword.value ?? '').trim();
+  const cat = (payload?.category as 'org' | 'member' | undefined) ?? selCat.value;
+  if (cat === 'member') {
+    const query = kw ? { name: kw } : undefined;
+    router.push({ name: 'grid-table-2', query }).catch(() => void 0);
+    return;
+  }
+  router.push({ path: '/home', query: { kw, cat } }).catch(() => void 0);
+}
 function goToUnionList() {
   router.push({ name: 'grid-table' }).catch(() => void 0);
 }
-function goToMemberList() {
-  router.push({ name: 'grid-table-2' }).catch(() => void 0);
+async function goToMemberList(options?: { sex?: GenderKey }) {
+  await ensureGenderDict();
+  const query: Record<string, string> = {};
+  if (options?.sex) {
+    const val = pickGenderValue(options.sex);
+    if (val) query.sex = val;
+  }
+  router.push({ name: 'grid-table-2', query }).catch(() => void 0);
 }
-function goToRefundDetail() {
-  const year = new Date().getFullYear();
+function goToRefundDetail(options?: { unionName?: string }) {
+  const year = Number(refundDataYear.value) || new Date().getFullYear();
+  const query: Record<string, string> = { year: String(year), orderName: 'zje' };
+  if (options?.unionName) {
+    query.unionName = options.unionName;
+  }
   router.push({
     name: 'refund-detail-list',
-    query: { year: String(year), orderName: 'zje' },
+    query,
   }).catch(() => void 0);
+}
+
+function onRefundRowClick(payload?: { item?: { name?: string } }) {
+  const name = String(payload?.item?.name ?? '').trim();
+  if (!name) {
+    goToRefundDetail();
+    return;
+  }
+  goToRefundDetail({ unionName: name });
+}
+function goToAidList(options?: { poorType?: string }) {
+  const query: Record<string, string> = {};
+  const type = String(options?.poorType ?? '').trim();
+  if (type) {
+    query.poorType = type;
+  }
+  router.push({
+    name: 'aid-list',
+    query,
+  }).catch(() => void 0);
+}
+function onAidTypeClick(type: string) {
+  goToAidList({ poorType: type });
 }
 // GridTable 的“查看更多”已在组件内部处理跳转
 
@@ -144,6 +209,32 @@ function goToRefundDetail() {
 type RefundRow = { id?: string; ghzzmc?: string; zje?: number };
 type RefundListResp = { total?: number; rows?: RefundRow[] };
 const refundTop = ref<{ name: string; value: number }[]>([]);
+const refundDataYear = ref(new Date().getFullYear());
+type GenderKey = 'male' | 'female';
+const genderDict = ref<DictItem[]>([]);
+
+async function ensureGenderDict() {
+  if (genderDict.value.length) return genderDict.value;
+  try {
+    const list = await getDict('gender');
+    genderDict.value = list;
+  } catch {
+    genderDict.value = [];
+  }
+  return genderDict.value;
+}
+
+function pickGenderValue(type: GenderKey): string {
+  const list = genderDict.value;
+  const keywords = type === 'male' ? ['男', '雄'] : ['女', '雌'];
+  const match = list.find((item) => {
+    const label = String(item?.label ?? '');
+    return keywords.some((kw) => kw && label.includes(kw));
+  });
+  const val = match?.value;
+  if (val !== undefined && val !== null && val !== '') return String(val);
+  return type === 'male' ? '1' : '2';
+}
 
 type SubsidyRow = { name: string; value: number; region?: string };
 const laomoSubsidies = ref<{ name: string; people: number; amount: number }[]>([]);
@@ -215,24 +306,33 @@ onMounted(async () => {
     loadRefundList(),
     loadModelWorkerSubsidy(),
     loadMedicalAllNum(new Date().getFullYear()),
-    loadUnionMap()
+    loadUnionMap(),
+    ensureGenderDict(),
   ]).catch(() => void 0);
 });
 
 async function loadRefundList() {
   try {
-    const now = new Date();
-    const yearNow = String(now.getFullYear());
-    // API 要求 year/pageNum/pageSize/orderName
-    const qs = (y: string) => new URLSearchParams({ year: y, pageNum: '1', pageSize: '10', orderName: 'zje' }).toString();
-    // 优先请求当年；为空时回退上一年（很多数据只到上一自然年）
-    let resp: any = await apiGet<RefundListResp>(`/refundOfFunds/list?${qs(yearNow)}`).catch(() => null);
-    if (!resp || (!Array.isArray((resp as any)?.rows) && !Array.isArray(resp))) {
-      const last = String(Number(yearNow) - 1);
-      resp = await apiGet<RefundListResp>(`/refundOfFunds/list?${qs(last)}`).catch(() => null);
+    const nowYear = new Date().getFullYear();
+    const buildQs = (year: number) =>
+      new URLSearchParams({ year: String(year), pageNum: '1', pageSize: '10', orderName: 'zje' }).toString();
+    const fetchYear = async (year: number) => {
+      const res: any = await apiGet<RefundListResp>(`/refundOfFunds/list?${buildQs(year)}`).catch(() => null);
+      const raw = (res as any)?.rows ?? res ?? [];
+      const rows = Array.isArray(raw) ? raw : [];
+      return { rows, year };
+    };
+    let attempt = await fetchYear(nowYear);
+    if (!attempt.rows.length) {
+      const prev = await fetchYear(nowYear - 1);
+      if (prev.rows.length) {
+        attempt = prev;
+      }
     }
-    const rows = (resp as any)?.rows || resp || [];
-    const list = (Array.isArray(rows) ? rows : [])
+    if (attempt.rows.length) {
+      refundDataYear.value = attempt.year;
+    }
+    const list = attempt.rows
       .map((r) => ({ name: String(r.ghzzmc || ''), value: Number(r.zje || 0) }))
       .filter((r) => r.name);
     list.sort((a, b) => (b.value - a.value));
@@ -410,6 +510,9 @@ async function loadMedicalAllNum(year: number | string) {
     aidCircleSix.value = items;
   }
   medicalLoading.value = false;
+}
+function onGenderClick(type: GenderKey) {
+   goToMemberList({ sex: type });
 }
 </script>
 

@@ -31,7 +31,7 @@
           <img class="summary__icon" :src="summaryIcon1x" :srcset="summaryIcon2x + ' 2x'" alt="" />
           <div class="summary__text">
             <div class="summary__name">{{ majorItem.name }}</div>
-            <div class="summary__meta">{{ sp.formatNumber(majorItem.value) }}人、{{ percentText(majorItem) }}</div>
+            <div class="summary__meta">{{ formatCount(majorItem.value) }}、{{ percentText(majorItem) }}</div>
           </div>
         </div>
 
@@ -46,7 +46,7 @@
           >
             <span class="dot" :style="{ backgroundColor: it?.color }" aria-hidden="true"></span>
             <span class="label">{{ it?.name }}</span>
-            <span class="count">{{ sp.formatNumber(it?.value || 0) }}、{{ percentText(it as any) }}</span>
+            <span class="count">{{ formatCount(it?.value || 0) }}、{{ percentText(it as any) }}</span>
           </li>
         </ul>
       </template>
@@ -108,6 +108,19 @@ function percentText(item?: Item | null) {
 
 // 调整环形图中心位置，让右侧有足够空间显示图例
 const seriesCenter = ref<[string, string]>(['38%', '48%']);
+
+function formatCount(value?: number) {
+  const num = Number(value) || 0;
+  if (num >= 1_000_000) {
+    const wan = num / 10000;
+    const digits = wan >= 100 ? 0 : wan >= 10 ? 1 : 2;
+    return `${wan.toLocaleString('zh-CN', {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits
+    })}万人`;
+  }
+  return `${num.toLocaleString('zh-CN')}人`;
+}
 </script>
 
 <style scoped lang="scss">
@@ -127,7 +140,7 @@ const seriesCenter = ref<[string, string]>(['38%', '48%']);
 .summary__icon { width: 56px; height: 56px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(90,160,255,0.25)); }
 .summary__text { display: flex; align-items: baseline; column-gap: 12px; white-space: nowrap; }
 .summary__name { font-size: 16px; font-weight: 900; color: #2a6ff0; letter-spacing: 1px; }
-.summary__meta { font-size: 16px; font-weight: 800; color: rgba(42,111,240,0.95); line-height: 1; }
+.summary__meta { font-size: 14px; font-weight: 800; color: rgba(42,111,240,0.95); line-height: 1; }
 
 /* 自定义图例样式，延续 RingPie 默认风格 */
 .legend { list-style: none; padding: 0 6px 0 0; margin: 0; display: grid; row-gap: 12px; }

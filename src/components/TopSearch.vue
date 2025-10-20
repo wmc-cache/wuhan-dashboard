@@ -9,7 +9,7 @@
       <span class="sep" aria-hidden="true" />
       <div class="input-wrap">
         <img class="icon-search" :src="search1x" :srcset="search2x + ' 2x'" alt="" />
-        <input class="input" type="text" :placeholder="placeholder" :value="modelValue" @input="onInput" />
+        <input class="input" type="text" :placeholder="inputPlaceholder" :value="modelValue" @input="onInput" />
       </div>
 
       <!-- 下拉列表 -->
@@ -62,6 +62,9 @@ const emit = defineEmits<{
 
 const open = ref(false);
 const activeLabel = computed(() => props.categories.find(c => c.value === props.category)?.label ?? '');
+const inputPlaceholder = computed(() =>
+  props.category === 'member' ? '请输入会员姓名' : props.placeholder
+);
 
 function onInput(e: Event) { emit('update:modelValue', (e.target as HTMLInputElement).value); }
 function pick(v: string) { emit('update:category', v); open.value = false; }

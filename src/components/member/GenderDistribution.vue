@@ -71,8 +71,17 @@ const maleColor = '#2a6ff0';
 const femaleColor = '#FFA36B';
 
 function pretty(n?: number) {
-  if (typeof n !== 'number') return '-';
-  return n.toLocaleString('zh-CN');
+  const num = Number(n);
+  if (!Number.isFinite(num)) return '-';
+  if (num >= 1_000_0000) {
+    const wan = num / 10000;
+    const digits = wan >= 100 ? 0 : wan >= 10 ? 1 : 2;
+    return `${wan.toLocaleString('zh-CN', {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits
+    })}万人`;
+  }
+  return `${num.toLocaleString('zh-CN')}人`;
 }
 </script>
 
@@ -106,7 +115,7 @@ function pretty(n?: number) {
 
 .col { display: grid; grid-template-rows: auto auto 1fr; align-items: start; justify-items: center; }
 .value {
-  font-size: 30px;
+  font-size: 24px;
   font-weight: 800;
   letter-spacing: 1px;
   line-height: 1;

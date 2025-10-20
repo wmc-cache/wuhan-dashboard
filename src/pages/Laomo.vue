@@ -51,7 +51,7 @@
     <section class="mod " style="grid-area: bl;">
       <span aria-hidden="true"></span>
       <div class="mod__body" style="place-items: stretch;">
-        <LaomoMemberNew :items="listItems" />
+        <LaomoMemberNew :items="listItems" @cell-click="onMemberCellClick" />
       </div>
     </section>
 
@@ -63,6 +63,12 @@
       </div>
     </section>
   </main>
+  <MemberDetailDialog
+    v-model="memberDlgOpen"
+    :data="memberDetail"
+    :search-code="memberSearchCode"
+    :default-tab="memberDefaultTab"
+  />
 </template>
 
 <script setup lang="ts">
@@ -78,6 +84,7 @@ import LaomoGenderDistribution from '../components/laomo/GenderDistribution.vue'
 // 中间顶栏不再放搜索（已移至首页地图上方）
 import { ref, onMounted } from 'vue';
 import { apiGet, niceMax } from '../utils/api';
+import MemberDetailDialog, { type MemberDetail, type MemberDetailTab } from '../components/MemberDetailDialog.vue';
 
 // ---------------- 数据状态 ----------------
 // 荣誉分类
@@ -95,13 +102,33 @@ const areaCats = ref<string[]>([]);
 const areaVals = ref<number[]>([]);
 const areaMax = ref<number>(1200);
 // 列表
-const listItems = ref<{ id: string | number; name: string; union: string; joinedAt: string }[]>([]);
+interface LaomoMemberItem {
+  id: string | number;
+  name: string;
+  union: string;
+  joinedAt: string;
+  gender?: string;
+  age?: number | string;
+  company?: string;
+  phone?: string;
+  education?: string;
+  politics?: string;
+  duty?: string;
+  searchCode?: string;
+}
+const listItems = ref<LaomoMemberItem[]>([]);
 // 中部四数值 + 性别分布
 const fourVals = ref<number[]>([]);
 const maleCount = ref<number>(0);
 const femaleCount = ref<number>(0);
 const malePct = ref<number | string>(0);
 const femalePct = ref<number | string>(0);
+
+// 详情弹窗
+const memberDlgOpen = ref(false);
+const memberDetail = ref<MemberDetail>({});
+const memberSearchCode = ref<string | undefined>(undefined);
+const memberDefaultTab = ref<MemberDetailTab>('laomo');
 
 // ---------------- 挂载加载 ----------------
 onMounted(async () => {
@@ -180,21 +207,31 @@ async function fetchList() {
   const rows: any[] = Array.isArray(res?.rows) ? res.rows : Array.isArray(res?.data?.rows) ? res.data.rows : [];
   const mapped = rows.map((r: any, i: number) => {
     const id = r?.id ?? i;
-    const name = r?.name ?? r?.fullname ?? `劳模${i+1}`;
+    const name = r?.name ?? r?.fullname ?? `劳模${i + 1}`;
     const union = r?.union ?? r?.tjdw ?? r?.streetUnion ?? '';
     const joinedAt = formatDate(r?.createdTime ?? r?.sbsj ?? r?.provinceTime ?? r?.cityTime);
-    return { id, name, union, joinedAt };
+    const gender = r?.gender ?? r?.sex;
+    const age = r?.age;
+    const company = r?.workUnit ?? r?.unit ?? '';
+    const phone = r?.phone ?? r?.mobile ?? r?.tel;
+    const education = r?.educationName ?? r?.education;
+    const politics = r?.politicsStatusName ?? r?.politicsStatus;
+    const duty = r?.post ?? r?.position ?? r?.unionJob;
+    const searchCode = r?.idNumberBright ?? r?.certificateNumBright ?? r?.idNumber ?? r?.certificateNum ?? r?.certificateNo ?? r?.idcard ?? r?.idCard;
+    return { id, name, union, joinedAt, gender, age, company, phone, education, politics, duty, searchCode } as LaomoMemberItem;
   });
   if (mapped.length) {
     const base = mapped.slice(0, 12);
     if (base.length < 12) {
       for (let i = base.length; i < 12; i++) {
         const ref = base[i % mapped.length] || mapped[0];
+        const fallback = ref ?? mapped[0];
         base.push({
+          ...fallback,
           id: `mw-auto-${i}`,
           name: `劳模${i + 1}`,
-          union: ref?.union || '—',
-          joinedAt: ref?.joinedAt || '2023-07-28'
+          union: fallback?.union || '—',
+          joinedAt: fallback?.joinedAt || '2023-07-28'
         });
       }
     }
@@ -231,6 +268,26 @@ async function fetchAllNum() {
   femaleCount.value = Number(d?.femaleCount || 0);
   malePct.value = d?.malePct ?? 0;
   femalePct.value = d?.femalePct ?? 0;
+}
+
+function onMemberCellClick(payload: { row: LaomoMemberItem }) {
+  const row = payload?.row;
+  if (!row) return;
+  memberDetail.value = {
+    name: row.name,
+    union: row.union,
+    joinAt: row.joinedAt,
+    gender: row.gender ? String(row.gender) : undefined,
+    age: row.age,
+    company: row.company,
+    phone: row.phone,
+    education: row.education ? String(row.education) : undefined,
+    politics: row.politics ? String(row.politics) : undefined,
+    duty: row.duty ? String(row.duty) : undefined,
+  };
+  memberSearchCode.value = row.searchCode ? String(row.searchCode) : undefined;
+  memberDefaultTab.value = 'laomo';
+  memberDlgOpen.value = true;
 }
 </script>
 

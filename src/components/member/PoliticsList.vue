@@ -55,7 +55,17 @@ const option = computed(() => {
   const gridLine = 'rgba(67,127,255,0.20)';
   return {
     grid: { left: 100, right: 140, top: 16, bottom: 40 },
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      formatter: (params: any) => {
+        const first = Array.isArray(params) ? params[0] : params;
+        const name = first?.name ?? '';
+        const raw = Number(first?.data?.raw ?? first?.value ?? 0);
+        const pct = total.value ? Math.round((raw / total.value) * 100) : 0;
+        return `${name}<br/>${formatWan(raw)} (${pct}%)`;
+      }
+    },
     xAxis: {
       type: 'value',
       min: 0,
@@ -67,7 +77,7 @@ const option = computed(() => {
       axisLabel: {
         color: '#2a6ff0',
         fontWeight: 600,
-        formatter: (val: number) => (val === props.max ? `${val}万人` : `${val}`)
+        formatter: (val: number) => `${val}万人`
       }
     },
     yAxis: {
@@ -122,7 +132,7 @@ const option = computed(() => {
           formatter: (p: any) => {
             const raw = Number(p.data?.raw ?? p.value);
             const pct = total.value ? Math.round((raw / total.value) * 100) : 0;
-            return `${fmt(raw)} (${pct}%)`;
+            return `${formatCount(raw)} (${pct}%)`;
           }
         },
         z: 3
@@ -131,7 +141,18 @@ const option = computed(() => {
   } as any;
 });
 
-function fmt(v: number) { return Number(v).toLocaleString('zh-CN'); }
+function formatCount(v: number) {
+  const num = Number(v) || 0;
+  if (num >= 1_000_000) {
+    const wan = num / 10000;
+    const digits = wan >= 100 ? 0 : wan >= 10 ? 1 : 2;
+    return `${wan.toLocaleString('zh-CN', {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits
+    })}万人`;
+  }
+  return `${num.toLocaleString('zh-CN')}人`;
+}
 </script>
 
 <style scoped lang="scss">

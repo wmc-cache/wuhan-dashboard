@@ -6,12 +6,28 @@
 
     <!-- 覆盖在图片上的数字与文字（左右各一组） -->
     <div class="overlay">
-      <div class="stat stat--male">
+      <div
+        class="stat stat--male"
+        role="button"
+        tabindex="0"
+        aria-label="查看男性会员列表"
+        @click="onClick('male')"
+        @keyup.enter.prevent="onClick('male')"
+        @keyup.space.prevent="onClick('male')"
+      >
         <div class="num">{{ pretty(maleCount) }}<span class="unit">人</span></div>
         <div class="label"><span  />男性会员</div>
       </div>
 
-      <div class="stat stat--female">
+      <div
+        class="stat stat--female"
+        role="button"
+        tabindex="0"
+        aria-label="查看女性会员列表"
+        @click="onClick('female')"
+        @keyup.enter.prevent="onClick('female')"
+        @keyup.space.prevent="onClick('female')"
+      >
         <div class="num">{{ pretty(femaleCount) }}<span class="unit">人</span></div>
         <div class="label"><span  />女性会员</div>
       </div>
@@ -31,12 +47,18 @@ const props = withDefaults(defineProps<Props>(), {
 });
 // NOTE: 使用 computed 包装 props，保持对父组件更新的响应
 import { computed } from 'vue';
+const emit = defineEmits<{ (e: 'gender-click', payload: 'male' | 'female'): void }>();
+
 const maleCount = computed(() => props.maleCount);
 const femaleCount = computed(() => props.femaleCount);
 
 function pretty(n?: number) {
   if (typeof n !== 'number') return '-';
   return n.toLocaleString('zh-CN');
+}
+
+function onClick(type: 'male' | 'female') {
+  emit('gender-click', type);
 }
 </script>
 
@@ -70,9 +92,14 @@ function pretty(n?: number) {
   align-items: center;
 }
 
-.stat { text-align: center; display: grid; justify-items: center; }
+.stat { text-align: center; display: grid; justify-items: center; cursor: pointer; outline: none; }
 .stat--male { grid-column: 1; color: #2a6ff0; }
 .stat--female { grid-column: 3; color: #FFA36B; }
+
+.stat:focus-visible {
+  box-shadow: 0 0 0 3px rgba(42, 111, 240, 0.45);
+  border-radius: 12px;
+}
 
 .num {
   font-size: 25px;

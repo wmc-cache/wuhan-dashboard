@@ -20,13 +20,13 @@
     <div class="kpi-row">
       <div class="card card--left">
         <div class="num num--blue">
-          {{ fmt(leftItem?.value) }}<span class="unit">名</span>
+          {{ leftDisplay.text }}<span v-if="leftDisplay.unit" class="unit">{{ leftDisplay.unit }}</span>
         </div>
         <div class="label">{{ leftItem?.title }}</div>
       </div>
       <div class="card card--right">
         <div class="num num--orange">
-          {{ fmt(rightItem?.value) }}<span class="unit">名</span>
+          {{ rightDisplay.text }}<span v-if="rightDisplay.unit" class="unit">{{ rightDisplay.unit }}</span>
         </div>
         <div class="label">{{ rightItem?.title }}</div>
       </div>
@@ -60,6 +60,8 @@ const props = withDefaults(defineProps<Props>(), {
 
 const leftItem = computed(() => props.items?.[0]);
 const rightItem = computed(() => props.items?.[1]);
+const leftDisplay = computed(() => formatDisplay(leftItem.value?.value));
+const rightDisplay = computed(() => formatDisplay(rightItem.value?.value));
 
 const emit = defineEmits<{
   (e: 'update:modelValue', v: string): void;
@@ -68,9 +70,23 @@ const emit = defineEmits<{
 function onInput(e: Event) { emit('update:modelValue', (e.target as HTMLInputElement).value); }
 function onSearch() { emit('search', props.modelValue); }
 
-function fmt(v?: number | string) {
+function formatDisplay(v?: number | string): { text: string; unit: string } {
   const n = Number(v);
-  return Number.isFinite(n) ? n.toLocaleString('zh-CN') : String(v ?? '');
+  if (!Number.isFinite(n)) {
+    return { text: String(v ?? ''), unit: '' };
+  }
+  if (n >= 1_000_0000) {
+    const wan = n / 10000;
+    const digits = wan >= 100 ? 0 : wan >= 10 ? 1 : 2;
+    return {
+      text: wan.toLocaleString('zh-CN', {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+      }),
+      unit: '万人'
+    };
+  }
+  return { text: n.toLocaleString('zh-CN'), unit: '人' };
 }
 </script>
 
@@ -114,7 +130,7 @@ function fmt(v?: number | string) {
 .num {
   position: relative;
   z-index: 1;
-  font-size: 44px;
+  font-size:35px;
   font-weight: 900;
   letter-spacing: 1px;
   line-height: 1;

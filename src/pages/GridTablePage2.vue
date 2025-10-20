@@ -4,6 +4,9 @@
     <section class="filters">
       <div class="flt-wrap">
         <el-form inline :model="q" label-position="left" label-width="auto" class="flt flt--center">
+          <el-form-item label="会员姓名：">
+            <el-input v-model="q.name" placeholder="请输入会员姓名" clearable class="w160" />
+          </el-form-item>
           <el-form-item label="所属工会：">
             <el-input v-model="q.unionName" placeholder="请输入" clearable class="w180" />
           </el-form-item>
@@ -75,7 +78,7 @@ const route = useRoute();
 function goBack() { router.back(); }
 
 // 查询条件（与接口字段一致）
-const q = reactive<{ unionName: string; sex: string | number | '' }>({ unionName: '', sex: '' });
+const q = reactive<{ name: string; unionName: string; sex: string | number | '' }>({ name: '', unionName: '', sex: '' });
 const genderOpts = ref<DItem[]>([]);
 
 // 列定义：序号、会员姓名、所属工会、性别、入会时间、年龄、工作单位、职务、联系电话、政治面貌、学历
@@ -106,6 +109,14 @@ function normalizeKw(v: unknown): string {
   return String(v);
 }
 
+function parseSexValue(raw: string): string | number | '' {
+  if (!raw) return '';
+  const hit = genderOpts.value.find((item) => String(item?.value) === raw);
+  if (hit) return hit.value;
+  const num = Number(raw);
+  return Number.isNaN(num) ? raw : num;
+}
+
 const pageSize = 20;
 const page = ref(1);
 const total = ref(0);
@@ -123,6 +134,11 @@ async function fetchList() {
   try {
     loading.value = true;
     const qs = new URLSearchParams();
+    if (q.name?.trim()) {
+      const nameVal = q.name.trim();
+      qs.set('name', nameVal);
+      qs.set('memberName', nameVal);
+    }
     if (q.unionName?.trim()) qs.set('unionName', q.unionName.trim());
     if (q.sex !== '') qs.set('sex', String(q.sex));
     qs.set('pageNum', String(page.value));
@@ -156,7 +172,7 @@ async function fetchList() {
 }
 
 function onSearch() { page.value = 1; fetchList(); }
-function onReset() { q.unionName = ''; q.sex = ''; page.value = 1; fetchList(); }
+function onReset() { q.name = ''; q.unionName = ''; q.sex = ''; page.value = 1; fetchList(); }
 
 const pageCount = computed(() => Math.max(1, Math.ceil((total.value || 0) / pageSize)));
 const pagedRows = computed(() => rows.value);
@@ -171,24 +187,32 @@ onMounted(async () => {
     getDict('education'),
   ]).catch(() => void 0);
   dictReady.value = true;
+  const nameQ = normalizeKw(route.query.name).trim();
   const kw = normalizeKw(route.query.kw).trim();
-  if (kw && !q.unionName) q.unionName = kw;
+  const unionQuery = normalizeKw(route.query.unionName).trim();
+  if (nameQ) q.name = nameQ;
+  else if (kw) q.name = kw;
+  if (unionQuery) q.unionName = unionQuery;
   const sex = normalizeKw(route.query.sex).trim();
-  if (sex && !Number.isNaN(Number(sex))) q.sex = Number(sex);
+  q.sex = parseSexValue(sex);
   await fetchList();
 });
 
 watch(
-  () => [route.query.kw, route.query.sex],
+  () => [route.query.name, route.query.kw, route.query.unionName, route.query.sex],
   () => {
     if (!dictReady.value) return;
-    const prevKw = q.unionName;
+    const prevName = q.name;
     const prevSex = q.sex;
+    const prevUnion = q.unionName;
+    const nameQ = normalizeKw(route.query.name).trim();
     const kw = normalizeKw(route.query.kw).trim();
+    const unionQuery = normalizeKw(route.query.unionName).trim();
     const sex = normalizeKw(route.query.sex).trim();
-    q.unionName = kw || '';
-    q.sex = sex ? (Number.isNaN(Number(sex)) ? '' : Number(sex)) : '';
-    if (q.unionName === prevKw && q.sex === prevSex) return;
+    q.name = nameQ || kw || '';
+    q.unionName = unionQuery || '';
+    q.sex = parseSexValue(sex);
+    if (q.name === prevName && q.unionName === prevUnion && q.sex === prevSex) return;
     page.value = 1;
     fetchList();
   }
@@ -231,6 +255,8 @@ async function onExport() {
   try {
     exporting.value = true;
     const body: Record<string, any> = {
+      name: q.name?.trim() || undefined,
+      memberName: q.name?.trim() || undefined,
       unionName: q.unionName?.trim() || undefined,
       sex: q.sex !== '' ? q.sex : undefined,
       exportFields: MEMBER_EXPORT_FIELDS.join(','),
@@ -271,6 +297,7 @@ async function onExport() {
 .flt--center { align-items: center; }
 .flt :deep(.el-form-item__label) { color: #333; font-weight: 700; }
 .actions { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: inline-flex; gap: 8px; }
+.w160 { width: 160px; }
 .w180 { width: 180px; }
 .w120 { width: 120px; }
 

@@ -1,7 +1,15 @@
 <template>
   <div class="org-total">
     <!-- 左侧：3D 漏斗 + 总数（还原参考图：18,897 人 + 下方标题） -->
-    <div class="org-total__left">
+    <div
+      class="org-total__left"
+      role="button"
+      tabindex="0"
+      aria-label="查看帮扶职工列表"
+      @click="handleTotalClick"
+      @keyup.enter.prevent="handleTotalClick"
+      @keyup.space.prevent="handleTotalClick"
+    >
       <div class="cone">
         <i class="cone__img" aria-hidden="true"></i>
         <div class="cone__num">
@@ -15,19 +23,43 @@
 
     <!-- 右侧：困难类型三项（蓝/绿/橙，与参考图一致） -->
     <ul class="org-total__list" role="list">
-      <li class="list-item list-item--blue">
+      <li
+        class="list-item list-item--blue"
+        role="button"
+        tabindex="0"
+        aria-label="查看深度困难列表"
+        @click="handleTypeClick('深度困难')"
+        @keyup.enter.prevent="handleTypeClick('深度困难')"
+        @keyup.space.prevent="handleTypeClick('深度困难')"
+      >
         <i class="list-item__bg" aria-hidden="true"></i>
         <span class="dot dot--blue" aria-hidden="true"></span>
         <span class="label">深度困难</span>
         <span class="value value--blue">{{ deep }}人</span>
       </li>
-      <li class="list-item list-item--green">
+      <li
+        class="list-item list-item--green"
+        role="button"
+        tabindex="0"
+        aria-label="查看相对困难列表"
+        @click="handleTypeClick('相对困难')"
+        @keyup.enter.prevent="handleTypeClick('相对困难')"
+        @keyup.space.prevent="handleTypeClick('相对困难')"
+      >
         <i class="list-item__bg" aria-hidden="true"></i>
         <span class="dot dot--green" aria-hidden="true"></span>
         <span class="label">相对困难</span>
         <span class="value value--green">{{ relative }}人</span>
       </li>
-      <li class="list-item list-item--orange">
+      <li
+        class="list-item list-item--orange"
+        role="button"
+        tabindex="0"
+        aria-label="查看意外致困列表"
+        @click="handleTypeClick('意外致困')"
+        @keyup.enter.prevent="handleTypeClick('意外致困')"
+        @keyup.space.prevent="handleTypeClick('意外致困')"
+      >
         <i class="list-item__bg" aria-hidden="true"></i>
         <span class="dot dot--orange" aria-hidden="true"></span>
         <span class="label">意外致困</span>
@@ -50,6 +82,10 @@ const props = withDefaults(defineProps<Props>(), {
   relative: 0,
   accident: 0,
 });
+const emit = defineEmits<{
+  (e: 'total-click'): void;
+  (e: 'type-click', type: string): void;
+}>();
 
 // 保持对父组件数据更新的响应（避免解构 props 造成的失去响应性）
 import { computed } from 'vue';
@@ -61,6 +97,14 @@ const accident = computed(() => props.accident);
 function formatNumber(n: number | undefined): string {
   const v = typeof n === 'number' ? n : 0;
   return v.toLocaleString('zh-CN');
+}
+
+function handleTotalClick() {
+  emit('total-click');
+}
+
+function handleTypeClick(type: string) {
+  emit('type-click', type);
 }
 </script>
 
@@ -80,6 +124,8 @@ function formatNumber(n: number | undefined): string {
   justify-items: center;
   align-content: start;
   row-gap: 6px;
+  cursor: pointer;
+  user-select: none;
 }
 
 .cone {
@@ -152,6 +198,8 @@ function formatNumber(n: number | undefined): string {
   grid-template-columns: 28px auto 1fr;
   align-items: center;
   padding: 0 16px 0 52px;
+  cursor: pointer;
+  user-select: none;
 }
 
 .list-item__bg {

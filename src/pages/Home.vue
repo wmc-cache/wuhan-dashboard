@@ -238,8 +238,13 @@ async function onCellClick(payload: { row: any; column: ColumnDef }) {
 // 底部“列表详情”点击，跳到表格详情页
 function onListDetail() {
   // 需求：当顶部选择为“工会会员”时跳 GridTablePage2；否则跳工会组织列表
-  if (selCat.value === 'member') router.push({ name: 'grid-table-2' });
-  else router.push({ name: 'grid-table' });
+  if (selCat.value === 'member') {
+    const kw = keyword.value.trim();
+    const query = kw ? { name: kw } : undefined;
+    router.push({ name: 'grid-table-2', query });
+  } else {
+    router.push({ name: 'grid-table' });
+  }
 }
 
 function buildColumnsByData(sample?: Row | MemberRow) {

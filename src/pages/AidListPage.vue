@@ -43,8 +43,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, reactive, ref, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { getDict, type DictItem as DItem } from '../utils/dict';
 import GridTable, { ColumnDef } from '../components/GridTable.vue';
 import { ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElButton, ElPagination } from 'element-plus';
@@ -57,6 +57,7 @@ import 'element-plus/es/components/button/style/css';
 import 'element-plus/es/components/pagination/style/css';
 
 const router = useRouter();
+const route = useRoute();
 function goBack(){ router.back(); }
 
 // 顶部筛选
@@ -99,7 +100,7 @@ const pageCount = computed(()=>Math.max(1, Math.ceil(total.value/pageSize)));
 const pagedRows = computed(()=> filtered.value );
 function to(p:number){ page.value=Math.min(pageCount.value, Math.max(1,p)); fetchList(); }
 // 初始化字典与列表
-loadDicts(); fetchList();
+loadDicts();
 
 async function loadDicts(){
   const fetchOne = async (type: string): Promise<DItem[]> => {
@@ -174,6 +175,30 @@ async function onExport(){
     document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
   }catch(e){ console.error(e); }
 }
+
+function normalizeToArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map((it) => String(it)).filter((s) => s.trim().length > 0);
+  }
+  if (typeof value === 'string') {
+    return value.split(',').map((s) => s.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+function syncFiltersFromRoute() {
+  q.poorType = normalizeToArray(route.query.poorType);
+}
+
+watch(
+  () => route.query,
+  () => {
+    syncFiltersFromRoute();
+    page.value = 1;
+    fetchList();
+  },
+  { immediate: true }
+);
 </script>
 
 <style scoped lang="scss">
