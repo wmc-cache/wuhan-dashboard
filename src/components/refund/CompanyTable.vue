@@ -11,6 +11,7 @@
     title-height="35px"
     :title-img1x="title1x"
     :title-img2x="title2x"
+    :auto-scroll="true"
   />
 </template>
 

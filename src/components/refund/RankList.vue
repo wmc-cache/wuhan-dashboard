@@ -8,7 +8,7 @@
     >
       <div class="row__top">
         <div>
-          <span class="no" v-if="showNo">NO.{{ i + 1 }}</span>
+          <span class="no" v-if="showNo">NO.{{ it.__index + 1 }}</span>
           <span class="name" :title="it.name">{{ it.name }}</span>
         </div>
         <div>

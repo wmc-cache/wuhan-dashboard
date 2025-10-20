@@ -12,7 +12,9 @@
         class="row"
         @click="emit('row-click', { item: it, index: it.__index })"
       >
-        <i class="medal" :class="'medal--' + (i + 1)" aria-hidden="true" />
+        <span class="medal" :class="medalClass(it.__index)" aria-hidden="true">
+          <span v-if="showMedalNumber(it.__index)" class="medal__text">{{ it.__index + 1 }}</span>
+        </span>
         <span class="name" :title="it.name">{{ it.name }}</span>
         <span class="val">{{ money(it.value) }}</span>
         <i class="underline" aria-hidden="true" />
@@ -87,6 +89,18 @@ function reset() {
   start();
 }
 
+function medalClass(rank: number) {
+  if (rank === 0) return 'medal--1';
+  if (rank === 1) return 'medal--2';
+  if (rank === 2) return 'medal--3';
+  if (rank === 3) return 'medal--4';
+  return 'medal--num';
+}
+
+function showMedalNumber(rank: number) {
+  return rank >= 4;
+}
+
 onMounted(() => start());
 onBeforeUnmount(() => stop());
 watch([list, visibleCount], () => reset(), { deep: true });
@@ -114,6 +128,20 @@ watch([list, visibleCount], () => reset(), { deep: true });
 .medal--2 { background-image: -webkit-image-set(url('../../images/refund/rank-type1/2/位图.png') 1x, url('../../images/refund/rank-type1/2/位图@2x.png') 2x); background-image: image-set(url('../../images/refund/rank-type1/2/位图.png') 1x, url('../../images/refund/rank-type1/2/位图@2x.png') 2x); }
 .medal--3 { background-image: -webkit-image-set(url('../../images/refund/rank-type1/3/位图.png') 1x, url('../../images/refund/rank-type1/3/位图@2x.png') 2x); background-image: image-set(url('../../images/refund/rank-type1/3/位图.png') 1x, url('../../images/refund/rank-type1/3/位图@2x.png') 2x); }
 .medal--4 { background-image: -webkit-image-set(url('../../images/refund/rank-type1/4/编组 13.png') 1x, url('../../images/refund/rank-type1/4/编组 13@2x.png') 2x); background-image: image-set(url('../../images/refund/rank-type1/4/编组 13.png') 1x, url('../../images/refund/rank-type1/4/编组 13@2x.png') 2x); }
+.medal--num {
+  background: rgba(106, 161, 251, 0.2);
+  border: 1px solid #6da1fb;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: #2a6ff0;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.medal__text {
+  transform: none;
+}
 
 .name { font-weight: 400;
     font-size: 16px;

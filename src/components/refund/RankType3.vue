@@ -1,48 +1,166 @@
 <template>
-  <div class="rank-type3">
+  <div class="rank-type3" @mouseenter="onHover(true)" @mouseleave="onHover(false)">
     <div class="header">
       <i class="title-img" aria-hidden="true" />
       <i class="more-img" role="button" aria-label="查看更多" @click="$emit('more')" />
     </div>
 
-    <ul class="list">
-      <!-- 收紧单行高度并把“数值盒子”的样式移动到末列，避免整行被额外 padding 撑高 -->
-      <li v-for="(it, i) in rows" :key="it.name + i" class="row val-box" @click="emit('row-click', { item: it, index: i })">
-        <span class="no-badge" :class="'no-badge--' + (i + 1)"><span class="no-text">NO.{{ i + 1 }}</span></span>
-        <span class="name" :title="it.name">{{ it.name }}</span>
+    <TransitionGroup name="scroll" tag="ul" class="list">
+      <li
+        v-for="row in visibleRows"
+        :key="row.__key"
+        class="row val-box"
+        @click="emit('row-click', { item: { name: row.name, value: row.value }, index: row.__index })"
+      >
+        <span class="no-badge" :class="badgeClass(row.__index)">
+          <span class="no-text">NO.{{ row.__index + 1 }}</span>
+        </span>
+        <span class="name" :title="row.name">{{ row.name }}</span>
 
-        <SegmentedBar class="bar" mode="segment" :seg-total="12" :gap="4" :percent="percent(it.value)"
-          :color="rowColor(i)" :width="100" :height="10" :radius="3" />
+        <SegmentedBar
+          class="bar"
+          mode="segment"
+          :seg-total="12"
+          :gap="4"
+          :percent="percent(row.value)"
+          :color="rowColor(row.__index)"
+          :width="100"
+          :height="10"
+          :radius="3"
+        />
 
         <span>
-          <span class=" val">{{ money(it.value) }}</span>
+          <span class="val">{{ money(row.value) }}</span>
         </span>
       </li>
-    </ul>
+    </TransitionGroup>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import SegmentedBar from '../SegmentedBar.vue';
 const emit = defineEmits<{ (e:'row-click', payload:{ item: {name:string; value:number}; index:number }): void }>();
 
 interface Item { name: string; value: number }
-interface Props { items: Item[]; maxRows?: number }
-const props = withDefaults(defineProps<Props>(), { items: () => [], maxRows: 5 });
+interface Props {
+  items: Item[];
+  maxRows?: number;
+  autoScroll?: boolean;
+  scrollInterval?: number;
+  pauseOnHover?: boolean;
+}
 
-const rows = computed(() => props.items.slice(0, props.maxRows));
-const maxV = computed(() => Math.max(1, ...rows.value.map(r => r.value || 0)));
+const props = withDefaults(defineProps<Props>(), {
+  items: () => [],
+  maxRows: 5,
+  autoScroll: true,
+  scrollInterval: 3500,
+  pauseOnHover: true
+});
+
+const itemsList = computed(() => props.items ?? []);
+const visibleCount = computed(() => Math.max(1, props.maxRows || 1));
+const maxV = computed(() => Math.max(1, ...itemsList.value.map(r => r?.value ?? 0)));
+const needsScroll = computed(() => props.autoScroll && itemsList.value.length > visibleCount.value);
+const scrollIndex = ref(0);
+const hovering = ref(false);
+let timer: ReturnType<typeof setInterval> | null = null;
+
+interface VisibleRow extends Item {
+  __index: number;
+  __key: string;
+}
+
+const visibleRows = computed<VisibleRow[]>(() => {
+  const list = itemsList.value;
+  if (!list.length) return [];
+  const size = Math.min(visibleCount.value, list.length);
+  const rows: VisibleRow[] = [];
+  for (let i = 0; i < size; i++) {
+    const idx = needsScroll.value ? (scrollIndex.value + i) % list.length : i;
+    const item = list[idx] || { name: '', value: 0 };
+    rows.push({ ...item, __index: idx, __key: `${idx}-${item.name}-${i}` });
+  }
+  return rows;
+});
+
 function percent(v: number) { return Math.max(0, Math.min(1, v / maxV.value)); }
 function money(v: number) {
   return Number(v).toLocaleString('zh-CN', { maximumFractionDigits: 3, useGrouping: false }) + '万元';
 }
 
 // 行颜色（依次：红、橙、黄、蓝、深蓝）
-function rowColor(i: number) {
+function rowColor(rank: number) {
   const palette = ['#FF5A58', '#FF8A4A', '#F2C84B', '#4E8FFF', '#5C8CFF'];
-  return palette[i] || palette[palette.length - 1];
+  return palette[rank] || palette[palette.length - 1];
 }
+
+function badgeClass(rank: number) {
+  const order = Math.min(rank, 4);
+  return `no-badge--${order + 1}`;
+}
+
+function advance() {
+  if (!needsScroll.value) return;
+  scrollIndex.value = (scrollIndex.value + 1) % itemsList.value.length;
+}
+
+function start() {
+  stop();
+  if (!needsScroll.value) return;
+  const interval = Math.max(1000, props.scrollInterval || 3500);
+  timer = setInterval(() => {
+    if (props.pauseOnHover && hovering.value) return;
+    advance();
+  }, interval);
+}
+
+function stop() {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+}
+
+function reset() {
+  scrollIndex.value = 0;
+  start();
+}
+
+function onHover(state: boolean) {
+  if (!props.pauseOnHover) return;
+  hovering.value = state;
+}
+
+onMounted(() => {
+  start();
+});
+
+onBeforeUnmount(() => {
+  stop();
+});
+
+watch(needsScroll, () => {
+  reset();
+});
+
+watch(() => props.items, () => {
+  reset();
+}, { deep: true });
+
+watch(() => props.maxRows, () => {
+  reset();
+});
+
+watch(() => props.scrollInterval, () => {
+  start();
+});
+
+watch(() => props.pauseOnHover, () => {
+  if (!props.pauseOnHover) hovering.value = false;
+  start();
+});
 </script>
 
 <style scoped lang="scss">
@@ -88,6 +206,8 @@ function rowColor(i: number) {
   padding: 2px 2px 2px 2px;
   display: grid;
   row-gap: 5px;
+  position: relative;
+  overflow: hidden;
 }
 
 .row {
@@ -174,7 +294,7 @@ function rowColor(i: number) {
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   min-width: 120px;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   border: 1px solid #6DA1FB;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   background: rgba(219, 235, 255, .45);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  transform: skewX(-10deg);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  transform: skewX(-7deg);
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 }
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 .val {
@@ -184,4 +304,20 @@ function rowColor(i: number) {
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   display: inline-block;
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   transform: skewX(10deg);
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 }
+.scroll-enter-active,
+.scroll-leave-active {
+  transition: all 0.35s ease;
+}
+.scroll-enter-from {
+  opacity: 0;
+  transform: translateY(18px);
+}
+.scroll-leave-to {
+  opacity: 0;
+  transform: translateY(-18px);
+}
+.scroll-leave-active {
+  position: absolute;
+  width: 100%;
+}
 </style>

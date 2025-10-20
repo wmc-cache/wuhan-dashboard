@@ -21,10 +21,17 @@
     </div>
 
     <!-- 数据行 -->
-    <ul class="tbody" role="rowgroup" :style="tbodyStyle">
+<ul
+      ref="tbodyRef"
+      class="tbody"
+      role="rowgroup"
+      :style="tbodyStyle"
+      @mouseenter="onHover(true)"
+      @mouseleave="onHover(false)"
+    >
       <li
         v-for="(row, rIdx) in displayRows"
-        :key="isPlaceholderRow(row) ? '__ph_' + rIdx : (rowKey ? (row as any)[rowKey] ?? rIdx : rIdx)"
+        :key="isPlaceholderRow(row) ? '__ph_' + rIdx : ((row as any).__loop_key__ ?? (rowKey ? (row as any)[rowKey] ?? rIdx : rIdx))"
         class="tr"
         :class="{ 'tr--ph': isPlaceholderRow(row) }"
         :style="rowGridStyle"
@@ -68,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElTooltip } from 'element-plus';
 import 'element-plus/es/components/tooltip/style/css';
@@ -109,6 +116,10 @@ interface Props {
   // 空数据占位
   emptyText?: string;   // 空数据时显示的文字
   fillPlaceholder?: boolean; // 是否以空行填充至 visibleRows 行
+  // 自动滚动配置
+  autoScroll?: boolean;
+  scrollInterval?: number;
+  pauseOnHover?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -119,7 +130,10 @@ const props = withDefaults(defineProps<Props>(), {
   fillPlaceholder: true,
   titleImg1x: titleOrg1x,
   titleImg2x: titleOrg2x,
-  morePageName: 'grid-table'
+  morePageName: 'grid-table',
+  autoScroll: false,
+  scrollInterval: 3500,
+  pauseOnHover: true
 });
 
 const emit = defineEmits<{
@@ -163,28 +177,136 @@ const moreStyle = computed(() => ({
   height: props.moreHeight || '13px'
 }));
 
+const visibleCount = computed(() => Math.max(1, props.visibleRows || 6));
+const baseRows = computed(() => (Array.isArray(props.rows) ? props.rows : []));
+const totalRows = computed(() => baseRows.value.length);
+
 // 计算表体固定高度：可见行数 × 行高；
 // 超出部分滚动；不足部分用空行填充（可配置）。
 const tbodyStyle = computed(() => {
-  const total = Array.isArray(props.rows) ? props.rows.length : 0;
-  const vis = Math.max(1, props.visibleRows || 6);
-  const needScroll = total > vis;
+  const vis = visibleCount.value;
+  const needScroll = props.autoScroll ? totalRows.value > 0 : totalRows.value > vis;
   return {
     height: `${vis * props.rowHeight}px`,
     overflowY: needScroll ? 'auto' : 'hidden'
   } as Record<string, string>;
 });
 
-const isEmpty = computed(() => (props.rows?.length ?? 0) === 0);
+const isEmpty = computed(() => totalRows.value === 0);
+
+const loopRows = computed(() => {
+  const rows = baseRows.value;
+  if (!props.autoScroll || rows.length === 0) return rows;
+  if (rows.length > visibleCount.value) return rows;
+  const minLen = Math.max(visibleCount.value + 1, rows.length * 2);
+  const looped: Record<string, any>[] = [];
+  for (let i = 0; i < minLen; i++) {
+    const origin = rows[i % rows.length];
+    looped.push({ ...origin, __origin__: origin, __loop_key__: `${i}-${props.rowKey ? (origin as any)[props.rowKey] ?? i : i}` });
+  }
+  return looped;
+});
+
+const effectiveRows = computed(() => (props.autoScroll ? loopRows.value : baseRows.value));
 
 const displayRows = computed(() => {
-  const rows = Array.isArray(props.rows) ? props.rows : [];
+  const rows = effectiveRows.value;
   if (!props.fillPlaceholder) return rows;
-  const vis = Math.max(1, props.visibleRows || 6);
+  const vis = visibleCount.value;
   const fillerCount = Math.max(0, vis - rows.length);
   if (fillerCount === 0) return rows;
   const fillers = Array.from({ length: fillerCount }, (_, i) => ({ __placeholder__: true, __ph__: i }));
   return rows.concat(fillers);
+});
+
+const tbodyRef = ref<HTMLElement | null>(null);
+const hovering = ref(false);
+let timer: ReturnType<typeof setInterval> | null = null;
+
+const autoScrollEnabled = computed(() => props.autoScroll && totalRows.value > 0);
+const intervalMs = computed(() => Math.max(1000, props.scrollInterval || 3500));
+
+function stepScroll() {
+  const body = tbodyRef.value;
+  if (!body) return;
+  const maxScroll = body.scrollHeight - body.clientHeight;
+  if (maxScroll <= 0) return;
+  const increment = props.rowHeight || 36;
+  const next = body.scrollTop + increment;
+  if (next >= maxScroll - 1) {
+    body.scrollTop = 0;
+  } else {
+    body.scrollTop = Math.min(next, maxScroll);
+  }
+}
+
+function stopAutoScroll() {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+}
+
+function resetScrollPosition() {
+  const body = tbodyRef.value;
+  if (body) body.scrollTop = 0;
+}
+
+function startAutoScroll() {
+  stopAutoScroll();
+  if (!autoScrollEnabled.value) {
+    resetScrollPosition();
+    return;
+  }
+  timer = setInterval(() => {
+    if (props.pauseOnHover && hovering.value) return;
+    stepScroll();
+  }, intervalMs.value);
+}
+
+function onHover(state: boolean) {
+  if (!props.pauseOnHover) return;
+  hovering.value = state;
+}
+
+onMounted(() => {
+  startAutoScroll();
+});
+
+onBeforeUnmount(() => {
+  stopAutoScroll();
+});
+
+watch(autoScrollEnabled, (enabled) => {
+  if (!enabled) {
+    stopAutoScroll();
+    resetScrollPosition();
+  } else {
+    startAutoScroll();
+  }
+});
+
+watch(() => props.rows, () => {
+  resetScrollPosition();
+  startAutoScroll();
+}, { deep: true });
+
+watch(() => visibleCount.value, () => {
+  resetScrollPosition();
+  startAutoScroll();
+});
+
+watch(() => props.rowHeight, () => {
+  resetScrollPosition();
+});
+
+watch(() => props.scrollInterval, () => {
+  startAutoScroll();
+});
+
+watch(() => props.pauseOnHover, () => {
+  if (!props.pauseOnHover) hovering.value = false;
+  startAutoScroll();
 });
 
 function isPlaceholderRow(row: Record<string, any>): boolean {
@@ -192,7 +314,8 @@ function isPlaceholderRow(row: Record<string, any>): boolean {
 }
 
 function emitCell(row: Record<string, any>, column: ColumnDef, rowIndex: number) {
-  emit('cell-click', { row, column, rowIndex });
+  const payload = (row as any).__origin__ || row;
+  emit('cell-click', { row: payload, column, rowIndex });
 }
 
 function formatCell(val: any, col: ColumnDef): string {
@@ -277,7 +400,14 @@ function lvClass(val: any, rIdx: number): string {
   margin: 0;
   padding: 0;
   position: relative;
+  scroll-behavior: smooth;
+  -ms-overflow-style: none; /* IE/Edge hides scrollbar */
+  scrollbar-width: none; /* Firefox hides scrollbar */
   /* 让外部可通过内联样式控制滚动区域高度 */
+}
+
+.tbody::-webkit-scrollbar {
+  display: none; /* Chrome/Safari hides scrollbar */
 }
 
 .tr { font-weight: 600; }

@@ -75,16 +75,14 @@ const orderOpts = [
 ];
 
 // 顶部筛选模型：从路由 query 初始化
-const q = reactive<{ year: number; orderName: string; ids: string[] }>(
-  {
-    year: Number(route.query.year || new Date().getFullYear()),
-    orderName: String(route.query.orderName || 'dsje'),
-    ids: String(route.query.id || '')
-      .split(',')
-      .map(s=>s.trim())
-      .filter(Boolean),
-  }
-);
+const q = reactive<{ year: number; orderName: string; ids: string[] }>({
+  year: Number(route.query.year || new Date().getFullYear()),
+  orderName: route.query.orderName !== undefined ? String(route.query.orderName) : '',
+  ids: String(route.query.id || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean),
+});
 
 // 列定义与布局：序号 | 企业名称 | 七项金额
 const gridTemplate = '60px 2fr repeat(7, 1fr)';
@@ -113,10 +111,24 @@ const pageCount = computed(()=>Math.max(1, Math.ceil(total.value / pageSize)));
 function to(p:number){ page.value = Math.min(pageCount.value, Math.max(1,p)); fetchList(); }
 
 function onSearch(){ page.value = 1; fetchList(); persistQueryToUrl(); }
-function onReset(){ q.orderName = 'dsje'; q.ids=[]; q.year = new Date().getFullYear(); page.value=1; fetchList(); persistQueryToUrl(); }
+function onReset(){
+  q.orderName = '';
+  q.ids = [];
+  q.year = new Date().getFullYear();
+  page.value = 1;
+  fetchList();
+  persistQueryToUrl();
+}
 
 function persistQueryToUrl(){
-  try{ router.replace({ query: { year: String(q.year), orderName: String(q.orderName||''), id: (q.ids||[]).join(',') } }); }catch{}
+  try{
+    const query: Record<string, string> = {
+      year: String(q.year),
+      orderName: String(q.orderName ?? ''),
+    };
+    if (q.ids?.length) query.id = q.ids.join(',');
+    router.replace({ query });
+  }catch{}
 }
 
 async function fetchList(){
@@ -126,7 +138,7 @@ async function fetchList(){
     params.set('year', String(q.year));
     params.set('pageNum', String(page.value));
     params.set('pageSize', String(pageSize));
-    if(q.orderName!=null) params.set('orderName', String(q.orderName));
+    params.set('orderName', String(q.orderName ?? ''));
     if(q.ids && q.ids.length) params.set('id', q.ids.join(','));
     const resp: any = await apiGet(`/refundOfFunds/detailList?${params.toString()}`).catch(()=>null);
     const list: any[] = Array.isArray(resp?.rows) ? resp.rows : [];

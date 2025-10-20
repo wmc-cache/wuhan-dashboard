@@ -215,7 +215,7 @@ async function loadRank(y: number, field: string, size = 5) {
 
 async function loadCompanyTable(y: number) {
   // 企业产业金额排名（使用 list 接口 + qycyje 排序）
-  const res = await listApi({ year: y, pageNum: 1, pageSize: 5, orderName: 'qycyje', sum: 1 });
+  const res = await listApi({ year: y, pageNum: 1, pageSize: 12, orderName: 'qycyje', sum: 1 });
   const rows: any[] = Array.isArray(res?.rows) ? res.rows : [];
   companyRows.value = rows.map((r, i) => ({ lv: i + 1, name: String(r?.ghzzmc || ''), fee: Number(r?.qycyje || 0) }));
 }
@@ -223,12 +223,12 @@ async function loadCompanyTable(y: number) {
 async function loadAll(y: number) {
   await Promise.allSettled([
     loadOverview(y),
-    (async () => { topCards.value = (await loadRank(y, 'zje', 4)).map(it => ({ name: it.name, amount: it.value })); })(),
-    (async () => { provinceAmountTop.value = await loadRank(y, 'szje', 4); })(),
-    (async () => { feeTop.value = await loadRank(y, 'sxf', 5); })(),
-    (async () => { districtTop4.value = await loadRank(y, 'dsje', 4); })(),
-    (async () => { districtTop5.value = await loadRank(y, 'xsje', 5); })(),
-    (async () => { basicTop5.value = await loadRank(y, 'jcje', 5); })(),
+    (async () => { topCards.value = (await loadRank(y, 'zje', 10)).map(it => ({ name: it.name, amount: it.value })); })(),
+    (async () => { provinceAmountTop.value = await loadRank(y, 'szje', 10); })(),
+    (async () => { feeTop.value = await loadRank(y, 'sxf', 10); })(),
+    (async () => { districtTop4.value = await loadRank(y, 'dsje', 10); })(),
+    (async () => { districtTop5.value = await loadRank(y, 'xsje', 10); })(),
+    (async () => { basicTop5.value = await loadRank(y, 'jcje', 10); })(),
     loadCompanyTable(y),
   ]);
 }
