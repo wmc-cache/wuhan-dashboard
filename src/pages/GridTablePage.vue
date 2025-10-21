@@ -128,15 +128,40 @@ const unionDetail = ref<UnionDetail | undefined>(undefined);
 const exporting = ref(false);
 const dictReady = ref(false);
 
-function resolveKw(val: unknown): string {
+function resolveQueryValue(val: unknown): string {
   if (Array.isArray(val)) return String(val[0] ?? '');
   if (val == null) return '';
   return String(val);
 }
+function pickRouteQuery(...keys: string[]): string {
+  const query = route.query as Record<string, unknown>;
+  for (const key of keys) {
+    if (Object.prototype.hasOwnProperty.call(query, key) && query[key] != null) {
+      return resolveQueryValue(query[key]);
+    }
+  }
+  return '';
+}
+function datesEqual(a?: string[] | null, b?: string[] | null): boolean {
+  const arrA = Array.isArray(a) ? a : [];
+  const arrB = Array.isArray(b) ? b : [];
+  if (arrA.length !== arrB.length) return false;
+  for (let i = 0; i < arrA.length; i += 1) {
+    if (arrA[i] !== arrB[i]) return false;
+  }
+  return true;
+}
 
 function syncRouteToForm() {
-  const kw = resolveKw(route.query.kw).trim();
+  const kw = pickRouteQuery('kw').trim();
   if (q.name !== kw) q.name = kw;
+  const begin = pickRouteQuery('beginTime', 'params[beginTime]');
+  const end = pickRouteQuery('endTime', 'params[endTime]');
+  const routeDates = begin && end ? [begin, end] : [];
+  const prevDates = Array.isArray(q.dates) ? [...q.dates] : [];
+  if (!datesEqual(routeDates, prevDates)) {
+    q.dates = routeDates.length ? routeDates : [];
+  }
 }
 
 // 将 UI 查询条件转换为 API 参数
@@ -175,14 +200,20 @@ async function fetchList() {
     if (q.industryCode != null && q.industryCode !== '') qs.set('unitIndustry', String(q.industryCode));
     if (Array.isArray(q.dates) && q.dates.length === 2) {
       const [b, e] = q.dates;
-      if (b) qs.set('beginTime', String(b)); // 传 YYYY-MM-DD
-      if (e) qs.set('endTime', String(e));   // 传 YYYY-MM-DD
+      if (b) {
+        qs.set('beginTime', String(b)); // 传 YYYY-MM-DD
+        qs.set('params[beginTime]', String(b));
+      }
+      if (e) {
+        qs.set('endTime', String(e));   // 传 YYYY-MM-DD
+        qs.set('params[endTime]', String(e));
+      }
     }
     qs.set('pageNum', String(page.value));
     qs.set('pageSize', String(pageSize));
 
     // 清理无效参数，避免传 "undefined"/"null"/空串
-    ['orgDistrict', 'unitIndustry', 'beginTime', 'endTime'].forEach((k) => {
+    ['orgDistrict', 'unitIndustry', 'beginTime', 'endTime', 'params[beginTime]', 'params[endTime]'].forEach((k) => {
       const v = qs.get(k);
       if (v == null || v === '' || v === 'undefined' || v === 'null') qs.delete(k);
     });
@@ -322,11 +353,20 @@ onMounted(async () => {
 });
 
 watch(
-  () => route.query.kw,
+  () => [
+    route.query.kw,
+    route.query.beginTime,
+    route.query['params[beginTime]'],
+    route.query.endTime,
+    route.query['params[endTime]'],
+  ],
   () => {
-    const prev = q.name;
+    const prevName = q.name;
+    const prevDates = Array.isArray(q.dates) ? [...q.dates] : [];
     syncRouteToForm();
-    if (q.name === prev) return;
+    const nameChanged = q.name !== prevName;
+    const dateChanged = !datesEqual(q.dates, prevDates);
+    if (!nameChanged && !dateChanged) return;
     page.value = 1;
     if (dictReady.value) fetchList();
   }

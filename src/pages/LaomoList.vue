@@ -10,6 +10,17 @@
           <el-form-item label="主管单位：">
             <el-input v-model="q.dept" placeholder="请输入" clearable class="w180" />
           </el-form-item>
+          <el-form-item label="申报年份：">
+            <el-date-picker
+              v-model="q.cityTime"
+              type="year"
+              value-format="YYYY"
+              format="YYYY"
+              placeholder="请选择"
+              clearable
+              class="w140"
+            />
+          </el-form-item>
         </el-form>
         <div class="actions">
           <el-button type="primary" @click="onSearch">查询</el-button>
@@ -29,6 +40,7 @@
         :visible-rows="20"
         :row-height="40"
         :show-header="false"
+        @cell-click="onCellClick"
       />
       <div class="pager">
         <el-pagination
@@ -42,6 +54,14 @@
       </div>
     </section>
   </main>
+  <MemberDetailDialog
+    v-model="detailVisible"
+    :data="detailData"
+    :search-code="detailSearchCode"
+    :default-tab="detailDefaultTab"
+    title="会员详情"
+    :width="1080"
+  />
 </template>
 
 <script setup lang="ts">
@@ -49,29 +69,49 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import GridTable, { type ColumnDef } from '../components/GridTable.vue';
 import { apiGet, apiPostBlob } from '../utils/api';
-import { ElForm, ElFormItem, ElInput, ElButton, ElPagination } from 'element-plus';
+import { ElForm, ElFormItem, ElInput, ElButton, ElPagination, ElDatePicker } from 'element-plus';
 import 'element-plus/es/components/form/style/css';
 import 'element-plus/es/components/form-item/style/css';
 import 'element-plus/es/components/input/style/css';
 import 'element-plus/es/components/button/style/css';
 import 'element-plus/es/components/pagination/style/css';
+import 'element-plus/es/components/date-picker/style/css';
+import MemberDetailDialog, { type MemberDetail, type MemberDetailTab } from '../components/MemberDetailDialog.vue';
 
 const router = useRouter();
 function goBack() { router.back(); }
 
 // 查询条件
-const q = reactive<{ kw: string; dept: string }>({ kw: '', dept: '' });
+const q = reactive<{ kw: string; dept: string; cityTime: string }>({ kw: '', dept: '', cityTime: '' });
 
-// 列定义：序号、劳模姓名、主管单位、推荐单位
-const gridTemplate = '64px 1.6fr 1.8fr 1.6fr';
+// 列定义：序号、姓名、年龄、主管单位、成为劳模时间、是否历史
+const gridTemplate = '64px 1.6fr 0.8fr 1.8fr 1.4fr 1.2fr';
 const columns: ColumnDef[] = [
   { key: 'index', title: '序号', formatter: (v) => String(v).padStart(2, '0') },
-  { key: 'name', title: '劳模姓名', align: 'left', clickable: true },
-  { key: 'dept', title: '主管单位' },
-  { key: 'unit', title: '推荐单位', align: 'right' }
+  { key: 'name', title: '姓名', align: 'left', clickable: true },
+  { key: 'age', title: '年龄', align: 'center' },
+  { key: 'workUnit', title: '主管单位', align: 'left' },
+  { key: 'cityTime', title: '成为市劳模时间' },
+  { key: 'isHistoryLabel', title: '是否历史数据', align: 'center' }
 ];
 
-interface Row { index: number; id: string | number; name: string; dept: string; unit: string }
+interface Row {
+  index: number;
+  id: string | number;
+  name: string;
+  age: string;
+  workUnit: string;
+  cityTime: string;
+  isHistoryLabel: string;
+  gender?: string;
+  union?: string;
+  duty?: string;
+  phone?: string;
+  education?: string;
+  politics?: string;
+  searchCode?: string;
+  joinAt?: string;
+}
 const rows = ref<Row[]>([]);         // 当前页数据
 const total = ref<number>(0);        // 后端总数
 
@@ -80,7 +120,7 @@ onMounted(async () => {
 });
 
 function onSearch() { page.value = 1; loadPage(); }
-function onReset() { q.kw = ''; q.dept = ''; page.value = 1; loadPage(); }
+function onReset() { q.kw = ''; q.dept = ''; q.cityTime = ''; page.value = 1; loadPage(); }
 
 // 分页
 const pageSize = 30;
@@ -112,8 +152,15 @@ async function exportCsv() {
     return;
   } catch (err) {
     // 回退：导出当前页 CSV
-    const header = ['序号', '劳模姓名', '主管单位', '推荐单位'];
-    const lines = rows.value.map(r => [r.index, r.name, r.dept, r.unit]);
+    const header = ['序号', '姓名', '年龄', '主管单位', '成为市劳模时间', '是否历史数据'];
+    const lines = rows.value.map(r => [
+      String(r.index).padStart(2, '0'),
+      r.name,
+      r.age,
+      r.workUnit,
+      r.cityTime,
+      r.isHistoryLabel
+    ]);
     const csv = [header, ...lines].map(row => row.map(toCsvCell).join(',')).join('\n');
     const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -135,18 +182,67 @@ async function loadPage() {
   params.set('pageSize', String(pageSize));
   if (q.kw) params.set('name', q.kw);
   if (q.dept) params.set('dept', q.dept);
+  if (q.cityTime) params.set('cityTime', q.cityTime);
   const url = `/modelWorker/list?${params.toString()}`;
   const res = await apiGet<any>(url).catch(() => null);
   const list: any[] = Array.isArray(res?.rows) ? res.rows : Array.isArray(res?.data?.rows) ? res.data.rows : [];
   total.value = Number(res?.total ?? res?.data?.total ?? list.length);
-  const mapped: Row[] = list.map((r: any, i: number) => ({
-    index: (page.value - 1) * pageSize + i + 1,
-    id: r?.id ?? i,
-    name: String(r?.name ?? r?.fullname ?? `劳模${i+1}`),
-    dept: String(r?.streetUnion ?? r?.workUnit ?? r?.union ?? ''),
-    unit: String(r?.tjdw ?? r?.union ?? r?.streetUnion ?? '')
-  }));
+  const mapped: Row[] = list.map((r: any, i: number) => {
+    const rawHistory = r?.isHistory ?? r?.ishistory;
+    const isHistoryLabel = rawHistory === '1' || rawHistory === 1 ? '是' : '否';
+    const cityTime = r?.cityTime ?? r?.approveTime ?? r?.approvalTime ?? r?.approveTimeStr;
+    const phone = r?.phone ?? r?.mobile ?? r?.linkPhone ?? '';
+    const education = r?.education ?? r?.educationName ?? '';
+    const duty = r?.post ?? r?.job ?? r?.position ?? '';
+    const politics = r?.politicsStatus ?? r?.politics ?? '';
+    const joinAt = r?.joinAt ?? r?.joinDate ?? r?.joinTime ?? '';
+    const unionName = r?.union ?? r?.streetUnion ?? r?.recommend ?? r?.unionName ?? '';
+    const gender = r?.gender ?? r?.sex;
+    return {
+      index: (page.value - 1) * pageSize + i + 1,
+      id: r?.id ?? i,
+      name: String(r?.name ?? r?.fullname ?? `劳模${i + 1}`),
+      age: r?.age != null ? String(r.age) : '',
+      workUnit: String(r?.workUnit ?? r?.streetUnion ?? r?.union ?? ''),
+      cityTime: cityTime != null ? String(cityTime) : '',
+      isHistoryLabel,
+      gender: gender != null ? String(gender) : undefined,
+      union: unionName ? String(unionName) : '',
+      duty: duty ? String(duty) : '',
+      phone: phone ? String(phone) : '',
+      education: education ? String(education) : '',
+      politics: politics ? String(politics) : '',
+      searchCode: r?.idNumberBright ?? r?.certificateNo ?? r?.certificateNum ?? r?.idCard,
+      joinAt: joinAt ? String(joinAt) : ''
+    };
+  });
   rows.value = mapped;
+}
+
+// 详情弹框状态
+const detailVisible = ref(false);
+const detailData = ref<MemberDetail>({});
+const detailSearchCode = ref<string | undefined>();
+const detailDefaultTab = ref<MemberDetailTab>('laomo');
+
+function onCellClick(payload: { row: Row; column: ColumnDef }) {
+  if (payload.column.key !== 'name') return;
+  const r = payload.row;
+  detailData.value = {
+    name: r.name,
+    union: r.union || r.workUnit,
+    joinAt: r.joinAt,
+    gender: r.gender,
+    age: r.age,
+    company: r.workUnit,
+    phone: r.phone,
+    education: r.education,
+    politics: r.politics,
+    duty: r.duty
+  };
+  detailSearchCode.value = r.searchCode ? String(r.searchCode) : undefined;
+  detailDefaultTab.value = 'laomo';
+  detailVisible.value = true;
 }
 </script>
 
@@ -159,6 +255,8 @@ async function loadPage() {
 .flt :deep(.el-form-item__label) { color: #2a6ff0; font-weight: 700; }
 .actions { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: inline-flex; gap: 8px; }
 .w180 { width: 180px; }
+.w120 { width: 120px; }
+.w140 { width: 140px; }
 
 .table-wrap { position: relative; border-radius: 10px; background: rgba(235,241,247,.74); box-shadow: inset 0 0 40px rgba(120,170,255,.08); padding: 12px; display: grid; grid-template-rows: 1fr auto; }
 .pager { display: flex; align-items: center; justify-content: flex-end; color: #2a6ff0; padding-top: 8px; }

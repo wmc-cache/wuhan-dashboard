@@ -308,9 +308,15 @@ function buildOption(): echarts.EChartsOption {
         selectedMode: 'single',
         data: seriesData,
         itemStyle: { areaColor: areaNormal, borderColor, borderWidth: 1 },
-        emphasis: { itemStyle: { areaColor: areaNormal2, borderColor: '#4E88FF' } },
-        select: { itemStyle: { areaColor: selectedColor, borderColor: '#0C5CE9', borderWidth: 1.2 } },
-        label: { show: false }
+        emphasis: {
+          itemStyle: { areaColor: areaNormal2, borderColor: '#4E88FF' },
+          label: { color: '#ffffff' }
+        },
+        select: {
+          itemStyle: { areaColor: selectedColor, borderColor: '#0C5CE9', borderWidth: 1.2 },
+          label: { color: '#ffffff' }
+        },
+        label: undefined
       },
       // 装饰虚线
       props.showNetwork ? {
@@ -319,38 +325,57 @@ function buildOption(): echarts.EChartsOption {
         lineStyle: { color: 'rgba(80,150,255,0.35)', width: 1, type: 'dashed' },
         data: linePairs
       } as any : undefined
-    ].filter(Boolean) as any
+    ].filter(Boolean) as any,
+    graphic: []
   } as echarts.EChartsOption;
 }
 
 function drawLabels() {
   if (!chart.value) return;
-  if (!props.showLabels) {
-    chart.value.setOption({ graphic: [] } as any, { replaceMerge: ['graphic'] });
-    return;
-  }
   const graphics: echarts.GraphicComponentOption[] = [];
   const geoCoordSys = { geoIndex: 0 } as any;
+  const showDecor = props.showLabels !== false;
   const makeLabel = (name: string) => {
     const center = featureCenters[name];
     if (!center) return;
     const [x, y] = chart.value!.convertToPixel(geoCoordSys, center) as number[];
-    const w = props.labelWidth || 72, h = props.labelHeight || 26;
+    const w = props.labelWidth || 72;
+    const h = props.labelHeight || (showDecor ? 26 : 20);
     const isActive = name === active.value;
     const off = props.labelOffsetByName?.[name] || [0, 0];
-    graphics.push({
-      type: 'group', x: x - w / 2 + off[0], y: y - h - 18 + off[1], z: 5,
-      children: [
+    const children: echarts.GraphicComponentOption[] = [];
+    if (showDecor) {
+      children.push(
         { type: 'rect', shape: { x: 0, y: 0, width: w, height: h, r: 6 }, style: { fill: isActive ? 'rgba(22,114,255,0.12)' : 'rgba(255,255,255,0.15)', stroke: '#5A9EFF', lineWidth: 1, lineDash: [5, 5] } },
-        { type: 'text', style: { text: name, x: w / 2, y: h / 2 + 1, fill: '#2a6ff0', fontSize: 12, fontWeight: 800, align: 'center', verticalAlign: 'middle' } },
         { type: 'polygon', shape: { points: [[w / 2 - 6, h], [w / 2 + 6, h], [w / 2, h + 8]] }, style: { fill: '#5A9EFF' } },
         { type: 'rect', shape: { x: w / 2 - 3, y: h + 8, width: 6, height: 10 }, style: { fill: isActive ? '#5A9EFF' : 'rgba(90,158,255,0.8)' } }
-      ],
+      );
+    }
+    children.push({
+      type: 'text',
+      style: {
+        text: name,
+        x: w / 2,
+        y: showDecor ? h / 2 + 1 : h / 2,
+        fill: isActive ? '#0C5CE9' : '#1f5eff',
+        fontSize: 13,
+        fontWeight: 800,
+        align: 'center',
+        verticalAlign: 'middle'
+      }
+    });
+    graphics.push({
+      type: 'group',
+      x: x - w / 2 + off[0],
+      y: y - (showDecor ? h + 18 : h / 2) + off[1],
+      z: 5,
+      silent: false,
       onclick: () => {
         stopAutoLoop();
         selectDistrict(name);
         scheduleAutoResume(2000);
-      }
+      },
+      children
     });
   };
   featureNames.forEach(makeLabel);

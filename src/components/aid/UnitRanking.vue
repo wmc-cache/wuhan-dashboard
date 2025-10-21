@@ -46,7 +46,7 @@ const cols: ColumnDef[] = [
 // 响应式接入
 const { rows } = toRefs(props);
 
-const visibleCount = 6;
+const visibleCount = 7;
 const list = computed(() => rows.value ?? []);
 const needsScroll = computed(() => list.value.length > 1);
 const scrollIndex = ref(0);

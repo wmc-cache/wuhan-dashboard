@@ -13,7 +13,7 @@
         @click="emit('row-click', { item: it, index: it.__index })"
       >
         <span class="medal" :class="medalClass(it.__index)" aria-hidden="true">
-          <span v-if="showMedalNumber(it.__index)" class="medal__text">{{ it.__index + 1 }}</span>
+          <span v-if="showMedalNumber(it.__index)" class="medal__text">NO.{{ it.__index + 1 }}</span>
         </span>
         <span class="name" :title="it.name">{{ it.name }}</span>
         <span class="val">{{ money(it.value) }}</span>
@@ -89,16 +89,25 @@ function reset() {
   start();
 }
 
+const medalMap: Record<number, string> = {
+  0: 'medal--1',
+  1: 'medal--2',
+  2: 'medal--3',
+  3: 'medal--4',
+  4: 'medal--5',
+  5: 'medal--6',
+  6: 'medal--7',
+  7: 'medal--8',
+  8: 'medal--9',
+  9: 'medal--10'
+};
+
 function medalClass(rank: number) {
-  if (rank === 0) return 'medal--1';
-  if (rank === 1) return 'medal--2';
-  if (rank === 2) return 'medal--3';
-  if (rank === 3) return 'medal--4';
-  return 'medal--num';
+  return medalMap[rank] || 'medal--num';
 }
 
 function showMedalNumber(rank: number) {
-  return rank >= 4;
+  return medalClass(rank) === 'medal--num';
 }
 
 onMounted(() => start());
@@ -123,20 +132,35 @@ watch([list, visibleCount], () => reset(), { deep: true });
 }
 .row { position: relative; display: grid; grid-template-columns: 44px 1fr auto; align-items: center; column-gap: 16px; min-height: 52px; padding-bottom: 10px; cursor: pointer; }
 
-.medal { width: 32px; height: 38px; background-repeat: no-repeat; background-size: 100% 100%; }
+.medal {
+  width: 32px;
+  height: 38px;
+  display: inline-grid;
+  place-items: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
 .medal--1 { background-image: -webkit-image-set(url('../../images/refund/rank-type1/1/位图.png') 1x, url('../../images/refund/rank-type1/1/位图@2x.png') 2x); background-image: image-set(url('../../images/refund/rank-type1/1/位图.png') 1x, url('../../images/refund/rank-type1/1/位图@2x.png') 2x); }
 .medal--2 { background-image: -webkit-image-set(url('../../images/refund/rank-type1/2/位图.png') 1x, url('../../images/refund/rank-type1/2/位图@2x.png') 2x); background-image: image-set(url('../../images/refund/rank-type1/2/位图.png') 1x, url('../../images/refund/rank-type1/2/位图@2x.png') 2x); }
 .medal--3 { background-image: -webkit-image-set(url('../../images/refund/rank-type1/3/位图.png') 1x, url('../../images/refund/rank-type1/3/位图@2x.png') 2x); background-image: image-set(url('../../images/refund/rank-type1/3/位图.png') 1x, url('../../images/refund/rank-type1/3/位图@2x.png') 2x); }
 .medal--4 { background-image: -webkit-image-set(url('../../images/refund/rank-type1/4/编组 13.png') 1x, url('../../images/refund/rank-type1/4/编组 13@2x.png') 2x); background-image: image-set(url('../../images/refund/rank-type1/4/编组 13.png') 1x, url('../../images/refund/rank-type1/4/编组 13@2x.png') 2x); }
+.medal--5 { background-image: -webkit-image-set(url('../../images/refund/rank-type1/5/编组 13备份.png') 1x, url('../../images/refund/rank-type1/5/编组 13备份@2x.png') 2x); background-image: image-set(url('../../images/refund/rank-type1/5/编组 13备份.png') 1x, url('../../images/refund/rank-type1/5/编组 13备份@2x.png') 2x); }
+.medal--6 { background-image: -webkit-image-set(url('../../images/refund/rank-type1/6/编组 13备份 2.png') 1x, url('../../images/refund/rank-type1/6/编组 13备份 2@2x.png') 2x); background-image: image-set(url('../../images/refund/rank-type1/6/编组 13备份 2.png') 1x, url('../../images/refund/rank-type1/6/编组 13备份 2@2x.png') 2x); }
+.medal--7 { background-image: -webkit-image-set(url('../../images/refund/rank-type1/7/编组 13备份 3.png') 1x, url('../../images/refund/rank-type1/7/编组 13备份 3@2x.png') 2x); background-image: image-set(url('../../images/refund/rank-type1/7/编组 13备份 3.png') 1x, url('../../images/refund/rank-type1/7/编组 13备份 3@2x.png') 2x); }
+.medal--8 { background-image: -webkit-image-set(url('../../images/refund/rank-type1/8/编组 13备份 4.png') 1x, url('../../images/refund/rank-type1/8/编组 13备份 4@2x.png') 2x); background-image: image-set(url('../../images/refund/rank-type1/8/编组 13备份 4.png') 1x, url('../../images/refund/rank-type1/8/编组 13备份 4@2x.png') 2x); }
+.medal--9 { background-image: -webkit-image-set(url('../../images/refund/rank-type1/9/编组 13备份 5.png') 1x, url('../../images/refund/rank-type1/9/编组 13备份 5@2x.png') 2x); background-image: image-set(url('../../images/refund/rank-type1/9/编组 13备份 5.png') 1x, url('../../images/refund/rank-type1/9/编组 13备份 5@2x.png') 2x); }
+.medal--10 { background-image: -webkit-image-set(url('../../images/refund/rank-type1/10/编组 13备份 6.png') 1x, url('../../images/refund/rank-type1/10/编组 13备份 6@2x.png') 2x); background-image: image-set(url('../../images/refund/rank-type1/10/编组 13备份 6.png') 1x, url('../../images/refund/rank-type1/10/编组 13备份 6@2x.png') 2x); }
 .medal--num {
   background: rgba(106, 161, 251, 0.2);
   border: 1px solid #6da1fb;
   border-radius: 8px;
-  display: grid;
-  place-items: center;
   color: #2a6ff0;
   font-weight: 800;
   font-size: 14px;
+  padding: 0 8px;
+  min-width: 32px;
+  height: 38px;
+  align-items: center;
 }
 
 .medal__text {

@@ -5,7 +5,7 @@
         <!-- 顶部左侧双 KPI 卡（工会总数/今年新增） -->
         <template v-if="!unionLoading">
           <KpiPair :items="leftKpis" left-bg="top-1" right-bg="top-2" left-clickable right-clickable
-            @left-click="goToUnionList" @right-click="goToUnionList" />
+            @left-click="() => goToUnionList()" @right-click="() => goToUnionList(getCurrentYearRange())" />
         </template>
         <div v-else class="loading-mask"></div>
       </div>
@@ -158,8 +158,20 @@ function goToHome(payload?: { keyword: string; category: string }) {
   }
   router.push({ path: '/home', query: { kw, cat } }).catch(() => void 0);
 }
-function goToUnionList() {
-  router.push({ name: 'grid-table' }).catch(() => void 0);
+type UnionDateRange = { beginTime?: string; endTime?: string };
+function goToUnionList(options?: UnionDateRange) {
+  const query: Record<string, string> = {};
+  if (options?.beginTime) query['params[beginTime]'] = options.beginTime;
+  if (options?.endTime) query['params[endTime]'] = options.endTime;
+  router.push({ name: 'grid-table', query }).catch(() => void 0);
+}
+function getCurrentYearRange(): UnionDateRange {
+  const now = new Date();
+  const year = now.getFullYear();
+  return {
+    beginTime: `${year}-01-01`,
+    endTime: `${year}-12-31`,
+  };
 }
 async function goToMemberList(options?: { sex?: GenderKey }) {
   await ensureGenderDict();
