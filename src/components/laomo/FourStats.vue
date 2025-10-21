@@ -1,7 +1,9 @@
 <template>
   <div class="four-stats">
     <div v-for="(item, i) in rows" :key="i" class="stat">
-      <div class="value" :style="{ color: item.color }">{{ formatNumber(item.value) }}</div>
+      <div class="value" :style="{ color: item.color }">
+        <CountUpNumber :value="item.value" :duration="1500" />
+      </div>
       <div class="label">{{ item.label }}</div>
       <img class="icon" :src="item.img1x" :srcset="item.img2x + ' 2x'" :alt="item.label" draggable="false" />
     </div>
@@ -10,6 +12,7 @@
 
 <script setup lang="ts">
 import { withDefaults, defineProps, computed } from 'vue';
+import CountUpNumber from '../CountUpNumber.vue';
 
 import icon1_1x from '../../images/laomo/title1/编组 7.png';
 import icon1_2x from '../../images/laomo/title1/编组 7@2x.png';

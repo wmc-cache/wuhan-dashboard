@@ -10,7 +10,13 @@
       @keyup.space.prevent="onLeftClick"
     >
       <div class="num" :class="leftGradient">
-        {{ fmt(items[0]?.value) }}<span v-if="items[0]?.unit" class="unit">{{ items[0]?.unit }}</span>
+        <CountUpNumber
+          :value="items[0]?.value"
+          :unit="items[0]?.unit"
+          unit-class="unit"
+          :duration="1500"
+          :decimal-places="getDecimalPlaces(items[0]?.value)"
+        />
       </div>
       <div class="label" style="margin-left: 5px;">{{ items[0]?.title }}</div>
     </div>
@@ -24,7 +30,13 @@
       @keyup.space.prevent="onRightClick"
     >
       <div class="num" :class="rightGradient">
-        {{ fmt(items[1]?.value) }}<span v-if="items[1]?.unit" class="unit">{{ items[1]?.unit }}</span>
+        <CountUpNumber
+          :value="items[1]?.value"
+          :unit="items[1]?.unit"
+          unit-class="unit"
+          :duration="1500"
+          :decimal-places="getDecimalPlaces(items[1]?.value)"
+        />
       </div>
       <div class="label">{{ items[1]?.title }}</div>
     </div>
@@ -33,6 +45,7 @@
 
 <script setup lang="ts">
 import { computed, withDefaults } from 'vue';
+import CountUpNumber from '../CountUpNumber.vue';
 // 首页顶部双 KPI 卡片（与 Member/TopSearchKpis 的卡面视觉一致，不含搜索）
 interface KItem { title: string; value: number | string; unit?: string }
 type BgKey = 'member-1' | 'member-2' | 'top-1' | 'top-2' | 'top-3' | 'top-4'
@@ -78,6 +91,20 @@ function onLeftClick() {
 function onRightClick() {
   if (!props.rightClickable) return;
   emit('right-click');
+}
+
+// 自动检测数值的小数位数
+function getDecimalPlaces(value?: number | string): number {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return 0;
+
+  // 检查是否有小数部分
+  const str = String(num);
+  const decimalIndex = str.indexOf('.');
+  if (decimalIndex === -1) return 0;
+
+  // 返回小数位数
+  return str.length - decimalIndex - 1;
 }
 </script>
 

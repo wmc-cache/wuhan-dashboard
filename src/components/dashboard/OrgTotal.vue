@@ -13,7 +13,12 @@
       <div class="cone">
         <i class="cone__img" aria-hidden="true"></i>
         <div class="cone__num">
-          {{ formatNumber(total) }} <span class="cone__unit">人</span>
+          <CountUpNumber
+            :value="total"
+            unit="人"
+            unit-class="cone__unit"
+            :duration="1500"
+          />
         </div>
 
       </div>
@@ -35,7 +40,13 @@
         <i class="list-item__bg" aria-hidden="true"></i>
         <span class="dot dot--blue" aria-hidden="true"></span>
         <span class="label">深度困难</span>
-        <span class="value value--blue">{{ deep }}人</span>
+        <span class="value value--blue">
+          <CountUpNumber
+            :value="deep"
+            unit="人"
+            :duration="1500"
+          />
+        </span>
       </li>
       <li
         class="list-item list-item--green"
@@ -49,7 +60,13 @@
         <i class="list-item__bg" aria-hidden="true"></i>
         <span class="dot dot--green" aria-hidden="true"></span>
         <span class="label">相对困难</span>
-        <span class="value value--green">{{ relative }}人</span>
+        <span class="value value--green">
+          <CountUpNumber
+            :value="relative"
+            unit="人"
+            :duration="1500"
+          />
+        </span>
       </li>
       <li
         class="list-item list-item--orange"
@@ -63,13 +80,22 @@
         <i class="list-item__bg" aria-hidden="true"></i>
         <span class="dot dot--orange" aria-hidden="true"></span>
         <span class="label">意外致困</span>
-        <span class="value value--orange">{{ accident }}人</span>
+        <span class="value value--orange">
+          <CountUpNumber
+            :value="accident"
+            unit="人"
+            :duration="1500"
+          />
+        </span>
       </li>
     </ul>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+import CountUpNumber from '../CountUpNumber.vue';
+
 interface Props {
   total?: number; // 帮扶职工总数
   deep?: number; // 深度困难人数
@@ -88,7 +114,6 @@ const emit = defineEmits<{
 }>();
 
 // 保持对父组件数据更新的响应（避免解构 props 造成的失去响应性）
-import { computed } from 'vue';
 const total = computed(() => props.total);
 const deep = computed(() => props.deep);
 const relative = computed(() => props.relative);

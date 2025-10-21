@@ -45,7 +45,8 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { getDict, type DictItem as DItem } from '../utils/dict';
+import { type DictItem as DItem } from '../utils/dict';
+import { apiGet, apiPostBlob } from '../utils/api';
 import GridTable, { ColumnDef } from '../components/GridTable.vue';
 import { ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElButton, ElPagination } from 'element-plus';
 import 'element-plus/es/components/form/style/css';
@@ -115,8 +116,8 @@ loadDicts();
 async function loadDicts(){
   const fetchOne = async (type: string): Promise<DItem[]> => {
     try {
-      const resp:any = await fetch(`/api/difficultAssistance/getDict?type=${encodeURIComponent(type)}`).then(r=>r.json()).catch(()=>null);
-      const arr = resp?.data || resp || [];
+      const resp: any = await apiGet<any>(`/difficultAssistance/getDict?type=${encodeURIComponent(type)}`).catch(() => null);
+      const arr = Array.isArray(resp) ? resp : Array.isArray(resp?.data) ? resp.data : [];
       return (Array.isArray(arr)?arr:[]).map((it:any)=>({
         label: String(it?.label ?? it?.name ?? it?.dictName ?? it ?? ''),
         value: it?.value ?? it?.dictValue ?? it?.code ?? it?.key ?? (it?.label ?? it?.name ?? it)
@@ -137,9 +138,20 @@ async function fetchList(){
     if(q.familyType.length) qs.set('familyType', q.familyType.join(','));
     qs.set('pageNum', String(page.value));
     qs.set('pageSize', String(pageSize));
-    const resp:any = await fetch(`/api/difficultAssistance/list?${qs.toString()}`).then(r=>r.json()).catch(()=>null);
-    const totalVal = Number(resp?.total || 0) || 0;
-    const rows = Array.isArray(resp?.rows) ? resp.rows : [];
+    const resp: any = await apiGet<any>(`/difficultAssistance/list?${qs.toString()}`).catch(() => null);
+    const toObject = (val: unknown) => (val && typeof val === 'object' && !Array.isArray(val)) ? (val as Record<string, any>) : null;
+    const root = toObject(resp) ?? {};
+    const nested = toObject(root.data) ?? {};
+    const totalVal = Number(root.total ?? nested.total ?? root.count ?? nested.count ?? 0) || 0;
+    const rows = Array.isArray(root.rows)
+      ? root.rows
+      : Array.isArray(nested.rows)
+        ? nested.rows
+        : Array.isArray(root.data)
+          ? root.data
+          : Array.isArray(resp)
+            ? resp
+            : [];
     total.value = totalVal;
     allRows.value = rows.map((r:any, i:number)=>({
       index: (page.value-1)*pageSize + i + 1,
@@ -169,11 +181,7 @@ async function onExport(){
     };
     // 清理 undefined
     Object.keys(body).forEach(k=>{ if(body[k]==null || body[k]==='') delete body[k]; });
-    const res = await fetch('/api/difficultAssistance/export', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
+    const res = await apiPostBlob('/difficultAssistance/export', body);
     if(!res.ok) throw new Error('导出失败');
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);

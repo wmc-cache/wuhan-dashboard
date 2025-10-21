@@ -10,7 +10,9 @@
       <div class="item female">
         <img class="icon" :src="female1x" :srcset="female2x + ' 2x'" alt="女性" draggable="false" />
         <div class="texts">
-          <div class="value" :style="{ color: femaleColor }">{{ pretty(femaleCount) }}</div>
+          <div class="value" :style="{ color: femaleColor }">
+            <CountUpNumber :value="femaleCount" :duration="1500" />
+          </div>
           <div class="label" :style="{ color: femaleColor }">女性</div>
         </div>
       </div>
@@ -19,7 +21,9 @@
       <div class="item male">
         <img class="icon" :src="male1x" :srcset="male2x + ' 2x'" alt="男性" draggable="false" />
         <div class="texts">
-          <div class="value" :style="{ color: maleColor }">{{ pretty(maleCount) }}</div>
+          <div class="value" :style="{ color: maleColor }">
+            <CountUpNumber :value="maleCount" :duration="1500" />
+          </div>
           <div class="label" :style="{ color: maleColor }">男性</div>
         </div>
       </div>
@@ -28,6 +32,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+import CountUpNumber from '../CountUpNumber.vue';
 import title1x from '../../images/yiliao/part2/title/编组 21.png';
 import title2x from '../../images/yiliao/part2/title/编组 21@2x.png';
 import male1x from '../../images/yiliao/part2/icon1/编组 17.png';
@@ -37,17 +43,12 @@ import female2x from '../../images/yiliao/part2/icon2/编组 18@2x.png';
 
 interface Props { maleCount?: number; femaleCount?: number }
 const props = withDefaults(defineProps<Props>(), { maleCount: 343889, femaleCount: 343889 });
-import { computed } from 'vue';
 const maleCount = computed(() => Number(props.maleCount || 0));
 const femaleCount = computed(() => Number(props.femaleCount || 0));
 
 const maleColor = '#2a6ff0';
 const femaleColor = '#FFA36B';
 
-function pretty(n?: number) {
-  if (typeof n !== 'number') return '-';
-  return n.toLocaleString('zh-CN');
-}
 </script>
 
 <style scoped lang="scss">

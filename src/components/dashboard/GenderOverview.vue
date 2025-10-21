@@ -6,36 +6,29 @@
 
     <!-- 覆盖在图片上的数字与文字（左右各一组） -->
     <div class="overlay">
-      <div
-        class="stat stat--male"
-        role="button"
-        tabindex="0"
-        aria-label="查看男性会员列表"
-        @click="onClick('male')"
-        @keyup.enter.prevent="onClick('male')"
-        @keyup.space.prevent="onClick('male')"
-      >
-        <div class="num">{{ pretty(maleCount) }}<span class="unit">人</span></div>
-        <div class="label"><span  />男性会员</div>
+      <div class="stat stat--male" role="button" tabindex="0" aria-label="查看男性会员列表" @click="onClick('male')"
+        @keyup.enter.prevent="onClick('male')" @keyup.space.prevent="onClick('male')">
+        <div class="num">
+          <CountUpNumber :value="maleCount" :duration="1500" />
+        </div>
+        <div class="label"><span />男性会员(人)</div>
       </div>
 
-      <div
-        class="stat stat--female"
-        role="button"
-        tabindex="0"
-        aria-label="查看女性会员列表"
-        @click="onClick('female')"
-        @keyup.enter.prevent="onClick('female')"
-        @keyup.space.prevent="onClick('female')"
-      >
-        <div class="num">{{ pretty(femaleCount) }}<span class="unit">人</span></div>
-        <div class="label"><span  />女性会员</div>
+      <div class="stat stat--female" role="button" tabindex="0" aria-label="查看女性会员列表" @click="onClick('female')"
+        @keyup.enter.prevent="onClick('female')" @keyup.space.prevent="onClick('female')">
+        <div class="num">
+          <CountUpNumber :value="femaleCount" :duration="1500" />
+        </div>
+        <div class="label"><span />女性会员(人)</div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+import CountUpNumber from '../CountUpNumber.vue';
+
 interface Props {
   maleCount?: number;
   femaleCount?: number;
@@ -46,7 +39,6 @@ const props = withDefaults(defineProps<Props>(), {
   femaleCount: 5132,
 });
 // NOTE: 使用 computed 包装 props，保持对父组件更新的响应
-import { computed } from 'vue';
 const emit = defineEmits<{ (e: 'gender-click', payload: 'male' | 'female'): void }>();
 
 const maleCount = computed(() => props.maleCount);

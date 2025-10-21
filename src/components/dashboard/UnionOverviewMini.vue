@@ -5,7 +5,9 @@
       <i class="k__bg" aria-hidden="true" />
       <i class="k__icon" aria-hidden="true" />
       <div class="k__label">{{ k.label }}</div>
-      <div class="k__num">{{ fmt(k.value) }}<span class="k__unit">个</span></div>
+      <div class="k__num">
+        <CountUpNumber :value="k.value" unit="个" unit-class="k__unit" :duration="1500" />
+      </div>
     </div>
   </div>
 
@@ -15,6 +17,9 @@
 // 工会概览模块（参考图还原）
 // 使用切图：src/images/dashboard/part1/{1..6}
 // 1/2/3 为三张矩形底图；4/5/6 为三枚圆形图标
+import { computed } from 'vue';
+import CountUpNumber from '../CountUpNumber.vue';
+
 interface K { label: string; value: number }
 interface Props { items?: K[] }
 const props = withDefaults(defineProps<Props>(), {
@@ -25,9 +30,7 @@ const props = withDefaults(defineProps<Props>(), {
   ]),
 });
 // 注意：不要直接解构/赋值 props，否则会失去响应性
-import { computed } from 'vue';
 const items = computed(() => props.items);
-function fmt(n?: number) { return (n ?? 0).toLocaleString('zh-CN'); }
 </script>
 
 <style scoped lang="scss">

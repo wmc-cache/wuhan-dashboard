@@ -21,7 +21,9 @@
         <div class="label">{{ leftMetrics[0].label }}</div>
         <div class="badge-img badge-img--left">
           <img class="badge-bg" :src="leftBg1x" :srcset="leftBg2x + ' 2x'" alt="" aria-hidden="true" />
-          <span class="num">{{ pretty(leftMetrics[0].value) }}</span>
+          <span class="num">
+            <CountUpNumber :value="leftMetrics[0].value" :duration="1500" />
+          </span>
         </div>
 
       </div>
@@ -29,7 +31,9 @@
         <div class="label">{{ leftMetrics[1].label }}</div>
         <div class="badge-img badge-img--left">
           <img class="badge-bg" :src="leftBg1x" :srcset="leftBg2x + ' 2x'" alt="" aria-hidden="true" />
-          <span class="num">{{ pretty(leftMetrics[1].value) }}</span>
+          <span class="num">
+            <CountUpNumber :value="leftMetrics[1].value" :duration="1500" />
+          </span>
         </div>
 
       </div>
@@ -37,7 +41,9 @@
         <div class="label">{{ leftMetrics[2].label }}</div>
         <div class="badge-img badge-img--left">
           <img class="badge-bg" :src="leftBg1x" :srcset="leftBg2x + ' 2x'" alt="" aria-hidden="true" />
-          <span class="num">{{ pretty(leftMetrics[2].value) }}</span>
+          <span class="num">
+            <CountUpNumber :value="leftMetrics[2].value" :duration="1500" />
+          </span>
         </div>
 
       </div>
@@ -47,7 +53,9 @@
         <div class="label">{{ rightMetrics[0].label }}</div>
         <div class="badge-img badge-img--right">
           <img class="badge-bg" :src="rightBg1x" :srcset="rightBg2x + ' 2x'" alt="" aria-hidden="true" />
-          <span class="num">{{ pretty(rightMetrics[0].value) }}</span>
+          <span class="num">
+            <CountUpNumber :value="rightMetrics[0].value" :duration="1500" />
+          </span>
         </div>
 
       </div>
@@ -55,7 +63,9 @@
         <div class="label">{{ rightMetrics[1].label }}</div>
         <div class="badge-img badge-img--right">
           <img class="badge-bg" :src="rightBg1x" :srcset="rightBg2x + ' 2x'" alt="" aria-hidden="true" />
-          <span class="num">{{ pretty(rightMetrics[1].value) }}</span>
+          <span class="num">
+            <CountUpNumber :value="rightMetrics[1].value" :duration="1500" />
+          </span>
         </div>
 
       </div>
@@ -63,7 +73,9 @@
         <div class="label">{{ rightMetrics[2].label }}</div>
         <div class="badge-img badge-img--right">
           <img class="badge-bg" :src="rightBg1x" :srcset="rightBg2x + ' 2x'" alt="" aria-hidden="true" />
-          <span class="num">{{ pretty(rightMetrics[2].value) }}</span>
+          <span class="num">
+            <CountUpNumber :value="rightMetrics[2].value" :duration="1500" />
+          </span>
         </div>
 
       </div>
@@ -73,6 +85,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
+import CountUpNumber from '../CountUpNumber.vue';
 import NiceSelect from '../NiceSelect.vue';
 import title1x from '../../images/yiliao/part8/title/编组 21.png';
 import title2x from '../../images/yiliao/part8/title/编组 21@2x.png';

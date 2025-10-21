@@ -2,7 +2,9 @@
   <div class="member-total">
     <!-- 左：总量 + 台阶立体图标 + 文案 -->
     <div class="left">
-      <div class="num">{{ formatNumber(total) }}</div>
+      <div class="num">
+        <CountUpNumber :value="total" :duration="1500" />
+      </div>
       <i class="stage" aria-hidden="true"></i>
       <div class="label">工会会员总数（人）</div>
     </div>
@@ -13,13 +15,29 @@
         <i class="item__bg" aria-hidden="true"></i>
         <img class="item__icon" :src="femaleIcon1x" :srcset="femaleIcon2x + ' 2x'" alt="女性会员" draggable="false" />
         <span class="item__label">女性会员</span>
-        <span class="item__value item__value--female"><span class="item__num">{{ female }}</span><small class="unit">人</small></span>
+        <span class="item__value item__value--female">
+          <CountUpNumber
+            :value="female"
+            unit="人"
+            number-class="item__num"
+            unit-class="unit"
+            :duration="1500"
+          />
+        </span>
       </li>
       <li class="item item--male">
         <i class="item__bg" aria-hidden="true"></i>
         <img class="item__icon" :src="maleIcon1x" :srcset="maleIcon2x + ' 2x'" alt="男性会员" draggable="false" />
         <span class="item__label">男性会员</span>
-        <span class="item__value item__value--male"><span class="item__num">{{ male }}</span><small class="unit">人</small></span>
+        <span class="item__value item__value--male">
+          <CountUpNumber
+            :value="male"
+            unit="人"
+            number-class="item__num"
+            unit-class="unit"
+            :duration="1500"
+          />
+        </span>
       </li>
     </ul>
   </div>
@@ -31,6 +49,7 @@
 // - 右侧为男女两项卡片，带背景与对应小图标
 
 import { computed } from 'vue';
+import CountUpNumber from '../CountUpNumber.vue';
 
 // 小图标（男女）
 import femaleIcon1x from '../../images/dashboard/icon2/位图.png';

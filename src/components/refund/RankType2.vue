@@ -154,7 +154,7 @@ watch([needsScroll, itemsList], () => {
 });
 
 function hasMedalImage(index: number) {
-  return index >= 0 && index < 5;
+  return index >= 0 && index < 10;
 }
 
 function medalClass(index: number) {
@@ -255,6 +255,27 @@ function medalClass(index: number) {
 .medal--img-5 {
   background-image: -webkit-image-set(url('../../images/refund/rank-type2/5/编组 19.png') 1x, url('../../images/refund/rank-type2/5/编组 19@2x.png') 2x);
   background-image: image-set(url('../../images/refund/rank-type2/5/编组 19.png') 1x, url('../../images/refund/rank-type2/5/编组 19@2x.png') 2x);
+}
+
+.medal--img-6 {
+  background-image: -webkit-image-set(url('../../images/refund/rank-type2/6/编组\ 19备份.png') 1x, url('../../images/refund/rank-type2/6/编组\ 19备份@2x.png') 2x);
+  background-image: image-set(url('../../images/refund/rank-type2/6/编组\ 19备份.png') 1x, url('../../images/refund/rank-type2/6/编组\ 19备份@2x.png') 2x);
+}
+.medal--img-7 {
+  background-image: -webkit-image-set(url('../../images/refund/rank-type2/7/编组\ 19备份\ 2.png') 1x, url('../../images/refund/rank-type2/7/编组\ 19备份\ 2@2x.png') 2x);
+  background-image: image-set(url('../../images/refund/rank-type2/7/编组\ 19备份\ 2.png') 1x, url('../../images/refund/rank-type2/7/编组\ 19备份\ 2@2x.png') 2x);
+}
+.medal--img-8 {
+  background-image: -webkit-image-set(url('../../images/refund/rank-type2/8/编组\ 19备份\ 3.png') 1x, url('../../images/refund/rank-type2/8/编组\ 19备份\ 3@2x.png') 2x);
+  background-image: image-set(url('../../images/refund/rank-type2/8/编组\ 19备份\ 3.png') 1x, url('../../images/refund/rank-type2/8/编组\ 19备份\ 3@2x.png') 2x);
+}
+.medal--img-9 {
+  background-image: -webkit-image-set(url('../../images/refund/rank-type2/9/编组\ 19备份\ 4.png') 1x, url('../../images/refund/rank-type2/9/编组\ 19备份\ 4@2x.png') 2x);
+  background-image: image-set(url('../../images/refund/rank-type2/9/编组\ 19备份\ 4.png') 1x, url('../../images/refund/rank-type2/9/编组\ 19备份\ 4@2x.png') 2x);
+}
+.medal--img-10 {
+  background-image: -webkit-image-set(url('../../images/refund/rank-type2/10/编组\ 19备份\ 5.png') 1x, url('../../images/refund/rank-type2/10/编组\ 19备份\ 5@2x.png') 2x);
+  background-image: image-set(url('../../images/refund/rank-type2/10/编组\ 19备份\ 5.png') 1x, url('../../images/refund/rank-type2/10/编组\ 19备份\ 5@2x.png') 2x);
 }
 
 .medal--img-1,

@@ -8,27 +8,39 @@
     <div class="overlay" :class="{ 'overlay--six': items.length >= 6 }" :style="overlayVars">
       <!-- 左上/右上/左中/右中/左下/右下 -->
       <div v-if="items[0]" class="stat stat--l1">
-        <div class="num">{{ fmt(items[0].value) }}<small class="unit" v-if="items[0].unit">{{ items[0].unit }}</small></div>
+        <div class="num">
+          <CountUpNumber :value="items[0].value" :unit="items[0].unit" unit-class="unit" :duration="1500" />
+        </div>
         <div class="label">{{ items[0].label }}</div>
       </div>
       <div v-if="items[1]" class="stat stat--r1">
-        <div class="num">{{ fmt(items[1].value) }}<small class="unit" v-if="items[1].unit">{{ items[1].unit }}</small></div>
+        <div class="num">
+          <CountUpNumber :value="items[1].value" :unit="items[1].unit" unit-class="unit" :duration="1500" />
+        </div>
         <div class="label">{{ items[1].label }}</div>
       </div>
       <div v-if="items[2]" class="stat stat--l2">
-        <div class="num">{{ fmt(items[2].value) }}<small class="unit" v-if="items[2].unit">{{ items[2].unit }}</small></div>
+        <div class="num">
+          <CountUpNumber :value="items[2].value" :unit="items[2].unit" unit-class="unit" :duration="1500" />
+        </div>
         <div class="label">{{ items[2].label }}</div>
       </div>
       <div v-if="items[3]" class="stat stat--r2">
-        <div class="num">{{ fmt(items[3].value) }}<small class="unit" v-if="items[3].unit">{{ items[3].unit }}</small></div>
+        <div class="num">
+          <CountUpNumber :value="items[3].value" :unit="items[3].unit" unit-class="unit" :duration="1500" />
+        </div>
         <div class="label">{{ items[3].label }}</div>
       </div>
       <div v-if="items[4]" class="stat stat--l3">
-        <div class="num">{{ fmt(items[4].value) }}<small class="unit" v-if="items[4].unit">{{ items[4].unit }}</small></div>
+        <div class="num">
+          <CountUpNumber :value="items[4].value" :unit="items[4].unit" unit-class="unit" :duration="1500" />
+        </div>
         <div class="label">{{ items[4].label }}</div>
       </div>
       <div v-if="items[5]" class="stat stat--r3">
-        <div class="num">{{ fmt(items[5].value) }}<small class="unit" v-if="items[5].unit">{{ items[5].unit }}</small></div>
+        <div class="num">
+          <CountUpNumber :value="items[5].value" :unit="items[5].unit" unit-class="unit" :duration="1500" />
+        </div>
         <div class="label">{{ items[5].label }}</div>
       </div>
     </div>
@@ -37,6 +49,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import CountUpNumber from '../CountUpNumber.vue';
+
 interface StatItem {
   label: string;
   value: number | string;

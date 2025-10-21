@@ -12,7 +12,9 @@
         <img class="icon" :src="male1x" :srcset="male2x + ' 2x'" alt="男性" draggable="false" />
         <div class="texts">
           <div class="label">男性</div>
-          <div class="value"><span class="num">{{ maleCount }}</span>人</div>
+          <div class="value">
+            <CountUpNumber :value="maleCount" unit="人" number-class="num" :duration="1500" />
+          </div>
         </div>
       </div>
 
@@ -21,7 +23,9 @@
         <img class="icon" :src="female1x" :srcset="female2x + ' 2x'" alt="女性" draggable="false" />
         <div class="texts">
           <div class="label">女性</div>
-          <div class="value"><span class="num">{{ femaleCount }}</span>人</div>
+          <div class="value">
+            <CountUpNumber :value="femaleCount" unit="人" number-class="num" :duration="1500" />
+          </div>
         </div>
       </div>
     </div>
@@ -29,6 +33,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+import CountUpNumber from '../CountUpNumber.vue';
 import title1x from '../../images/yiliao/part1/title/编组 21.png';
 import title2x from '../../images/yiliao/part1/title/编组 21@2x.png';
 import male1x from '../../images/yiliao/part1/icon1/编组 6.png';
@@ -38,7 +44,6 @@ import female2x from '../../images/yiliao/part1/icon2/编组 7@2x.png';
 
 interface Props { maleCount?: number; femaleCount?: number }
 const props = withDefaults(defineProps<Props>(), { maleCount: 324, femaleCount: 324 });
-import { computed } from 'vue';
 const maleCount = computed(() => Number(props.maleCount || 0));
 const femaleCount = computed(() => Number(props.femaleCount || 0));
 
