@@ -15,7 +15,12 @@
       @active-change="onActiveChange"
     >
       <template #center>
-        <div class="num">{{ active.value }}</div>
+        <div class="num">
+          <CountUpNumber
+            :value="active?.value ?? 0"
+            :duration="1500"
+          />
+        </div>
         <div class="name">{{ active.name }}</div>
       </template>
     </RingPie>
@@ -25,6 +30,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
 import RingPie from '../RingPie.vue';
+import CountUpNumber from '../CountUpNumber.vue';
 
 interface BizItem {
   name: string;

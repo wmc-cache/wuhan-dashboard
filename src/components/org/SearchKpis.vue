@@ -17,7 +17,12 @@
         <div>
           <img class="icon" :src="it.icon1x" :srcset="it.icon2x + ' 2x'" :alt="it.title" draggable="false" />
         </div>
-        <div class="num">{{ fmt(it.value) }}</div>
+        <div class="num">
+          <CountUpNumber
+            :value="it.value"
+            :duration="1500"
+          />
+        </div>
         <div class="title">{{ it.title }}</div>
       </div>
     </div>
@@ -25,6 +30,7 @@
 </template>
 
 <script setup lang="ts">
+import CountUpNumber from '../CountUpNumber.vue';
 import bg1x from '../../images/org/bg/编组 8.png';
 import bg2x from '../../images/org/bg/编组 8@2x.png';
 import search1x from '../../images/search/搜索.png';
@@ -60,8 +66,6 @@ const emit = defineEmits<{
 
 function onInput(e: Event) { emit('update:modelValue', (e.target as HTMLInputElement).value); }
 function onSearch() { emit('search', props.modelValue); }
-
-function fmt(v: number | string) { const n = Number(v); return Number.isFinite(n) ? n.toLocaleString('zh-CN') : String(v); }
 </script>
 
 <style scoped lang="scss">
@@ -94,6 +98,20 @@ function fmt(v: number | string) { const n = Number(v); return Number.isFinite(n
   background-clip: text;
   color: transparent;
   text-shadow: 0 4px 8px rgba(30, 100, 220, 0.18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.num :deep(.count-up-wrapper) {
+  display: inline-flex;
+}
+.num :deep(.count-up-wrapper span) {
+  font: inherit;
+  color: inherit;
+  background: inherit;
+  -webkit-background-clip: inherit;
+  background-clip: inherit;
+  text-shadow: inherit;
 }
 
 .card-bg {

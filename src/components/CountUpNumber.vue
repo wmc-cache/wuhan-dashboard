@@ -4,13 +4,13 @@
       ref="numberRef"
       :class="numberClass"
       :style="numberStyle"
-    ></span>
+    >{{ displayValue }}</span>
     <span v-if="unit" :class="unitClass" :style="unitStyle">{{ unit }}</span>
   </span>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, nextTick } from 'vue'
+import { ref, onMounted, watch, nextTick, computed } from 'vue'
 import { CountUp } from 'countup.js'
 
 interface Props {
@@ -44,8 +44,8 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const numberRef = ref<HTMLElement>()
+const isAnimating = ref(false)
 let countUp: CountUp | null = null
-let hasAnimated = false // 确保只在首次加载时动画
 
 // 格式化数字，保持与原项目一致的千位分隔符
 function formatNumber(num: number | string): number {
@@ -53,58 +53,78 @@ function formatNumber(num: number | string): number {
   return Number.isFinite(n) ? n : 0
 }
 
+// 显示值：动画时让 CountUp 控制，否则显示格式化的值
+const displayValue = computed(() => {
+  if (isAnimating.value) {
+    return '' // CountUp 控制内容时，Vue 不显示任何内容
+  }
+  const targetValue = formatNumber(props.value)
+  return targetValue.toLocaleString('zh-CN')
+})
+
 // 初始化 CountUp
 function initCountUp() {
-  if (!numberRef.value || hasAnimated) return
+  if (!numberRef.value) return
 
   const targetValue = formatNumber(props.value)
 
-  const options = {
-    startVal: 0,
-    duration: props.duration / 1000, // CountUp 使用秒为单位
-    useEasing: props.easing,
-    useGrouping: true, // 启用千位分隔符
-    separator: props.separator,
-    decimal: props.decimal,
-    decimalPlaces: props.decimalPlaces,
-    // 使用 easeOutExpo 缓动函数（缓入缓出）
-    easingFn: (t: number, b: number, c: number, d: number) => {
-      return t === d ? b + c : c * (-Math.pow(2, -10 * t / d) + 1) + b
-    }
+  console.log('CountUpNumber: Initializing with value:', props.value, 'formatted:', targetValue)
+
+  // 如果值为0，直接显示，不需要动画
+  if (targetValue === 0) {
+    console.log('CountUpNumber: Value is 0, skipping animation')
+    isAnimating.value = false
+    return
   }
 
-  countUp = new CountUp(numberRef.value, targetValue, options)
+  try {
+    const options = {
+      startVal: 0,
+      duration: props.duration / 1000, // CountUp 使用秒为单位
+      useEasing: props.easing,
+      useGrouping: true, // 启用千位分隔符
+      separator: props.separator,
+      decimal: props.decimal,
+      decimalPlaces: props.decimalPlaces,
+    }
 
-  if (!countUp.error) {
-    if (props.autoStart) {
-      countUp.start()
-      hasAnimated = true
+    countUp = new CountUp(numberRef.value, targetValue, options)
+
+    if (!countUp.error) {
+      if (props.autoStart) {
+        isAnimating.value = true // 开始动画前设置状态
+        countUp.start(() => {
+          console.log('CountUpNumber: Animation completed for value:', targetValue)
+          isAnimating.value = false // 动画完成后恢复状态
+        })
+      }
+    } else {
+      console.error('CountUp error:', countUp.error)
+      isAnimating.value = false
     }
-  } else {
-    console.error('CountUp error:', countUp.error)
-    // 如果 CountUp 失败，直接显示格式化后的数字
-    if (numberRef.value) {
-      const formattedValue = targetValue.toLocaleString('zh-CN')
-      numberRef.value.textContent = formattedValue
-    }
+  } catch (error) {
+    console.error('CountUp initialization failed:', error)
+    isAnimating.value = false
   }
 }
 
 // 手动启动动画的方法
 function startAnimation() {
-  if (countUp && !hasAnimated) {
-    countUp.start()
-    hasAnimated = true
+  if (countUp) {
+    isAnimating.value = true
+    countUp.start(() => {
+      isAnimating.value = false
+    })
   }
 }
 
 // 直接更新数字（不带动画）
 function updateValue(newValue: number | string) {
-  if (!numberRef.value) return
-
+  console.log('CountUpNumber: Updating value to:', newValue)
   const targetValue = formatNumber(newValue)
-  const formattedValue = targetValue.toLocaleString('zh-CN')
-  numberRef.value.textContent = formattedValue
+  if (countUp) {
+    countUp.update(targetValue)
+  }
 }
 
 // 暴露方法给父组件
@@ -114,17 +134,34 @@ defineExpose({
 })
 
 onMounted(() => {
-  // 确保 DOM 渲染完成后再初始化
+  console.log('CountUpNumber: Mounted with value:', props.value)
   nextTick(() => {
     initCountUp()
   })
 })
 
-// 监听 value 变化（后续数据更新直接切换，不再动画）
-watch(() => props.value, (newValue) => {
-  if (hasAnimated && numberRef.value) {
-    // 已经动画过了，直接更新数字
-    updateValue(newValue)
+// 监听 value 变化
+watch(() => props.value, (newValue, oldValue) => {
+  console.log('CountUpNumber: Value changed from', oldValue, 'to', newValue)
+  if (numberRef.value && newValue !== oldValue) {
+    const oldTargetValue = formatNumber(oldValue)
+    const newTargetValue = formatNumber(newValue)
+
+    // 如果从 0 变为非 0，重新启动完整动画
+    if (oldTargetValue === 0 && newTargetValue > 0) {
+      console.log('CountUpNumber: Starting fresh animation from 0 to', newTargetValue)
+      initCountUp()
+    }
+    // 如果都不是 0，使用更新动画
+    else if (newTargetValue > 0 && countUp) {
+      console.log('CountUpNumber: Updating animation to', newTargetValue)
+      isAnimating.value = true
+      countUp.update(newTargetValue)
+      // update 不会自动触发动画完成回调，所以需要手动重置状态
+      setTimeout(() => {
+        isAnimating.value = false
+      }, props.duration)
+    }
   }
 })
 </script>

@@ -78,7 +78,7 @@ const femaleCount = computed(() => Number(props.femaleCount || 0));
 .icon { width: 110px; height: 117px; object-fit: contain; }
 .texts { display: grid; row-gap: 6px; align-content: center; }
 .label { font-size: 16px; color: #4c5566; }
-.value { font-size: 22px; font-weight: 800; letter-spacing: 1px; }
+.value { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
 .male .value { color: #2a6ff0; }
 .female .value { color: #ff6b97; }
 .num { margin-right: 4px; }

@@ -33,17 +33,32 @@
       <div class="mod__body">
         <div class="overview3">
           <div class="k">
-            <div class="k__num">{{ fmt(kpiOverview.downUnion) }}</div>
+            <div class="k__num">
+              <CountUpNumber
+                :value="kpiOverview.downUnion"
+                :duration="1500"
+              />
+            </div>
             <img class="badge" :src="pin1x" :srcset="pin2x + ' 2x'" alt="行业产业工会" draggable="false" />
             <div class="k__label">下辖工会</div>
           </div>
           <div class="k">
-            <div class="k__num">{{ fmt(kpiOverview.openGov) }}</div>
+            <div class="k__num">
+              <CountUpNumber
+                :value="kpiOverview.openGov"
+                :duration="1500"
+              />
+            </div>
             <img class="badge" :src="pin1x" :srcset="pin2x + ' 2x'" alt="行业产业工会" draggable="false" />
             <div class="k__label">执行厂务公开制度</div>
           </div>
           <div class="k">
-            <div class="k__num">{{ fmt(kpiOverview.staffRep) }}</div>
+            <div class="k__num">
+              <CountUpNumber
+                :value="kpiOverview.staffRep"
+                :duration="1500"
+              />
+            </div>
             <img class="badge" :src="pin1x" :srcset="pin2x + ' 2x'" alt="行业产业工会" draggable="false" />
             <div class="k__label">执行职代会制度</div>
           </div>
@@ -123,6 +138,7 @@ import StackedColumnChart from '../components/StackedColumnChart.vue';
 import SmallTripleGauge from '../components/org/SmallTripleGauge.vue';
 import StripedBarChart from '../components/StripedBarChart.vue';
 import OrgAreaRank from '../components/org/AreaRank.vue';
+import CountUpNumber from '../components/CountUpNumber.vue';
 
 import { computed, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
@@ -568,6 +584,28 @@ async function fetchThreeDept() {
 }
 .overview3 { height: 100%; display: grid; grid-template-columns: repeat(3, 1fr); align-items: center; justify-items: center; }
 .k { display: grid; row-gap: 6px; justify-items: center; }
-.k__num { font-size: 30px; font-weight: 900; background: linear-gradient(180deg, #6FA7FF 0%, #1A65FF 90%); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 4px 9px rgba(30, 100, 220, 0.18); }
+.k__num {
+  font-size: 30px;
+  font-weight: 900;
+  background: linear-gradient(180deg, #6FA7FF 0%, #1A65FF 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 4px 9px rgba(30, 100, 220, 0.18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.k__num :deep(.count-up-wrapper) {
+  display: inline-flex;
+}
+.k__num :deep(.count-up-wrapper span) {
+  font: inherit;
+  color: inherit;
+  background: inherit;
+  -webkit-background-clip: inherit;
+  background-clip: inherit;
+  text-shadow: inherit;
+}
 .k__label { font-size: 14px; color: #2a6ff0; font-weight: 800; text-align: center; }
 </style>

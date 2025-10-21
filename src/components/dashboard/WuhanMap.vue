@@ -12,9 +12,36 @@
         <span class="dot"></span>{{ activeInfo.name }}
       </div>
       <ul class="stats">
-        <li><span>工会组织数</span><b>{{ fmt(activeInfo.orgCount) }}</b><i>个</i></li>
-        <li><span>工会会员数</span><b>{{ fmt(activeInfo.memberCount) }}</b><i>人</i></li>
-        <li><span>组织单位数</span><b>{{ fmt(activeInfo.unitCount) }}</b><i>家</i></li>
+        <li>
+          <span>工会组织数</span>
+          <b>
+            <CountUpNumber
+              :value="activeInfo.orgCount"
+              :duration="1500"
+            />
+          </b>
+          <i>个</i>
+        </li>
+        <li>
+          <span>工会会员数</span>
+          <b>
+            <CountUpNumber
+              :value="activeInfo.memberCount"
+              :duration="1500"
+            />
+          </b>
+          <i>人</i>
+        </li>
+        <li>
+          <span>组织单位数</span>
+          <b>
+            <CountUpNumber
+              :value="activeInfo.unitCount"
+              :duration="1500"
+            />
+          </b>
+          <i>家</i>
+        </li>
       </ul>
     </div>
   </div>
@@ -23,6 +50,7 @@
 <script setup lang="ts">
 import * as echarts from 'echarts';
 import { onMounted, onBeforeUnmount, ref, shallowRef, computed, watch } from 'vue';
+import CountUpNumber from '../CountUpNumber.vue';
 // 本地 geoJSON（武汉各区）
 // 注意：文件较大，已作为 js 导出
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -248,8 +276,6 @@ const activeInfo = computed(() => props.dataByDistrict[active.value] || { name: 
 const emit = defineEmits<{
   (e: 'select-change', name: string, info: DistrictInfo): void
 }>();
-
-function fmt(n: number) { return (n ?? 0).toLocaleString('zh-CN'); }
 
 function register() {
   // 使用官方 API 判断是否已注册，避免往 echarts 对象挂私有属性（某些构建下该对象是不可扩展的）
