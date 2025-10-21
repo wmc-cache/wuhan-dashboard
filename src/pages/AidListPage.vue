@@ -33,7 +33,7 @@
 
     <section class="table-wrap">
       <GridTable :columns="columns" :rows="pagedRows" :grid-template="gridTemplate" :visible-rows="20" :row-height="40"
-        :show-header="false" />
+        :show-header="false" :highlight-fields="highlightFields" />
       <div class="pager">
         <el-pagination v-model:current-page="page" :page-size="pageSize" :total="total" background
           layout="total, prev, pager, next, jumper" @current-change="(p:number)=>to(p)" />
@@ -99,6 +99,16 @@ const total = ref(0);
 const pageCount = computed(()=>Math.max(1, Math.ceil(total.value/pageSize)));
 const pagedRows = computed(()=> filtered.value );
 function to(p:number){ page.value=Math.min(pageCount.value, Math.max(1,p)); fetchList(); }
+
+const highlightFields = computed<Record<string, string | string[]>>(()=> {
+  const map: Record<string, string | string[]> = {};
+  const name = q.name.trim();
+  if (name) map.name = name;
+  if (q.poorType.length) map.archiveType = [...q.poorType];
+  if (q.helpOutType.length) map.archiveCategory = [...q.helpOutType];
+  if (q.familyType.length) map.difficultyType = [...q.familyType];
+  return map;
+});
 // 初始化字典与列表
 loadDicts();
 
@@ -188,6 +198,9 @@ function normalizeToArray(value: unknown): string[] {
 
 function syncFiltersFromRoute() {
   q.poorType = normalizeToArray(route.query.poorType);
+  q.helpOutType = normalizeToArray(route.query.helpOutType);
+  q.familyType = normalizeToArray(route.query.familyType);
+  q.name = typeof route.query.name === 'string' ? route.query.name : '';
 }
 
 watch(

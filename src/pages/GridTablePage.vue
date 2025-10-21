@@ -44,7 +44,7 @@
     <!-- 表格主体（占满剩余高度） -->
     <section class="table-wrap">
       <GridTable :columns="columns" :rows="pagedRows" :grid-template="gridTemplate" :visible-rows="20" :row-height="40"
-        :show-header="false" @cell-click="onCellClick" />
+        :show-header="false" :highlight-fields="highlightFields" @cell-click="onCellClick" />
 
       <!-- Loading -->
       <div v-if="loading" class="loading-overlay" aria-live="polite" aria-busy="true">
@@ -302,6 +302,21 @@ async function onExport() {
 const pageCount = computed(() => Math.max(1, Math.ceil((total.value || 0) / pageSize)));
 const pagedRows = computed(() => rows.value);
 function to(p: number) { page.value = Math.min(pageCount.value, Math.max(1, p)); fetchList(); }
+
+const highlightFields = computed<Record<string, string | string[]>>(() => {
+  const map: Record<string, string | string[]> = {};
+  const name = q.name.trim();
+  if (name) map.name = name;
+  if (q.regionCode !== '' && q.regionCode != null) {
+    const label = dictLabel(regionOpts.value, q.regionCode, 'sys_wuhan_quyu').trim();
+    if (label && label !== '-') map.region = label;
+  }
+  if (q.industryCode !== '' && q.industryCode != null) {
+    const label = dictLabel(industryOpts.value, q.industryCode, 'unitIndustry').trim();
+    if (label && label !== '-') map.industry = label;
+  }
+  return map;
+});
 
 async function onCellClick(payload: { row: Row; column?: ColumnDef }) {
   const id = (payload.row as any).id;

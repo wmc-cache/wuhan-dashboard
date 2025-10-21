@@ -1,6 +1,6 @@
 <template>
   <div class="honor-rings">
-    <EChart :option="option" />
+    <EChart :option="option" :events="chartEvents" />
     <!-- 可选中心内容：图标与文字，位置跟随 center -->
     <div v-if="centerText || centerIcon" class="center-layer" :style="centerStyle">
       <img
@@ -68,6 +68,10 @@ const data = computed(() => {
   return arr.length ? arr : [{ name: '—', value: 1, color: palette[0] }];
 });
 const total = computed(() => data.value.reduce((s, d) => s + d.value, 0));
+
+const emit = defineEmits<{
+  (e: 'segment-click', payload: { name: string; value: number }): void;
+}>();
 
 function angleByValue(v: number) {
   return (v / total.value) * props.sweepAngle;
@@ -209,6 +213,17 @@ const centerStyle = computed(() => ({
   left: props.center?.[0] || '46%',
   top: props.center?.[1] || '55%'
 }));
+
+function handleChartClick(params: any) {
+  const name = params?.name;
+  if (!name || /^gap-/.test(name) || name === 'under' || name === 'solid') return;
+  const value = Number(params?.value ?? params?.data?.value ?? 0) || 0;
+  emit('segment-click', { name: String(name), value });
+}
+
+const chartEvents = {
+  click: handleChartClick
+};
 
 </script>
 

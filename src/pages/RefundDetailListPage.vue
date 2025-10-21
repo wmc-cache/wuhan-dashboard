@@ -34,7 +34,7 @@
         <div class="spinner" aria-hidden="true"></div>
         <div class="txt">加载中...</div>
       </div>
-      <GridTable :columns="columns" :rows="rows" :grid-template="gridTemplate" :visible-rows="20" :row-height="40" :show-header="false" />
+      <GridTable :columns="columns" :rows="rows" :grid-template="gridTemplate" :visible-rows="20" :row-height="40" :show-header="false" :highlight-fields="highlightFields" />
       <div class="pager">
         <el-pagination v-model:current-page="page" :page-size="pageSize" :total="total" background layout="total, prev, pager, next, jumper" @current-change="(p:number)=>to(p)" />
       </div>
@@ -162,6 +162,21 @@ async function fetchList(){
 // 工会下拉
 interface Opt { label: string; value: string }
 const unionOpts = ref<Opt[]>([]);
+
+const highlightFields = computed<Record<string, string | string[]>>(() => {
+  const map: Record<string, string | string[]> = {};
+  if (q.ids.length) {
+    const labels = q.ids
+      .map((id) => {
+        const found = unionOpts.value.find((opt) => String(opt.value) === String(id));
+        return found?.label?.trim() ?? '';
+      })
+      .filter((label) => label.length > 0);
+    if (labels.length) map.qymc = labels;
+  }
+  return map;
+});
+
 async function loadUnions(){
   try{
     const arr: any[] = await apiGet('/refundOfFunds/union').catch(()=>[]);

@@ -7,9 +7,9 @@
           <el-form-item label="姓名：">
             <el-input v-model="q.kw" placeholder="请输入" clearable class="w180" />
           </el-form-item>
-          <el-form-item label="主管单位：">
+          <!-- <el-form-item label="主管单位：">
             <el-input v-model="q.dept" placeholder="请输入" clearable class="w180" />
-          </el-form-item>
+          </el-form-item> -->
           <el-form-item label="申报年份：">
             <el-date-picker
               v-model="q.cityTime"
@@ -40,6 +40,7 @@
         :visible-rows="20"
         :row-height="40"
         :show-header="false"
+        :highlight-fields="highlightFields"
         @cell-click="onCellClick"
       />
       <div class="pager">
@@ -128,6 +129,17 @@ const page = ref(1);
 const pageCount = computed(() => Math.max(1, Math.ceil(total.value / pageSize)));
 const pagedRows = computed(() => rows.value);
 async function to(p: number) { page.value = Math.min(pageCount.value, Math.max(1, p)); await loadPage(); }
+
+const highlightFields = computed<Record<string, string | string[]>>(() => {
+  const map: Record<string, string | string[]> = {};
+  const kwName = q.kw.trim();
+  if (kwName) map.name = kwName;
+  const kwDept = q.dept.trim();
+  if (kwDept) map.workUnit = kwDept;
+  const kwCity = q.cityTime.trim();
+  if (kwCity) map.cityTime = kwCity;
+  return map;
+});
 
 // 导出：后端返回文件（xlsx），以 blob 下载
 async function exportCsv() {

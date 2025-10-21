@@ -15,7 +15,17 @@
               </ul>
             </div>
             <ul class="aid2-left__list">
-              <li v-for="(it, i) in leftItems" :key="i" class="aid2-left__item" :style="{ '--dot': it.color } as any">
+              <li
+                v-for="(it, i) in leftItems"
+                :key="i"
+                class="aid2-left__item"
+                :style="{ '--dot': it.color } as any"
+                role="button"
+                tabindex="0"
+                @click="onLeftItemClick(it)"
+                @keyup.enter="onLeftItemClick(it)"
+                @keyup.space.prevent="onLeftItemClick(it)"
+              >
                 <span class="dot" />
                 <span class="label">{{ it.name }}</span>
                 <span class="val"><b>{{ it.value }}</b><i>人</i></span>
@@ -31,8 +41,16 @@
         <div class="mod__head"><span class="title-img title-img--aid2-3" aria-hidden="true"></span></div>
         <div class="mod__body mod__body--full">
           <!-- 饼图整体缩小到 86% 以贴近效果图占比 -->
-          <HonorRingsChart :items="archiveItems" center-text="档案分类" :center="['50%','56%']" :gap-deg="10"
-            :base-start="20" :sweep-angle="260" :scale="0.86" />
+          <HonorRingsChart
+            :items="archiveItems"
+            center-text="档案分类"
+            :center="['50%','56%']"
+            :gap-deg="10"
+            :base-start="20"
+            :sweep-angle="260"
+            :scale="0.86"
+            @segment-click="onArchiveSegment"
+          />
         </div>
         <button class="see-btn" type="button" title="查看更多" @click="onSee('archive')"></button>
       </section>
@@ -101,7 +119,7 @@
       <section class="mod">
         <div class="mod__head"><span class="title-img title-img--aid2-5" aria-hidden="true"></span></div>
         <div class="mod__body mod__body--full">
-          <CoverageRings :items="coverageItems" />
+          <CoverageRings :items="coverageItems" @item-click="onCoverageItem" />
         </div>
         <button class="see-btn" type="button" title="查看更多" @click="onSee('fileType')"></button>
       </section>
@@ -237,9 +255,58 @@ async function loadAll() {
 const router = useRouter();
 onMounted(() => { loadAll().catch(() => void 0); });
 
+function normalizeQueryValue(val: string | string[] | undefined) {
+  if (Array.isArray(val)) {
+    return val.map((s) => String(s).trim()).filter(Boolean).join(',');
+  }
+  if (val == null) return '';
+  const s = String(val).trim();
+  return s;
+}
+
+function goList(filters: { poorType?: string | string[]; helpOutType?: string | string[]; familyType?: string | string[] }) {
+  const query: Record<string, string> = {};
+  const poor = normalizeQueryValue(filters.poorType);
+  if (poor) query.poorType = poor;
+  const archive = normalizeQueryValue(filters.helpOutType);
+  if (archive) query.helpOutType = archive;
+  const family = normalizeQueryValue(filters.familyType);
+  if (family) query.familyType = family;
+  router.push({ name: 'aid-list', query }).catch(() => void 0);
+}
+
+function onLeftItemClick(item: { name?: string }) {
+  if (!item?.name) return;
+  goList({ poorType: item.name });
+}
+
+function onArchiveSegment(payload: { name?: string }) {
+  if (!payload?.name) return;
+  goList({ helpOutType: payload.name });
+}
+
+function onCoverageItem(item: { label?: string }) {
+  if (!item?.label) return;
+  goList({ familyType: item.label });
+}
+
 function onSee(which: string) {
-  // 跳转到“职工帮扶列表”新页面
-  try { router.push({ name: 'aid-list' }); } catch {}
+  if (which === 'poorType') {
+    const names = leftItems.value.map((it) => it.name).filter(Boolean);
+    goList({ poorType: names });
+    return;
+  }
+  if (which === 'archive') {
+    const names = archiveItems.value.map((it) => it.name).filter(Boolean);
+    goList({ helpOutType: names });
+    return;
+  }
+  if (which === 'fileType') {
+    const labels = coverageItems.value.map((it) => it.label).filter(Boolean);
+    goList({ familyType: labels });
+    return;
+  }
+  goList({});
 }
 </script>
 
@@ -305,7 +372,8 @@ function onSee(which: string) {
 .aid2-left__pcts { position: absolute; left: 0; right: 0; top: 8%; bottom: 10%; list-style: none; margin: 0; padding: 0; }
 .aid2-left__pcts .pct { position: absolute; left: 42%; transform: translate(-50%, -40%); color: #fff; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
 .aid2-left__list { list-style: none; margin: 0; padding: 0; display: grid; row-gap: 14px; }
-.aid2-left__item { height: 72px; border-radius: 8px; background-repeat: no-repeat; background-size: 100% 100%; background-position: center; background-image: -webkit-image-set(url('../images/aid2/part1/2/矩形.png') 1x, url('../images/aid2/part1/2/矩形@2x.png') 2x); background-image: image-set(url('../images/aid2/part1/2/矩形.png') 1x, url('../images/aid2/part1/2/矩形@2x.png') 2x); display: grid; grid-template-columns: 18px 1fr auto; align-items: center; column-gap: 10px; padding: 0 16px; }
+.aid2-left__item { height: 72px; border-radius: 8px; background-repeat: no-repeat; background-size: 100% 100%; background-position: center; background-image: -webkit-image-set(url('../images/aid2/part1/2/矩形.png') 1x, url('../images/aid2/part1/2/矩形@2x.png') 2x); background-image: image-set(url('../images/aid2/part1/2/矩形.png') 1x, url('../images/aid2/part1/2/矩形@2x.png') 2x); display: grid; grid-template-columns: 18px 1fr auto; align-items: center; column-gap: 10px; padding: 0 16px; cursor: pointer; outline: none; }
+.aid2-left__item:focus-visible { box-shadow: 0 0 0 2px rgba(42,111,240,0.35); }
 .aid2-left__item .dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 0 3px rgba(255,255,255,.7) inset; background: var(--dot); }
 .aid2-left__item .label { font-weight: 800; color: #2a6ff0; letter-spacing: .5px; }
 .aid2-left__item .val { justify-self: end; font-weight: 900; color: #2a6ff0; }

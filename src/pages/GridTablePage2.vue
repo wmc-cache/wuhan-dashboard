@@ -34,6 +34,7 @@
         :visible-rows="20"
         :row-height="40"
         :show-header="false"
+        :highlight-fields="highlightFields"
         @cell-click="onCellClick"
       />
       <!-- Loading -->
@@ -177,6 +178,19 @@ function onReset() { q.name = ''; q.unionName = ''; q.sex = ''; page.value = 1; 
 const pageCount = computed(() => Math.max(1, Math.ceil((total.value || 0) / pageSize)));
 const pagedRows = computed(() => rows.value);
 function to(p: number) { page.value = Math.min(pageCount.value, Math.max(1, p)); fetchList(); }
+
+const highlightFields = computed<Record<string, string | string[]>>(() => {
+  const map: Record<string, string | string[]> = {};
+  const nameKw = q.name.trim();
+  if (nameKw) map.name = nameKw;
+  const unionKw = q.unionName.trim();
+  if (unionKw) map.union = unionKw;
+  if (q.sex !== '') {
+    const label = labelOf('gender', q.sex, String(q.sex ?? '')).trim();
+    if (label) map.gender = label;
+  }
+  return map;
+});
 
 onMounted(async () => {
   // 预拉取展示用字典

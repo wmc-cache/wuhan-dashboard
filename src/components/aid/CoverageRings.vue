@@ -1,6 +1,16 @@
 <template>
   <div class="cov3">
-    <div v-for="(it, i) in items" :key="i" class="row" :style="{ '--c': it.color || '#4E8FFF' } as any">
+    <div
+      v-for="(it, i) in items"
+      :key="i"
+      class="row"
+      :style="{ '--c': it.color || '#4E8FFF' } as any"
+      role="button"
+      tabindex="0"
+      @click="emitClick(it)"
+      @keyup.enter="emitClick(it)"
+      @keyup.space.prevent="emitClick(it)"
+    >
       <div class="ring">
         <EChart :option="ringOption(it)" />
       
@@ -29,6 +39,10 @@ const props = withDefaults(defineProps<Props>(), {
     { percent: 80, value: 2347, label: '职工涵盖', color: '#f6a03a' },
   ])
 });
+
+const emit = defineEmits<{
+  (e: 'item-click', payload: Item): void;
+}>();
 
 function ringOption(it: Item) {
   const pct = Math.max(0, Math.min(100, Number(it.percent) || 0));
@@ -60,11 +74,17 @@ function ringOption(it: Item) {
     ]
   } as any;
 }
+
+function emitClick(item: Item) {
+  if (!item?.label) return;
+  emit('item-click', item);
+}
 </script>
 
 <style scoped lang="scss">
 .cov3 { height: 100%; display: grid; align-content: center; row-gap: 18px; }
-.row { display: grid; grid-template-columns: 110px 1fr; align-items: center; column-gap: 16px; }
+.row { display: grid; grid-template-columns: 110px 1fr; align-items: center; column-gap: 16px; cursor: pointer; outline: none; }
+.row:focus-visible { box-shadow: 0 0 0 2px rgba(42,111,240,0.35); border-radius: 12px; }
 .ring { position: relative; width: 110px; height: 110px; }
 .ring :deep(canvas), .ring :deep(div[style*="position: relative"]) { border-radius: 50%; }
 .ring__center { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-weight: 900; color: var(--c, #2a6ff0); text-shadow: 0 2px 8px rgba(38,112,255,.25); font-size: 22px; }

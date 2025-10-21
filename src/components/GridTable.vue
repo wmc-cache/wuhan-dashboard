@@ -21,7 +21,7 @@
     </div>
 
     <!-- 数据行 -->
-<ul
+    <ul
       ref="tbodyRef"
       class="tbody"
       role="rowgroup"
@@ -59,7 +59,7 @@
                   <i class="lv-icon" :class="lvClass((row as any)[col.key], rIdx)" aria-hidden="true"></i>
                 </template>
                 <template v-else>
-                  {{ formatCell((row as any)[col.key], col) }}
+                  <span class="cell__inner" v-html="renderCell(row as any, col)"></span>
                 </template>
               </template>
               <template v-else>
@@ -98,6 +98,7 @@ interface Props {
   rows: Record<string, any>[];
   gridTemplate?: string; // CSS grid-template-columns
   rowKey?: string; // 行唯一 key 字段
+  highlightFields?: Record<string, string | string[] | null | undefined>; // 列关键字高亮配置
   showHeader?: boolean;
   // 可视行数与行高：超过后在表体内滚动（滚动区域高度=可见行数×行高，避免出现半截行）
   visibleRows?: number; // 默认 6 行
@@ -127,6 +128,7 @@ const props = withDefaults(defineProps<Props>(), {
   visibleRows: 6,
   rowHeight: 36,
   emptyText: '暂无数据',
+  highlightFields: undefined,
   fillPlaceholder: true,
   titleImg1x: titleOrg1x,
   titleImg2x: titleOrg2x,
@@ -318,9 +320,72 @@ function emitCell(row: Record<string, any>, column: ColumnDef, rowIndex: number)
   emit('cell-click', { row: payload, column, rowIndex });
 }
 
+const highlightMap = computed(() => {
+  const raw = props.highlightFields;
+  const map = new Map<string, string[]>();
+  if (!raw) return map;
+  Object.entries(raw)
+    .forEach(([key, value]) => {
+      const arr = normalizeKeywords(value);
+      if (arr.length > 0) map.set(key, arr);
+    });
+  return map;
+});
+
 function formatCell(val: any, col: ColumnDef): string {
   if (col.formatter) return col.formatter(val, {} as any);
   return String(val ?? '');
+}
+
+function renderCell(row: Record<string, any>, col: ColumnDef): string {
+  const raw = formatCell((row as any)[col.key], col);
+  return applyHighlight(raw, col.key);
+}
+
+function normalizeKeywords(raw: unknown): string[] {
+  if (!raw && raw !== 0) return [];
+  const values = Array.isArray(raw) ? raw : [raw];
+  const normalized = values
+    .map((item) => {
+      if (item == null) return '';
+      if (typeof item === 'string') return item.trim();
+      return String(item).trim();
+    })
+    .filter((s) => s.length > 0);
+  const set = new Set<string>();
+  normalized.forEach((s) => set.add(s));
+  return Array.from(set).sort((a, b) => b.length - a.length);
+}
+
+function escapeHtml(input: string): string {
+  return input.replace(/[&<>"']/g, (char) => {
+    switch (char) {
+      case '&': return '&amp;';
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '"': return '&quot;';
+      case "'": return '&#39;';
+      default: return char;
+    }
+  });
+}
+
+function applyHighlight(text: string, columnKey: string): string {
+  const base = text == null ? '' : String(text);
+  const keywords = highlightMap.value.get(columnKey);
+  if (!keywords || keywords.length === 0) return escapeHtml(base);
+  const escapedPatterns = keywords.map((kw) => kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+  if (!escapedPatterns) return escapeHtml(base);
+  const regex = new RegExp(`(${escapedPatterns})`, 'gi');
+  const parts = base.split(regex);
+  if (parts.length === 1) return escapeHtml(base);
+  return parts.map((part, idx) => {
+    const safe = escapeHtml(part);
+    if (idx % 2 === 1) {
+      return `<mark class="grid-highlight">${safe}</mark>`;
+    }
+    return safe;
+  }).join('');
 }
 
 // LV 图标类名计算：
@@ -487,9 +552,19 @@ function lvClass(val: any, rIdx: number): string {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.cell__inner {
+  display: inline;
+}
 
 .cell.clickable:hover {
   text-decoration: underline;
+}
+
+.grid-highlight {
+  background: rgba(255, 214, 102, 0.65);
+  color: inherit;
+  padding: 0 2px;
+  border-radius: 2px;
 }
 
 /* LV 图标（28x28），使用 1x/2x 切图 */

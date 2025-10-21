@@ -31,7 +31,7 @@
       <!-- 右：表格与分页 -->
       <section class="table-area">
         <GridTable :columns="columns" :rows="pagedRows" :grid-template="gridTemplate" :visible-rows="15"
-          :row-height="44" :show-header="false" :fill-placeholder="true" @cell-click="onCellClick" />
+          :row-height="44" :show-header="false" :fill-placeholder="true" :highlight-fields="highlightFields" @cell-click="onCellClick" />
 
         <!-- 底部：左侧“列表详情”，右侧分页（还原截图位置） -->
         <div class="bottom-bar">
@@ -140,6 +140,15 @@ const pagedRows = computed(() => {
   return filtered.value; // 统一服务端分页
 });
 function to(p: number) { page.value = p; fetchListFromApi(); }
+
+const highlightFields = computed<Record<string, string | string[]>>(() => {
+  const kw = keyword.value.trim();
+  if (!kw) return {};
+  if (selCat.value === 'member') {
+    return { name: kw, unionName: kw };
+  }
+  return { fullname: kw, unitName: kw, legalCode: kw, creditCode: kw };
+});
 
 const navItems = computed(() => {
   // 来自统计接口；若暂无数据则退回到单一分类
