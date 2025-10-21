@@ -86,8 +86,8 @@ import { apiGet, niceMax } from '../utils/api';
 
 // 顶部 KPI（来自 /business/member/allNum）
 const kpiItems = ref([
-  { title: '会员总数', value: 0, icon1x: icon31x, icon2x: icon32x },
-  { title: '新就业形态劳动者', value: 0, icon1x: icon41x, icon2x: icon42x },
+  { title: '会员总数（人）', value: 0, icon1x: icon31x, icon2x: icon32x },
+  { title: '新就业形态劳动者（人）', value: 0, icon1x: icon41x, icon2x: icon42x },
 ]);
 
 // 顶左：性别分布（来自 /business/member/allNum）

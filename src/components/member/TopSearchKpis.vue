@@ -20,13 +20,15 @@
     <div class="kpi-row">
       <div class="card card--left">
         <div class="num num--blue">
-          {{ leftDisplay.text }}<span v-if="leftDisplay.unit" class="unit">{{ leftDisplay.unit }}</span>
+          <span class="num__value">{{ leftDisplay.text }}</span>
+          <span v-if="leftDisplay.unit" class="unit">{{ leftDisplay.unit }}</span>
         </div>
         <div class="label">{{ leftItem?.title }}</div>
       </div>
       <div class="card card--right">
         <div class="num num--orange">
-          {{ rightDisplay.text }}<span v-if="rightDisplay.unit" class="unit">{{ rightDisplay.unit }}</span>
+          <span class="num__value">{{ rightDisplay.text }}</span>
+          <span v-if="rightDisplay.unit" class="unit">{{ rightDisplay.unit }}</span>
         </div>
         <div class="label">{{ rightItem?.title }}</div>
       </div>
@@ -130,6 +132,9 @@ function formatDisplay(v?: number | string): { text: string; unit: string } {
 .num {
   position: relative;
   z-index: 1;
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 6px;
   font-size:35px;
   font-weight: 900;
   letter-spacing: 1px;
@@ -137,6 +142,7 @@ function formatDisplay(v?: number | string): { text: string; unit: string } {
   text-shadow: 0 6px 14px rgba(45,110,255,0.12);
   transform: translate(var(--num-x), var(--num-y));
 }
+.num__value { line-height: 1; }
 .num--blue {
   /* 蓝色数值使用渐变以贴合设计 */
   background: linear-gradient(180deg, #6FA7FF 0%, #1A65FF 88%);
@@ -151,7 +157,12 @@ function formatDisplay(v?: number | string): { text: string; unit: string } {
   color: transparent;
   text-shadow: 0 6px 14px rgba(255,140,20,0.18);
 }
-.unit { margin-left: 6px; font-size: 20px; font-weight: 800; }
+.unit {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+  transform: translateY(6px);
+}
 .label { position: relative; z-index: 1; margin-top: 8px; font-size: 18px; font-weight: 800; color: #333; transform: translate(var(--label-x), var(--label-y)); white-space: nowrap; }
 
 /* 左右卡片可以分别细调位移（如需不同距离） */

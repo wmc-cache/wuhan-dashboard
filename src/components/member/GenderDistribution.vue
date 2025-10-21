@@ -18,7 +18,7 @@
         <div class="value" :style="{ color: femaleColor }">{{ pretty(femaleCount) }}</div>
         <div class="legend" :style="{ color: femaleColor }">
           <!-- <span class="dot" :style="{ borderColor: femaleColor }"></span> -->
-          女性会员
+          女性会员(人)
         </div>
         <img class="icon" :src="female1x" :srcset="female2x + ' 2x'" alt="女性会员图标" draggable="false" />
       </div>
@@ -28,7 +28,7 @@
         <div class="value" :style="{ color: maleColor }">{{ pretty(maleCount) }}</div>
         <div class="legend" :style="{ color: maleColor }">
           <!-- <span class="dot" :style="{ borderColor: maleColor }"></span> -->
-          男性会员
+          男性会员(人)
         </div>
         <img class="icon" :src="male1x" :srcset="male2x + ' 2x'" alt="男性会员图标" draggable="false" />
       </div>
@@ -81,7 +81,7 @@ function pretty(n?: number) {
       maximumFractionDigits: digits
     })}万人`;
   }
-  return `${num.toLocaleString('zh-CN')}人`;
+  return `${num.toLocaleString('zh-CN')}`;
 }
 </script>
 
