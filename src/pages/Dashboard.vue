@@ -279,7 +279,7 @@ const leftKpis = ref<[KItem, KItem]>([
 ]);
 const rightKpis = ref<[KItem, KItem]>([
   { title: '工会会员总数(人)', value: 0, unit: '' },
-  { title: '本年度代收金额（亿元）', value: 0, unit: '' },
+  { title: '本年度代收金额（万元）', value: 0, unit: '' },
 ]);
 
 // 会员性别（用于右侧性别概览）
@@ -479,10 +479,10 @@ async function loadMemberAllNum() {
   try {
     const d = await apiGet<MemberAllNum>('/business/member/allNum');
     const total = Number(d?.total || 0);
-    const szje = Number((d as any)?.szje || 0);
+    const zje = Number((d as any)?.zje || 0);
     rightKpis.value = [
       { title: '工会会员总数(人)', value: total, unit: '' },
-      { title: '本年度代收金额（亿元）', value: szje, unit: '' },
+      { title: '本年度代收金额（万元）', value: zje, unit: '' },
     ];
     memberMale.value = Number(d?.manNum || 0);
     memberFemale.value = Number(d?.womanNum || 0);

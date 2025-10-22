@@ -7,9 +7,23 @@
           <el-form-item label="姓名：">
             <el-input v-model="q.kw" placeholder="请输入" clearable class="w180" />
           </el-form-item>
-          <!-- <el-form-item label="主管单位：">
-            <el-input v-model="q.dept" placeholder="请输入" clearable class="w180" />
-          </el-form-item> -->
+          <el-form-item label="主管单位：">
+            <el-select
+              v-model="q.dept"
+              placeholder="请选择"
+              clearable
+              filterable
+              class="w180"
+              :loading="deptLoading"
+            >
+              <el-option
+                v-for="opt in deptOptions"
+                :key="opt.value"
+                :label="opt.label"
+                :value="opt.value"
+              />
+            </el-select>
+          </el-form-item>
           <el-form-item label="申报年份：">
             <el-date-picker
               v-model="q.cityTime"
@@ -70,20 +84,30 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import GridTable, { type ColumnDef } from '../components/GridTable.vue';
 import { apiGet, apiPostBlob } from '../utils/api';
-import { ElForm, ElFormItem, ElInput, ElButton, ElPagination, ElDatePicker } from 'element-plus';
+import { ElForm, ElFormItem, ElInput, ElButton, ElPagination, ElDatePicker, ElSelect, ElOption } from 'element-plus';
 import 'element-plus/es/components/form/style/css';
 import 'element-plus/es/components/form-item/style/css';
 import 'element-plus/es/components/input/style/css';
 import 'element-plus/es/components/button/style/css';
 import 'element-plus/es/components/pagination/style/css';
 import 'element-plus/es/components/date-picker/style/css';
+import 'element-plus/es/components/select/style/css';
+import 'element-plus/es/components/option/style/css';
 import MemberDetailDialog, { type MemberDetail, type MemberDetailTab } from '../components/MemberDetailDialog.vue';
 
 const router = useRouter();
 function goBack() { router.back(); }
 
 // 查询条件
-const q = reactive<{ kw: string; dept: string; cityTime: string }>({ kw: '', dept: '', cityTime: '' });
+const q = reactive<{ kw: string; dept: string | number; cityTime: string }>({ kw: '', dept: '', cityTime: '' });
+
+interface DictOption { label: string; value: string | number }
+const deptOptions = ref<DictOption[]>([]);
+const deptLoading = ref(false);
+const selectedDeptLabel = computed(() => {
+  const found = deptOptions.value.find(opt => opt.value === q.dept);
+  return found ? found.label : typeof q.dept === 'string' ? q.dept : '';
+});
 
 // 列定义：序号、姓名、年龄、主管单位、成为劳模时间、是否历史
 const gridTemplate = '64px 1.6fr 0.8fr 1.8fr 1.4fr 1.2fr';
@@ -117,7 +141,7 @@ const rows = ref<Row[]>([]);         // 当前页数据
 const total = ref<number>(0);        // 后端总数
 
 onMounted(async () => {
-  await loadPage();
+  await Promise.all([loadDeptDict(), loadPage()]);
 });
 
 function onSearch() { page.value = 1; loadPage(); }
@@ -134,7 +158,7 @@ const highlightFields = computed<Record<string, string | string[]>>(() => {
   const map: Record<string, string | string[]> = {};
   const kwName = q.kw.trim();
   if (kwName) map.name = kwName;
-  const kwDept = q.dept.trim();
+  const kwDept = selectedDeptLabel.value.trim();
   if (kwDept) map.workUnit = kwDept;
   const kwCity = q.cityTime.trim();
   if (kwCity) map.cityTime = kwCity;
@@ -187,13 +211,33 @@ function toCsvCell(v: any): string {
   return s;
 }
 
+async function loadDeptDict() {
+  deptLoading.value = true;
+  try {
+    const res = await apiGet<any>('/modelWorker/dict?pid=1000').catch(() => null);
+    const list: Array<{ name?: string; value?: string | number }> = Array.isArray(res?.data)
+      ? res.data
+      : Array.isArray(res)
+        ? res
+        : Array.isArray(res?.rows)
+          ? res.rows
+          : [];
+    deptOptions.value = list
+      .filter(item => item && item.name)
+      .map(item => ({ label: String(item.name), value: item.value ?? item.name }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'zh-Hans-CN'));
+  } finally {
+    deptLoading.value = false;
+  }
+}
+
 // 加载数据（服务端分页）
 async function loadPage() {
   const params = new URLSearchParams();
   params.set('pageNum', String(page.value));
   params.set('pageSize', String(pageSize));
   if (q.kw) params.set('name', q.kw);
-  if (q.dept) params.set('dept', q.dept);
+  if (q.dept !== '' && q.dept !== undefined && q.dept !== null) params.set('tjdw', String(q.dept));
   if (q.cityTime) params.set('cityTime', q.cityTime);
   const url = `/modelWorker/list?${params.toString()}`;
   const res = await apiGet<any>(url).catch(() => null);

@@ -20,15 +20,27 @@
     <div class="kpi-row">
       <div class="card card--left">
         <div class="num num--blue">
-          <span class="num__value">{{ leftDisplay.text }}</span>
-          <span v-if="leftDisplay.unit" class="unit">{{ leftDisplay.unit }}</span>
+          <CountUpNumber
+            :value="leftDisplay.value"
+            :duration="1500"
+            :decimal-places="leftDisplay.decimalPlaces"
+          
+            number-class="num__value"
+            unit-class="unit"
+          />
         </div>
         <div class="label">{{ leftItem?.title }}</div>
       </div>
       <div class="card card--right">
         <div class="num num--orange">
-          <span class="num__value">{{ rightDisplay.text }}</span>
-          <span v-if="rightDisplay.unit" class="unit">{{ rightDisplay.unit }}</span>
+          <CountUpNumber
+            :value="rightDisplay.value"
+            :duration="1500"
+            :decimal-places="rightDisplay.decimalPlaces"
+         
+            number-class="num__value"
+            unit-class="unit"
+          />
         </div>
         <div class="label">{{ rightItem?.title }}</div>
       </div>
@@ -43,6 +55,7 @@
 import { computed } from 'vue';
 import search1x from '../../images/search/搜索.png';
 import search2x from '../../images/search/搜索@2x.png';
+import CountUpNumber from '../CountUpNumber.vue';
 
 interface KItem { title: string; value: number | string }
 interface Props {
@@ -72,23 +85,21 @@ const emit = defineEmits<{
 function onInput(e: Event) { emit('update:modelValue', (e.target as HTMLInputElement).value); }
 function onSearch() { emit('search', props.modelValue); }
 
-function formatDisplay(v?: number | string): { text: string; unit: string } {
+function formatDisplay(v?: number | string): { value: number; unit: string; decimalPlaces: number } {
   const n = Number(v);
   if (!Number.isFinite(n)) {
-    return { text: String(v ?? ''), unit: '' };
+    return { value: 0, unit: '', decimalPlaces: 0 };
   }
   if (n >= 1_000_0000) {
     const wan = n / 10000;
     const digits = wan >= 100 ? 0 : wan >= 10 ? 1 : 2;
     return {
-      text: wan.toLocaleString('zh-CN', {
-        minimumFractionDigits: digits,
-        maximumFractionDigits: digits
-      }),
-      unit: '万人'
+      value: Number(wan.toFixed(digits)),
+      unit: '万人',
+      decimalPlaces: digits
     };
   }
-  return { text: n.toLocaleString('zh-CN'), unit: '人' };
+  return { value: n, unit: '人', decimalPlaces: 0 };
 }
 </script>
 
@@ -139,22 +150,39 @@ function formatDisplay(v?: number | string): { text: string; unit: string } {
   font-weight: 900;
   letter-spacing: 1px;
   line-height: 1;
-  text-shadow: 0 6px 14px rgba(45,110,255,0.12);
   transform: translate(var(--num-x), var(--num-y));
+}
+.num :deep(.count-up-wrapper) {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 6px;
 }
 .num__value { line-height: 1; }
 .num--blue {
-  /* 蓝色数值使用渐变以贴合设计 */
+  color: transparent;
+}
+.num--orange {
+  color: transparent;
+}
+.num--blue :deep(.num__value),
+.num--blue :deep(.unit) {
   background: linear-gradient(180deg, #6FA7FF 0%, #1A65FF 88%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
-.num--orange {
+.num--orange :deep(.num__value),
+.num--orange :deep(.unit) {
   background: linear-gradient(180deg, #FFB37F 0%, #FE870B 90%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+.num--blue :deep(.num__value) {
+  text-shadow: 0 6px 14px rgba(45,110,255,0.12);
+}
+.num--orange :deep(.num__value),
+.num--orange :deep(.unit) {
   text-shadow: 0 6px 14px rgba(255,140,20,0.18);
 }
 .unit {

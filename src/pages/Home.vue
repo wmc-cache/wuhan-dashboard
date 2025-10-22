@@ -107,6 +107,7 @@ interface Row {
   legalCode?: string;     // 法人证代码
   unitName?: string;      // 单位名称
   creditCode?: string;    // 统一社会信用代码
+  segments?: string[];
 }
 
 interface MemberRow {
@@ -116,6 +117,7 @@ interface MemberRow {
   gender?: string;       // 性别
   joinAt?: string;       // 入会时间
   idNumber?: string;     // 身份证（用于详情接口）
+  segments?: string[];
 }
 
 const allRows = ref<any[]>([]); // 根据 selCat 切换 Row/MemberRow
@@ -141,13 +143,31 @@ const pagedRows = computed(() => {
 });
 function to(p: number) { page.value = p; fetchListFromApi(); }
 
+const segmentKeywords = computed(() => {
+  const set = new Set<string>();
+  allRows.value.forEach((row: any) => {
+    const segs: unknown = row?.segments ?? row?.segment;
+    if (Array.isArray(segs)) {
+      segs.forEach((item) => {
+        const s = typeof item === 'string' ? item.trim() : String(item ?? '').trim();
+        if (s) set.add(s);
+      });
+    }
+  });
+  return Array.from(set).sort((a, b) => b.length - a.length);
+});
+
 const highlightFields = computed<Record<string, string | string[]>>(() => {
+  const terms = new Set<string>();
   const kw = keyword.value.trim();
-  if (!kw) return {};
+  if (kw) terms.add(kw);
+  segmentKeywords.value.forEach((word) => terms.add(word));
+  if (terms.size === 0) return {};
+  const arr = Array.from(terms).sort((a, b) => b.length - a.length);
   if (selCat.value === 'member') {
-    return { name: kw, unionName: kw };
+    return { name: arr, unionName: arr };
   }
-  return { fullname: kw, unitName: kw, legalCode: kw, creditCode: kw };
+  return { fullname: arr, unitName: arr, legalCode: arr, creditCode: arr };
 });
 
 const navItems = computed(() => {
@@ -315,6 +335,7 @@ function mapRow(raw: any, i: number): Row {
     legalCode: raw.legalCode ?? raw.licenseCode ?? raw.corporateCode ?? raw.orgCode,
     unitName: raw.unitName ?? raw.orgName,
     creditCode: raw.creditCode ?? raw.uscc ?? raw.socialCreditCode ?? raw.othersOrgCode,
+    segments: normalizeSegments(raw.segment)
   };
   return r;
 }
@@ -327,6 +348,7 @@ function mapMemberRow(raw: any, i: number): MemberRow {
     gender: raw.gender ?? raw.sex ?? (i % 2 ? '女' : '男'),
     joinAt: raw.joinAt ?? raw.joinDate ?? raw.joinTime ?? raw.createdAt ?? '2024-03-02',
     idNumber: raw.idNumberBright ?? raw.certificateNumBright ?? raw.idNumber ?? raw.certificateNum ?? raw.certificateNo,
+    segments: normalizeSegments(raw.segment)
   } as MemberRow;
 }
 
@@ -338,6 +360,16 @@ function normalizeDate(v: any): string | undefined {
   // 兼容 2025-08-20T00:00:00.000+08:00
   if (s.includes('T')) return s.slice(0, 10);
   return s;
+}
+
+function normalizeSegments(seg: unknown): string[] {
+  if (!Array.isArray(seg)) return [];
+  const set = new Set<string>();
+  seg.forEach((item) => {
+    const s = typeof item === 'string' ? item.trim() : String(item ?? '').trim();
+    if (s) set.add(s);
+  });
+  return Array.from(set).sort((a, b) => b.length - a.length);
 }
 
 // ---------------- API: 统计 + 列表 ----------------

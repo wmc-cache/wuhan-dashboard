@@ -15,7 +15,16 @@
     <div class="right">
       <!-- 女性 -->
       <div class="col female">
-        <div class="value" :style="{ color: femaleColor }">{{ pretty(femaleCount) }}</div>
+        <div class="value" :style="{ color: femaleColor }">
+          <CountUpNumber
+            :value="femaleDisplay.value"
+            :duration="1500"
+            :decimal-places="femaleDisplay.decimalPlaces"
+            :unit="femaleDisplay.unit"
+            number-class="value__number"
+            unit-class="value__unit"
+          />
+        </div>
         <div class="legend" :style="{ color: femaleColor }">
           <!-- <span class="dot" :style="{ borderColor: femaleColor }"></span> -->
           女性会员(人)
@@ -25,7 +34,16 @@
 
       <!-- 男性 -->
       <div class="col male">
-        <div class="value" :style="{ color: maleColor }">{{ pretty(maleCount) }}</div>
+        <div class="value" :style="{ color: maleColor }">
+          <CountUpNumber
+            :value="maleDisplay.value"
+            :duration="1500"
+            :decimal-places="maleDisplay.decimalPlaces"
+            :unit="maleDisplay.unit"
+            number-class="value__number"
+            unit-class="value__unit"
+          />
+        </div>
         <div class="legend" :style="{ color: maleColor }">
           <!-- <span class="dot" :style="{ borderColor: maleColor }"></span> -->
           男性会员(人)
@@ -63,25 +81,34 @@ const props = withDefaults(defineProps<Props>(), {
 
 // 保持对外部传值的响应，避免解构为常量后不更新
 import { computed } from 'vue';
+import CountUpNumber from '../CountUpNumber.vue';
 const maleCount = computed(() => Number(props.maleCount || 0));
 const femaleCount = computed(() => Number(props.femaleCount || 0));
+const maleDisplay = computed(() => formatDisplay(maleCount.value));
+const femaleDisplay = computed(() => formatDisplay(femaleCount.value));
 
 // 颜色与原型一致：男蓝 女橙
 const maleColor = '#2a6ff0';
 const femaleColor = '#FFA36B';
 
-function pretty(n?: number) {
-  const num = Number(n);
-  if (!Number.isFinite(num)) return '-';
-  if (num >= 1_000_0000) {
-    const wan = num / 10000;
-    const digits = wan >= 100 ? 0 : wan >= 10 ? 1 : 2;
-    return `${wan.toLocaleString('zh-CN', {
-      minimumFractionDigits: digits,
-      maximumFractionDigits: digits
-    })}万人`;
+function formatDisplay(value: number) {
+  if (!Number.isFinite(value)) {
+    return { value: 0, unit: '', decimalPlaces: 0 };
   }
-  return `${num.toLocaleString('zh-CN')}`;
+  if (value >= 1_000_0000) {
+    const wan = value / 10000;
+    const digits = wan >= 100 ? 0 : wan >= 10 ? 1 : 2;
+    return {
+      value: Number(wan.toFixed(digits)),
+      unit: '万人',
+      decimalPlaces: digits
+    };
+  }
+  return {
+    value,
+    unit: '',
+    decimalPlaces: 0
+  };
 }
 </script>
 
@@ -120,6 +147,19 @@ function pretty(n?: number) {
   letter-spacing: 1px;
   line-height: 1;
   white-space: nowrap;
+}
+.value :deep(.count-up-wrapper) {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 4px;
+}
+.value__number {
+  line-height: 1;
+}
+.value__unit {
+  font-size: 0.75em;
+  font-weight: 700;
+  margin-left: 4px;
 }
 
 .legend { margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 800; }

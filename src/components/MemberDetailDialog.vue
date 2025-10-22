@@ -145,74 +145,81 @@
 
           <!-- 困难帮扶 -->
           <template v-else-if="tab==='help'">
-            <div class="card">
-              <ul class="info info--flat">
-                <li class="info__row"><span class="lab">审核工会</span><span class="val">{{ help.archive.auditOrg || '-' }}</span></li>
-                <li class="info__row"><span class="lab">审核时间</span><span class="val">{{ help.archive.auditTime || '-' }}</span></li>
-                <li class="info__row"><span class="lab">审核人</span><span class="val">{{ help.archive.auditUser || '-' }}</span></li>
-                <li class="info__row"><span class="lab">建档时间</span><span class="val">{{ help.archive.createTime || '-' }}</span></li>
-                <li class="info__row"><span class="lab">建档工会</span><span class="val">{{ help.archive.creatorOrg || '-' }}</span></li>
-                <li class="info__row"><span class="lab">建档人</span><span class="val">{{ help.archive.creator || '-' }}</span></li>
-                <li class="info__row"><span class="lab">困难类别</span><span class="val">{{ help.archive.poorTypeNew || '-' }}</span></li>
-              </ul>
-            </div>
-            <div class="card" style="margin-top:8px;">
-              <template v-if="help.families.length">
-                <table class="table">
-                  <thead>
-                    <tr><th>姓名</th><th>关系</th><th>性别</th><th>出生日期</th><th>健康状态</th><th>单位/学校</th><th>人员身份</th><th>月收入</th></tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(r,i) in help.families" :key="i">
-                      <td>{{ r.name || '-' }}</td>
-                      <td>{{ r.kindred || '-' }}</td>
-                      <td>{{ r.gender || '-' }}</td>
-                      <td>{{ r.birthday || '-' }}</td>
-                      <td>{{ r.health || '-' }}</td>
-                      <td>{{ r.company || '-' }}</td>
-                      <td>{{ r.personStatus || '-' }}</td>
-                      <td>{{ r.earning || '-' }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </template>
-              <p v-else class="empty-tip">暂无家庭成员信息</p>
-            </div>
-            <div class="card" style="margin-top:8px;">
-              <template v-if="help.helps.length">
-                <table class="table">
-                  <thead>
-                    <tr><th>上报单位</th><th>资金类型</th><th>帮扶日期</th><th>帮扶形式</th><th>帮扶措施</th><th>状态</th><th>联系方式</th><th>帮扶单位</th></tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(r,i) in help.helps" :key="i">
-                      <td>{{ r.currentDept || '-' }}</td>
-                      <td>{{ r.incomingType || '-' }}</td>
-                      <td>{{ r.salvationDate || '-' }}</td>
-                      <td>{{ r.salvationForm || '-' }}</td>
-                      <td>{{ r.salvationMethod || '-' }}</td>
-                      <td>{{ r.stateStr || '-' }}</td>
-                      <td>{{ r.tel || '-' }}</td>
-                      <td>{{ r.userDept || '-' }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </template>
-              <p v-else class="empty-tip">暂无帮扶记录</p>
-            </div>
-            <div class="card" style="margin-top:8px;">
-              <ul class="info info--flat">
-                <li class="info__row"><span class="lab">疾病类型</span><span class="val">{{ help.people.deformity || '-' }}</span></li>
-                <li class="info__row"><span class="lab">月收入</span><span class="val">{{ help.people.earning || '-' }}</span></li>
-                <li class="info__row"><span class="lab">健康</span><span class="val">{{ help.people.health || '-' }}</span></li>
-                <li class="info__row"><span class="lab">住房</span><span class="val">{{ help.people.houseType || '-' }}</span></li>
-                <li class="info__row"><span class="lab">帮扶原因</span><span class="val">{{ help.people.mainPoorType || '-' }}</span></li>
-                <li class="info__row"><span class="lab">婚姻</span><span class="val">{{ help.people.marriage || '-' }}</span></li>
-                <li class="info__row"><span class="lab">民族</span><span class="val">{{ help.people.nation || '-' }}</span></li>
-                <li class="info__row"><span class="lab">政治面貌</span><span class="val">{{ help.people.party || '-' }}</span></li>
-                <li class="info__row"><span class="lab">家庭人口数</span><span class="val">{{ help.people.personSum || '-' }}</span></li>
-              </ul>
-            </div>
+            <template v-if="helpAllEmpty">
+              <div class="card">
+                <p class="empty-tip">暂无困难帮扶数据</p>
+              </div>
+            </template>
+            <template v-else>
+              <div class="card">
+                <ul class="info info--flat">
+                  <li class="info__row"><span class="lab">审核工会</span><span class="val">{{ help.archive.auditOrg || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">审核时间</span><span class="val">{{ help.archive.auditTime || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">审核人</span><span class="val">{{ help.archive.auditUser || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">建档时间</span><span class="val">{{ help.archive.createTime || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">建档工会</span><span class="val">{{ help.archive.creatorOrg || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">建档人</span><span class="val">{{ help.archive.creator || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">困难类别</span><span class="val">{{ help.archive.poorTypeNew || '-' }}</span></li>
+                </ul>
+              </div>
+              <div class="card" style="margin-top:8px;">
+                <template v-if="help.families.length">
+                  <table class="table">
+                    <thead>
+                      <tr><th>姓名</th><th>关系</th><th>性别</th><th>出生日期</th><th>健康状态</th><th>单位/学校</th><th>人员身份</th><th>月收入</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(r,i) in help.families" :key="i">
+                        <td>{{ r.name || '-' }}</td>
+                        <td>{{ r.kindred || '-' }}</td>
+                        <td>{{ r.gender || '-' }}</td>
+                        <td>{{ r.birthday || '-' }}</td>
+                        <td>{{ r.health || '-' }}</td>
+                        <td>{{ r.company || '-' }}</td>
+                        <td>{{ r.personStatus || '-' }}</td>
+                        <td>{{ r.earning || '-' }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </template>
+                <p v-else class="empty-tip">暂无家庭成员信息</p>
+              </div>
+              <div class="card" style="margin-top:8px;">
+                <template v-if="help.helps.length">
+                  <table class="table">
+                    <thead>
+                      <tr><th>上报单位</th><th>资金类型</th><th>帮扶日期</th><th>帮扶形式</th><th>帮扶措施</th><th>状态</th><th>联系方式</th><th>帮扶单位</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(r,i) in help.helps" :key="i">
+                        <td>{{ r.currentDept || '-' }}</td>
+                        <td>{{ r.incomingType || '-' }}</td>
+                        <td>{{ r.salvationDate || '-' }}</td>
+                        <td>{{ r.salvationForm || '-' }}</td>
+                        <td>{{ r.salvationMethod || '-' }}</td>
+                        <td>{{ r.stateStr || '-' }}</td>
+                        <td>{{ r.tel || '-' }}</td>
+                        <td>{{ r.userDept || '-' }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </template>
+                <p v-else class="empty-tip">暂无帮扶记录</p>
+              </div>
+              <div class="card" style="margin-top:8px;">
+                <ul class="info info--flat">
+                  <li class="info__row"><span class="lab">疾病类型</span><span class="val">{{ help.people.deformity || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">月收入</span><span class="val">{{ help.people.earning || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">健康</span><span class="val">{{ help.people.health || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">住房</span><span class="val">{{ help.people.houseType || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">帮扶原因</span><span class="val">{{ help.people.mainPoorType || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">婚姻</span><span class="val">{{ help.people.marriage || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">民族</span><span class="val">{{ help.people.nation || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">政治面貌</span><span class="val">{{ help.people.party || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">家庭人口数</span><span class="val">{{ help.people.personSum || '-' }}</span></li>
+                </ul>
+              </div>
+            </template>
           </template>
 
           <!-- 劳模信息 -->
@@ -283,9 +290,32 @@ const rescueList = ref<Array<{ hospitalName?: string; diseaseType?: string; sign
 
 // 困难帮扶
 const help = ref<{ archive: any; families: any[]; helps: any[]; people: any }>({ archive: {}, families: [], helps: [], people: {} });
+const helpAllEmpty = computed(() => {
+  const h = help.value || {};
+  const archiveHas = hasObjectData(h.archive);
+  const familiesHas = Array.isArray(h.families) && h.families.length > 0;
+  const helpsHas = Array.isArray(h.helps) && h.helps.length > 0;
+  const peopleHas = hasObjectData(h.people);
+  return !archiveHas && !familiesHas && !helpsHas && !peopleHas;
+});
 
 // 劳模信息
 const model = ref<any>({});
+
+function hasObjectData(obj: unknown): boolean {
+  if (!obj || typeof obj !== 'object') return false;
+  return Object.values(obj as Record<string, unknown>).some((val) => isMeaningfulValue(val));
+}
+
+function isMeaningfulValue(val: unknown): boolean {
+  if (val === null || val === undefined) return false;
+  if (typeof val === 'string') return val.trim() !== '';
+  if (typeof val === 'number') return !Number.isNaN(val);
+  if (typeof val === 'boolean') return true;
+  if (Array.isArray(val)) return val.length > 0;
+  if (typeof val === 'object') return Object.keys(val as Record<string, unknown>).length > 0;
+  return true;
+}
 
 function normDate(s?: string): string {
   if (!s) return '';
