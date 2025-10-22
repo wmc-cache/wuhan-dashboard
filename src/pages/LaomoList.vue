@@ -156,11 +156,11 @@ async function to(p: number) { page.value = Math.min(pageCount.value, Math.max(1
 
 const highlightFields = computed<Record<string, string | string[]>>(() => {
   const map: Record<string, string | string[]> = {};
-  const kwName = q.kw.trim();
+  const kwName = (q.kw ?? '').trim();
   if (kwName) map.name = kwName;
   const kwDept = selectedDeptLabel.value.trim();
   if (kwDept) map.workUnit = kwDept;
-  const kwCity = q.cityTime.trim();
+  const kwCity = (q.cityTime ?? '').trim();
   if (kwCity) map.cityTime = kwCity;
   return map;
 });

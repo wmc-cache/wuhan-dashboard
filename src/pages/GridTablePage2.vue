@@ -141,7 +141,7 @@ async function fetchList() {
       qs.set('memberName', nameVal);
     }
     if (q.unionName?.trim()) qs.set('unionName', q.unionName.trim());
-    if (q.sex !== '') qs.set('sex', String(q.sex));
+    if (q.sex !== '' && q.sex !== undefined && q.sex !== null) qs.set('sex', String(q.sex));
     qs.set('pageNum', String(page.value));
     qs.set('pageSize', String(pageSize));
 
