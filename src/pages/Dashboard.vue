@@ -152,8 +152,7 @@ function goToHome(payload?: { keyword: string; category: string }) {
   if (!kw) return;
   const cat = (payload?.category as 'org' | 'member' | undefined) ?? selCat.value;
   if (cat === 'member') {
-    const query = kw ? { name: kw } : undefined;
-    router.push({ name: 'grid-table-2', query }).catch(() => void 0);
+    router.push({ path: '/home', query: { kw, cat } }).catch(() => void 0);
     return;
   }
   router.push({ path: '/home', query: { kw, cat } }).catch(() => void 0);

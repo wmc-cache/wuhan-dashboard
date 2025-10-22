@@ -32,14 +32,31 @@
     </section>
 
     <section class="table-wrap">
-      <GridTable :columns="columns" :rows="pagedRows" :grid-template="gridTemplate" :visible-rows="20" :row-height="40"
-        :show-header="false" :highlight-fields="highlightFields" />
+      <GridTable
+        :columns="columns"
+        :rows="pagedRows"
+        :grid-template="gridTemplate"
+        :visible-rows="20"
+        :row-height="40"
+        :show-header="false"
+        :highlight-fields="highlightFields"
+        @cell-click="onCellClick"
+      />
       <div class="pager">
         <el-pagination v-model:current-page="page" :page-size="pageSize" :total="total" background
           layout="total, prev, pager, next, jumper" @current-change="(p:number)=>to(p)" />
       </div>
     </section>
   </main>
+  <!-- 会员详情弹窗（点击姓名） -->
+  <MemberDetailDialog
+    v-model="showMember"
+    :data="memberData"
+    :search-code="memberSearchCode"
+    title="会员详情"
+    :width="1080"
+    :default-tab="'help'"
+  />
 </template>
 
 <script setup lang="ts">
@@ -56,6 +73,7 @@ import 'element-plus/es/components/select/style/css';
 import 'element-plus/es/components/option/style/css';
 import 'element-plus/es/components/button/style/css';
 import 'element-plus/es/components/pagination/style/css';
+import MemberDetailDialog, { type MemberDetail } from '../components/MemberDetailDialog.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -84,7 +102,19 @@ const columns: ColumnDef[] = [
 ];
 
 interface Row {
-  index:number; reportUnit:string; archiveType:string; workerNo:string; name:string; gender:string; idCard:string; householdType:string; qualified:string; archiveCategory:string; difficultyType:string; cause:string;
+  index: number;
+  reportUnit: string;
+  archiveType: string;
+  workerNo: string;
+  name: string;
+  gender: string;
+  idCard: string; // 列表展示（可能为脱敏）
+  idNumber?: string; // 明文身份证号（用于详情检索）
+  householdType: string;
+  qualified: string;
+  archiveCategory: string;
+  difficultyType: string;
+  cause: string;
 }
 const allRows = ref<Row[]>([]);
 
@@ -160,7 +190,10 @@ async function fetchList(){
       workerNo: r.number || '-',
       name: r.name || '-',
       gender: r.gender || '-',
+      // 列表中展示的身份证（后端通常返回脱敏字段 certificateNo）
       idCard: r.certificateNo || '-',
+      // 详情检索优先使用明文字段；兜底使用 certificateNo
+      idNumber: r.certificateNoBright || r.idNumber || r.certificateNum || r.certificateNo,
       householdType: r.residenceType || '-',
       qualified: r.qualified || '-',
       archiveCategory: r.helpOutType || '-',
@@ -220,6 +253,21 @@ watch(
   },
   { immediate: true }
 );
+
+// 点击姓名 -> 打开“会员详情”弹窗
+const showMember = ref(false);
+const memberData = ref<MemberDetail>({});
+const memberSearchCode = ref<string | undefined>(undefined);
+function onCellClick(payload: { row: Row; column: ColumnDef }) {
+  if (payload.column.key !== 'name') return;
+  memberData.value = {
+    name: payload.row.name,
+    gender: payload.row.gender,
+    union: payload.row.reportUnit,
+  } as MemberDetail;
+  memberSearchCode.value = payload.row.idNumber;
+  showMember.value = true;
+}
 </script>
 
 <style scoped lang="scss">

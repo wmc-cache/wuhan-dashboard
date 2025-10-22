@@ -13,6 +13,7 @@
         :show-header="false"
         empty-text="暂无记录"
         row-key="__key"
+        @cell-click="onCellClick"
       />
     </div>
   </section>
@@ -22,7 +23,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, toRefs, watch } from 'vue';
 import GridTable, { type ColumnDef } from '../GridTable.vue';
 
-interface Row { name: string; type: string; date: string }
+interface Row { name: string; type: string; date: string; idNumber?: string }
 interface Props { title?: string; rows?: Row[] }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -40,7 +41,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const cols: ColumnDef[] = [
-  { key: 'name', title: '会员姓名', align: 'left' },
+  { key: 'name', title: '会员姓名', align: 'left', clickable: true },
   { key: 'type', title: '救助名称', align: 'left' },
   { key: 'date', title: '时间' }
 ];
@@ -70,6 +71,14 @@ const displayRows = computed(() => {
   }
   return out;
 });
+
+// 透传单元格点击事件，供父组件打开详情弹窗
+const emit = defineEmits<{
+  (e: 'cell-click', payload: { row: Row; column: ColumnDef; rowIndex: number }): void;
+}>();
+function onCellClick(payload: { row: Row; column: ColumnDef; rowIndex: number }) {
+  emit('cell-click', payload);
+}
 
 function advance() {
   if (!needsScroll.value) return;

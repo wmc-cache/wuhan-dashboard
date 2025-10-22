@@ -20,8 +20,10 @@
     <AidTypeAmount :categories="typeCats" :values="typeAmountVals" :y-max="typeAmountMax" style="grid-area: bc;" />
 
     <!-- 近期列表（/difficultRelief/maxAmout/{year}） -->
-    <AidRecentList :rows="recentRows" style="grid-area: br;" />
+    <AidRecentList :rows="recentRows" style="grid-area: br;" @cell-click="onRecentCellClick" />
   </main>
+  <!-- 详情弹窗：点击近期名单中的姓名 -->
+  <MemberDetailDialog v-model="showMemberDlg" :data="memberDetail" :search-code="memberSearchCode" :default-tab="'rescue'" :width="1080" />
 </template>
 
 <script setup lang="ts">
@@ -33,6 +35,7 @@ import AidUnitRanking from '../components/aid/UnitRanking.vue';
 import AidTypePeople from '../components/aid/TypePeople.vue';
 import AidTypeAmount from '../components/aid/TypeAmount.vue';
 import AidRecentList from '../components/aid/RecentList.vue';
+import MemberDetailDialog, { type MemberDetail } from '../components/MemberDetailDialog.vue';
 
 // 年份：默认取当年
 const year = new Date().getFullYear();
@@ -65,7 +68,7 @@ const typePeopleMax = ref<number>(0);
 const typeAmountMax = ref<number>(0);
 
 // 近期列表
-interface RecentRow { name: string; type: string; date: string }
+interface RecentRow { name: string; type: string; date: string; idNumber?: string }
 const recentRows = ref<RecentRow[]>([]);
 
 onMounted(() => loadAll(year));
@@ -149,8 +152,28 @@ async function loadRecent(y: number) {
   recentRows.value = arr.map((it) => ({
     name: String(it?.appName || it?.name || ''),
     type: String(it?.diseaseType || it?.type || ''),
-    date: String(it?.reportDate || it?.date || '')
+    date: String(it?.reportDate || it?.date || ''),
+    // 身份证字段用于详情检索：优先取明文；后备取脱敏（若后端支持）
+    idNumber: it?.idNumberBright || it?.certificateNumBright || it?.idNumber || it?.certificateNum || it?.certificateNo
   }));
+}
+
+// 点击近期名单的“会员姓名”查看详情（默认展示“困难救助”tab）
+const showMemberDlg = ref(false);
+const memberDetail = ref<MemberDetail>({});
+const memberSearchCode = ref<string | undefined>(undefined);
+async function onRecentCellClick(payload: { row: RecentRow; column: any }) {
+  if (!payload || payload.column?.key !== 'name') return;
+  memberDetail.value = { name: payload.row.name };
+  // 若接口未返回身份证，尝试按姓名查询一次以获取 searchCode
+  let code = payload.row.idNumber;
+  if (!code && payload.row.name) {
+    const r: any = await apiGet<any>(`/business/member/list?name=${encodeURIComponent(payload.row.name)}&pageNum=1&pageSize=1`).catch(() => null);
+    const one = (r && (Array.isArray(r?.rows) ? r.rows[0] : (Array.isArray(r?.data) ? r.data[0] : undefined))) || undefined;
+    code = one?.idNumberBright || one?.certificateNumBright || one?.idNumber || one?.certificateNum || one?.certificateNo;
+  }
+  memberSearchCode.value = code;
+  showMemberDlg.value = true;
 }
 </script>
 
