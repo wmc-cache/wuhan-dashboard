@@ -26,6 +26,8 @@ interface Props {
   decimal?: string
   decimalPlaces?: number
   autoStart?: boolean
+  // 是否启用千分位分隔符（默认启用）；有些场景需要纯数字（例如“8.9亿”样式）
+  grouping?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -40,7 +42,8 @@ const props = withDefaults(defineProps<Props>(), {
   separator: ',',
   decimal: '.',
   decimalPlaces: 0,
-  autoStart: true
+  autoStart: true,
+  grouping: true
 })
 
 const numberRef = ref<HTMLElement>()
@@ -53,13 +56,21 @@ function formatNumber(num: number | string): number {
   return Number.isFinite(n) ? n : 0
 }
 
-// 显示值：动画时让 CountUp 控制，否则显示格式化的值
+// 显示值：动画时让 CountUp 控制；否则按分组/小数位规则格式化
 const displayValue = computed(() => {
   if (isAnimating.value) {
     return '' // CountUp 控制内容时，Vue 不显示任何内容
   }
   const targetValue = formatNumber(props.value)
-  return targetValue.toLocaleString('zh-CN')
+  const dp = props.decimalPlaces
+  if (props.grouping) {
+    return targetValue.toLocaleString('zh-CN', {
+      minimumFractionDigits: dp,
+      maximumFractionDigits: dp,
+    })
+  }
+  // 不启用分组：按指定位数输出，不加千分位
+  return dp > 0 ? targetValue.toFixed(dp) : String(Math.trunc(targetValue))
 })
 
 // 初始化 CountUp
@@ -82,7 +93,7 @@ function initCountUp() {
       startVal: 0,
       duration: props.duration / 1000, // CountUp 使用秒为单位
       useEasing: props.easing,
-      useGrouping: true, // 启用千位分隔符
+      useGrouping: props.grouping, // 是否启用千位分隔符
       separator: props.separator,
       decimal: props.decimal,
       decimalPlaces: props.decimalPlaces,

@@ -3,7 +3,12 @@
     <div v-for="(k, i) in items" :key="k.label" class="kpi">
       <div class="kpi__icon" :class="'kpi__icon--' + (i + 1)" aria-hidden="true"></div>
       <div class="kpi__meta">
-        <div class="kpi__value">{{ pretty(k.value) }}</div>
+        <!-- 使用通用的 CountUpNumber 组件替换数值展示；
+             不改动原有结构与样式（外层仍保留 .kpi__value），
+             以避免影响布局和字体样式 -->
+        <div class="kpi__value">
+          <CountUpNumber :value="k.value" :duration="1200" />
+        </div>
         <div class="kpi__label">{{ k.label }}</div>
       </div>
     </div>
@@ -12,6 +17,7 @@
 
 <script setup lang="ts">
 import { toRefs } from 'vue';
+import CountUpNumber from '../CountUpNumber.vue';
 interface KpiItem { label: string; value: number }
 interface Props { items?: KpiItem[] }
 
@@ -26,7 +32,6 @@ const props = withDefaults(defineProps<Props>(), {
 
 // 保持响应式：把 props.items 暴露为 ref，模板直接用 items
 const { items } = toRefs(props);
-function pretty(n: number) { return n.toLocaleString('zh-CN'); }
 </script>
 
 <style scoped lang="scss">

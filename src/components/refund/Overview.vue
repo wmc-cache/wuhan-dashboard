@@ -8,8 +8,10 @@
              @click="onCellClick($event)">
           <div class="barrel" aria-hidden="true"></div>
           <div class="amount">
-            <span class="amount__num">{{ amountParts(it.value).n }}</span>
-            <span class="amount__unit">{{ amountParts(it.value).u }}</span>
+            <span class="amount__num">
+              <CountUpNumber :value="numFor(it.value)" :decimal-places="dpFor(it.value)" :separator="''" :grouping="false" :duration="1200" />
+            </span>
+            <span class="amount__unit">{{ unitFor(it.value) }}</span>
           </div>
           <!-- 顶部三桶：文字直接放到桶上，不要下面的底座牌 -->
           <div class="title-on-barrel">{{ it.name }}</div>
@@ -21,8 +23,10 @@
              @click="onCellClick($event)">
           <div class="barrel" aria-hidden="true"></div>
           <div class="amount">
-            <span class="amount__num">{{ amountParts(it.value).n }}</span>
-            <span class="amount__unit">{{ amountParts(it.value).u }}</span>
+            <span class="amount__num">
+              <CountUpNumber :value="numFor(it.value)" :decimal-places="dpFor(it.value)" :separator="''" :grouping="false" :duration="1200" />
+            </span>
+            <span class="amount__unit">{{ unitFor(it.value) }}</span>
           </div>
           <div class="title-on-barrel">{{ it.name }}</div>
         </div>
@@ -33,6 +37,7 @@
 
 <script setup lang="ts">
 import { toRefs } from 'vue';
+import CountUpNumber from '../CountUpNumber.vue';
 // 接收年份 + 可选的“顶部/底部 7 个统计项”，便于由页面统一取数
 type Item = { name: string; value: number }
 type ValueUnit = 'yuan' | 'wan' | 'yi'; // 原始数值单位（默认 'yuan'）
@@ -62,21 +67,26 @@ function onCellClick(e: MouseEvent) {
   emit('open-detail', { x: e.clientX, y: e.clientY });
 }
 
-// 将原始金额换算为 亿/万 的整洁文案，贴近效果图（不加千分位分隔）
-function amountParts(v: number): { n: string; u: '亿' | '万' } {
+// 统一数值换算逻辑：输出给 CountUpNumber 的目标数字 + 单位 + 小数位
+function parts(v: number): { num: number; u: '亿' | '万'; dp: number } {
   const unit = props.valueUnit;
   if (unit === 'yi') {
-    // 后端已是“亿元”，直接保留 1 位小数
-    return { n: (Number(v) || 0).toFixed(1), u: '亿' };
+    const n = Number(v) || 0;
+    return { num: Number(n.toFixed(1)), u: '亿', dp: 1 };
   }
   if (unit === 'wan') {
-    return { n: (Math.round((Number(v) || 0))).toString(), u: '万' };
+    const n = Math.round(Number(v) || 0);
+    return { num: n, u: '万', dp: 0 };
   }
-  // 默认：原始是“元”，根据量级换算到亿/万
+  // 默认：原始是元，根据量级换算到 亿/万（整数显示）
   const val = Number(v) || 0;
-  if (val >= 1e8) return { n: String(Math.round(val / 1e8)), u: '亿' };
-  return { n: String(Math.round(val / 1e4)), u: '万' };
+  if (val >= 1e8) return { num: Math.round(val / 1e8), u: '亿', dp: 0 };
+  return { num: Math.round(val / 1e4), u: '万', dp: 0 };
 }
+
+const numFor = (v: number) => parts(v).num;
+const unitFor = (v: number) => parts(v).u;
+const dpFor = (v: number) => parts(v).dp;
 </script>
 
 <style scoped lang="scss">

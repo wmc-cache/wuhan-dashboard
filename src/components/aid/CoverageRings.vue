@@ -13,13 +13,14 @@
     >
       <div class="ring">
         <EChart :option="ringOption(it)" />
-      
-        <div class="ring__center">{{ Math.round(it.percent) }}<small>%</small></div>
+        <div class="ring__center"><CountUpNumber :value="Math.round(it.percent)" :duration="1000" :decimal-places="0" />
+          <small>%</small>
+        </div>
       </div>
 
      
       <div class="box">
-        <div class="num">{{ it.value.toLocaleString('zh-CN') }}<small class="unit">人</small></div>
+        <div class="num"><CountUpNumber :value="it.value" :duration="1200" /><small class="unit">人</small></div>
         <div class="label">{{ it.label }}</div>
       </div>
     </div>
@@ -28,6 +29,7 @@
 
 <script setup lang="ts">
 import EChart from '../EChart.vue';
+import CountUpNumber from '../CountUpNumber.vue';
 
 interface Item { percent: number; value: number; label: string; color?: string }
 interface Props { items?: Item[] }

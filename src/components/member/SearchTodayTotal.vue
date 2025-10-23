@@ -5,7 +5,10 @@
       <!-- 数字翻牌（覆盖在底图之上） -->
       <div class="digits" role="group" aria-label="今日会员总数">
         <div v-for="(d, i) in paddedDigits" :key="i" class="digit">
-          <span class="text">{{ d }}</span>
+          <!-- 用 CountUpNumber 渲染每一位数字，保持原有样式容器与字体 -->
+          <span class="text">
+            <CountUpNumber :value="Number(d)" :duration="800" :decimal-places="0" />
+          </span>
         </div>
       </div>
     </div>
@@ -13,7 +16,7 @@
     <!-- 辅助信息：环比/进度条 -->
     <div class="meta">
       <div class="incr">
-        比上周新增 <span class="num">{{ weeklyIncrease }}</span> 人
+        比上周新增 <span class="num"><CountUpNumber :value="weeklyIncrease" :duration="800" /></span> 人
       </div>
       <div class="progress">
         <div class="bar" :style="{ width: progress + '%' }"></div>
@@ -29,6 +32,7 @@
 // - 下方“比上周新增”与进度条
 
 import { computed } from 'vue';
+import CountUpNumber from '../CountUpNumber.vue';
 // 搜索图标切图（临时使用该目录中的切图；如有单独放大镜图标，可替换为对应文件名）
 import search1x from '../../images/search/搜索.png';
 import search2x from '../../images/search/搜索@2x.png';

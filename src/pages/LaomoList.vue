@@ -245,7 +245,7 @@ async function loadPage() {
   total.value = Number(res?.total ?? res?.data?.total ?? list.length);
   const mapped: Row[] = list.map((r: any, i: number) => {
     const rawHistory = r?.isHistory ?? r?.ishistory;
-    const isHistoryLabel = rawHistory === '1' || rawHistory === 1 ? '是' : '否';
+    const isHistoryLabel = rawHistory
     const cityTime = r?.cityTime ?? r?.approveTime ?? r?.approvalTime ?? r?.approveTimeStr;
     const phone = r?.phone ?? r?.mobile ?? r?.linkPhone ?? '';
     const education = r?.education ?? r?.educationName ?? '';
@@ -259,7 +259,7 @@ async function loadPage() {
       id: r?.id ?? i,
       name: String(r?.name ?? r?.fullname ?? `劳模${i + 1}`),
       age: r?.age != null ? String(r.age) : '',
-      workUnit: String(r?.workUnit ?? r?.streetUnion ?? r?.union ?? ''),
+      workUnit: String(r?.tjdw ?? r?.streetUnion ?? r?.union ?? ''),
       cityTime: cityTime != null ? String(cityTime) : '',
       isHistoryLabel,
       gender: gender != null ? String(gender) : undefined,

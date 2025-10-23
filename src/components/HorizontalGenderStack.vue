@@ -28,7 +28,7 @@ const props = withDefaults(defineProps<Props>(), {
   femaleColor: '#ff6b97',
   barWidth: 12,
   gridLeft: 100,
-  gridRight: 20,
+  gridRight: 30,
   gridTop: 30,
   gridBottom: 40,
   unitText: '万人'

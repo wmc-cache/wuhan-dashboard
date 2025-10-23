@@ -11,7 +11,9 @@
               <div class="aid2-left__pillar" aria-hidden="true"></div>
               <!-- 动态百分比文本（居中到每段圆柱） -->
               <ul class="aid2-left__pcts">
-                <li v-for="(p, i) in leftPercents" :key="i" class="pct" :style="{ top: leftPctPos[i] }">{{ p }}</li>
+                <li v-for="(p, i) in leftPercents" :key="i" class="pct" :style="{ top: leftPctPos[i] }">
+                  <CountUpNumber :value="p" :decimal-places="2" :duration="800" />%
+                </li>
               </ul>
             </div>
             <ul class="aid2-left__list">
@@ -28,7 +30,7 @@
               >
                 <span class="dot" />
                 <span class="label">{{ it.name }}</span>
-                <span class="val"><b>{{ it.value }}</b><i>人</i></span>
+                <span class="val"><b><CountUpNumber :value="it.value" :duration="1000" /></b><i>人</i></span>
               </li>
             </ul>
           </div>
@@ -64,11 +66,14 @@
           <div class="aid2-center">
             <div class="aid2-center__counter">
               <ul class="digits" aria-label="总数">
-                <li v-for="(d, i) in counterDigits" :key="i">{{ d }}</li>
+                <li v-for="(d, i) in counterDigits" :key="i">
+                  <!-- 用 CountUpNumber 渲染每一位数字，保留原样式与间距 -->
+                  <CountUpNumber :value="Number(d)" :duration="800" :decimal-places="0" />
+                </li>
               </ul>
               <div style="margin-top: 50px;" class="delta-row" aria-label="环比">
-                <span class="delta-text">比上周新增 <b class="num">{{ lastMonthAdd }}</b> 人</span>
-                <span class="delta-bar"><i :style="{ width: Math.round(deltaPercent * 100) + '%' }"></i></span>
+                <span class="delta-text">比上周新增 <b class="num"><CountUpNumber :value="lastMonthAdd" :duration="800" /></b> 人</span>
+              <span class="delta-bar"><i :style="{ width: Math.round(deltaPercent * 100) + '%' }"></i></span>
               </div>
             </div>
             <div class="aid2-center__illus" aria-hidden="true"></div>
@@ -97,16 +102,16 @@
         <div class="mod__head"><span class="title-img title-img--aid2-2" aria-hidden="true"></span></div>
         <div class="mod__body">
           <div class="aid2-right">
-            <div class="aid2-right__badges">
-              <div class="badge-box">
-                <div class="badge-num">{{ maleTotal }}人</div>
-                <span class="badge badge--male" aria-hidden="true"></span>
+              <div class="aid2-right__badges">
+                <div class="badge-box">
+                  <div class="badge-num"><CountUpNumber :value="maleTotal" :duration="1000" />人</div>
+                  <span class="badge badge--male" aria-hidden="true"></span>
+                </div>
+                <div class="badge-box">
+                  <div class="badge-num"><CountUpNumber :value="femaleTotal" :duration="1000" />人</div>
+                  <span class="badge badge--female" aria-hidden="true"></span>
+                </div>
               </div>
-              <div class="badge-box">
-                <div class="badge-num">{{ femaleTotal }}人</div>
-                <span class="badge badge--female" aria-hidden="true"></span>
-              </div>
-            </div>
             <HorizontalGenderStack class="aid2-right__chart" :labels="ageLabels" :male="male" :female="female"
               :min-total="90" :step="15" unit-text="人" :grid-left="74" :grid-right="26" :grid-top="24"
               :grid-bottom="36" :bar-width="12" />
@@ -129,6 +134,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import CountUpNumber from '../components/CountUpNumber.vue';
 import HonorRingsChart from '../components/HonorRingsChart.vue';
 import StripedBarChart from '../components/StripedBarChart.vue';
 import HorizontalGenderStack from '../components/HorizontalGenderStack.vue';
@@ -151,9 +157,9 @@ const colors: Record<string, string> = {
 // 左上：帮扶职工档案类型
 const leftItems = ref<Array<{ name: string; value: number; color: string }>>([]);
 // 百分比文本 & 位置（相对柱体高度）
-const leftPercents = computed(() => {
+const leftPercents = computed<number[]>(() => {
   const sum = leftItems.value.reduce((s, d) => s + d.value, 0) || 1;
-  return leftItems.value.map(d => (d.value / sum * 100).toFixed(2) + '%');
+  return leftItems.value.map(d => Number((d.value / sum * 100).toFixed(2)));
 });
 const leftPctPos = computed(() => {
   const sum = leftItems.value.reduce((s, d) => s + d.value, 0) || 1;
