@@ -1,6 +1,11 @@
 export const API_BASE: string =
   (import.meta as any).env?.VITE_API_BASE || "/api";
 
+// When backend says the session/token is invalid, redirect user to login.
+// Use env override if provided; otherwise fall back to the IP given by the user.
+const LOGIN_URL: string =
+  (import.meta as any).env?.VITE_LOGIN_URL || 'http://172.16.188.42/login';
+
 export interface ApiResponse<T = any> {
   code?: number;
   msg?: string;
@@ -50,6 +55,25 @@ function resolveToken(): string | undefined {
   }
 }
 
+// Best‑effort cleanup + hard redirect to login (replace current page).
+function redirectToLogin(): void {
+  try {
+    if (typeof window === 'undefined') return;
+    const href = String(window.location?.href || '');
+    if (href.startsWith(LOGIN_URL)) return; // avoid loops if already there
+
+    // Clear common token storages so subsequent requests don't retry with bad creds
+    const keys = ['token', 'Token', 'Authorization', 'authorization', 'authToken', 'access_token', 'Admin-Token'];
+    try { keys.forEach(k => { try { localStorage.removeItem(k); } catch {} try { sessionStorage.removeItem(k); } catch {}; }); } catch {}
+    try { keys.forEach(k => { document.cookie = `${k}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`; }); } catch {}
+
+    // Replace current page so Back does not return to the protected view
+    window.location.replace(LOGIN_URL);
+  } catch {
+    // ignore
+  }
+}
+
 function withAuthHeaders(base?: HeadersInit): HeadersInit {
   const token = resolveToken();
   if (!token) return base || {};
@@ -75,8 +99,10 @@ export async function apiGet<T = any>(
     ...init,
     headers: withAuthHeaders({ Accept: "application/json", ...(init?.headers || {}) }),
   });
+  if (res.status === 401) { redirectToLogin(); throw new Error(`HTTP 401 Unauthorized`); }
   if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
   const json: ApiResponse<T> = await res.json().catch(() => ({} as any));
+  if ((json as any)?.code === 401) { redirectToLogin(); throw new Error(`HTTP 401 Unauthorized`); }
   if (json && typeof json === "object" && "data" in json) return json.data as T;
   return json as unknown as T;
 }
@@ -102,8 +128,10 @@ export async function apiPost<T = any>(
     },
     ...init,
   });
+  if (res.status === 401) { redirectToLogin(); throw new Error(`HTTP 401 Unauthorized`); }
   if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
   const json: ApiResponse<T> = await res.json().catch(() => ({} as any));
+  if ((json as any)?.code === 401) { redirectToLogin(); throw new Error(`HTTP 401 Unauthorized`); }
   if (json && typeof json === "object" && "data" in json) return json.data as T;
   return json as unknown as T;
 }
@@ -132,8 +160,10 @@ export async function apiPostForm<T = any>(
     }),
     ...init,
   });
+  if (res.status === 401) { redirectToLogin(); throw new Error(`HTTP 401 Unauthorized`); }
   if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
   const json: ApiResponse<T> = await res.json().catch(() => ({} as any));
+  if ((json as any)?.code === 401) { redirectToLogin(); throw new Error(`HTTP 401 Unauthorized`); }
   if (json && typeof json === "object" && "data" in json) return json.data as T;
   return json as unknown as T;
 }
@@ -156,6 +186,7 @@ export async function apiPostBlob(
     }),
     ...init,
   });
+  if (res.status === 401) { redirectToLogin(); throw new Error(`HTTP 401 Unauthorized`); }
   if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
   return res;
 }

@@ -19,12 +19,7 @@
     <section style="grid-area: tc;">
       <div class="mod__body" style="margin-top: 10px;">
         <!-- 顶部中间搜索：跳转至工会列表页（GridTable） -->
-        <OrgSearchKpis
-          v-model="keyword"
-          style="margin-top: 10px;"
-          :items="searchKpiItems"
-          @search="goToHome"
-        />
+        <OrgSearchKpis v-model="keyword" style="margin-top: 10px;" :items="searchKpiItems" @search="goToHome" />
       </div>
     </section>
 
@@ -34,30 +29,21 @@
         <div class="overview3">
           <div class="k">
             <div class="k__num">
-              <CountUpNumber
-                :value="kpiOverview.downUnion"
-                :duration="1500"
-              />
+              <CountUpNumber :value="kpiOverview.downUnion" :duration="1500" />
             </div>
             <img class="badge" :src="pin1x" :srcset="pin2x + ' 2x'" alt="行业产业工会" draggable="false" />
             <div class="k__label">下辖工会</div>
           </div>
           <div class="k">
             <div class="k__num">
-              <CountUpNumber
-                :value="kpiOverview.openGov"
-                :duration="1500"
-              />
+              <CountUpNumber :value="kpiOverview.openGov" :duration="1500" />
             </div>
             <img class="badge" :src="pin1x" :srcset="pin2x + ' 2x'" alt="行业产业工会" draggable="false" />
             <div class="k__label">执行厂务公开制度</div>
           </div>
           <div class="k">
             <div class="k__num">
-              <CountUpNumber
-                :value="kpiOverview.staffRep"
-                :duration="1500"
-              />
+              <CountUpNumber :value="kpiOverview.staffRep" :duration="1500" />
             </div>
             <img class="badge" :src="pin1x" :srcset="pin2x + ' 2x'" alt="行业产业工会" draggable="false" />
             <div class="k__label">执行职代会制度</div>
@@ -80,16 +66,16 @@
     <section class="mod" style="grid-area: mc;">
       <img class="mod__title-img" :src="titleImgType1x" :srcset="titleImgType2x + ' 2x'" alt="工会类型统计" />
       <div class="mod__body">
-        <StripedBarChart :categories="unionTypeCategories" :values="unionTypeValues" :yMax="typeYMax" y-unit="个"
-          :gridTop="25" :gridBottom="32" :xLabelInterval="0" />
+        <StripedBarChart :xLabelRotate="30" :categories="unionTypeCategories" :values="unionTypeValues" :yMax="typeYMax" y-unit="个"
+          :gridTop="25" :gridBottom="72" :xLabelInterval="0" />
       </div>
     </section>
 
     <section class="mod" style="grid-area: mr;">
       <img class="mod__title-img" :src="titleImgBiz1x" :srcset="titleImgBiz2x + ' 2x'" alt="企业性质占比" />
       <div class="mod__body">
-        <RingPie :data="bizPieItems" :center="['42%', '54%']" :radius="['48%', '72%']" enable-pagination
-          :page-size="6" v-model:activeIndex="activeBizIndex" :border-width="6" gap-color="transparent">
+        <RingPie :data="bizPieItems" :center="['42%', '54%']" :radius="['48%', '72%']" enable-pagination :page-size="6"
+          v-model:activeIndex="activeBizIndex" :border-width="6" gap-color="transparent">
           <template #center>
             <div class="pie-center">
               <b class="pie-center__num">{{ fmt(activeBiz.value) }}</b>
@@ -110,7 +96,7 @@
           <img :src="showAll1x" :srcset="showAll2x + ' 2x'" alt="查看更多" />
         </button>
         <div class="mod__body">
-          <StackedColumnChart :categories="rdCategories" :series="districtStackSeries" :yMax="rdYMax"
+          <StackedColumnChart :gridTop="45" :gridBottom="-10" :xLabelRotate="25" :categories="rdCategories" :series="districtStackSeries" :yMax="rdYMax"
             :xLabelInterval="0" :ySplitNumber="4" />
         </div>
       </section>
@@ -122,7 +108,7 @@
           <div class="split2">
             <SmallTripleGauge :total="small3Total" />
             <StripedBarChart :categories="rightBarCats" :values="rightBarVals" :yMax="rightBarMax" y-unit="个"
-              :gridTop="25" :gridBottom="52" :xLabelInterval="0" :xLabelRotate="30" :showLabels="false" />
+              :gridTop="25" :gridBottom="72" :xLabelInterval="0" :xLabelRotate="30" :showLabels="false" />
           </div>
         </div>
       </section>

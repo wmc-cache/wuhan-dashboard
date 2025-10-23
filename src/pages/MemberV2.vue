@@ -56,7 +56,7 @@
             <SearchTodayTotal :today-total="todayTotal" :weekly-increase="weeklyIncrease" :progress="progress" />
           </div>
           <StripedBarChart :categories="industryCats" :values="industryVals" y-unit="人" :y-max="industryMax" :grid-left="64"
-            :grid-right="20" :grid-bottom="56" :x-label-rotate="25" />
+            :grid-right="20" :grid-bottom="66" :x-label-rotate="25" />
 
         </div>
       </div>
