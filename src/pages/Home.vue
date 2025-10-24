@@ -227,9 +227,25 @@ async function onCellClick(payload: { row: any; column: ColumnDef }) {
     try {
       const resp = await apiGet<any>(`/business/union/${encodeURIComponent(String(id))}`).catch(() => null);
       const d = (resp && (resp.data || resp)) || {};
+      // 统一转义布尔：后端可能返回 1/0、'1'/'0'、true/false、'是'/'否'
+      // 布尔规范化：按“1 是，其余 否”的口径，缺失也按 否
+      function normalizeBool(v: any): boolean {
+        if (v == null || v === '') return false;
+        const s = String(v).trim().toLowerCase();
+        if (s === '1' || s === 'true' || s === '是' || s === 'y' || s === 'yes') return true;
+        if (s === '0' || s === 'false' || s === '否' || s === 'n' || s === 'no') return false;
+        const n = Number(v);
+        if (Number.isFinite(n)) return n === 1;
+        return false;
+      }
+
       unionData.value = {
         fullname: d.fullname ?? r.fullname ?? '-',
-        unitDistrictSuffix: d.unitDistrictSuffix || labelOf('sys_wuhan_quyu', d.orgDistrict, String(d.orgDistrict ?? '')),
+        // 所属区域：后端有时直接给 code（如 420112），统一用字典转义为名称
+        unitDistrictSuffix: (() => {
+          const val = d.unitDistrictSuffix ?? d.orgDistrict ?? (d as any).district ?? (d as any).area ?? (d as any).region;
+          return labelOf('sys_wuhan_quyu', val, String(val ?? ''));
+        })(),
         unitIndustry: labelOf('unitIndustry', d.unitIndustry, String(d.unitIndustry ?? '')),
         establishDate: normalizeDate(d.establishDate ?? d.createunionDate ?? r.establishDate),
         memberCount: d.memberCount ?? d.membership ?? r.memberCount ?? '-',
@@ -239,8 +255,10 @@ async function onCellClick(payload: { row: any; column: ColumnDef }) {
         viceChair: d.viceResident ?? r.viceChair ?? '-',
         parentUnionName: d.pName ?? d.parentUnionName ?? r.parentUnionName ?? '-',
         legalDuty: d.legalDuty ?? '工会主席',
-        isOpenSystem: d.isConsult ?? r.isOpenSystem ?? '-',
-        isWorkerCongress: d.workersCongress ?? r.isWorkerCongress ?? '-',
+        // 新字段名兼容：executeEnterprises（厂务公开）、workersCongress（职代会）
+        // 数值 1 表示“是”，其余按“否”处理
+        isOpenSystem: normalizeBool(d.executeEnterprises ?? d.isConsult ?? r.isOpenSystem),
+        isWorkerCongress: normalizeBool(d.workersCongress ?? r.isWorkerCongress),
         childOrgCount: d.orgCount ?? r.childOrgCount ?? '-',
       } as UnionDetail;
       showUnion.value = true;

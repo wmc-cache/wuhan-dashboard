@@ -91,9 +91,11 @@ import { apiGet } from '../utils/api';
 import titleImg1x from '../images/refund/title5/编组 21.png';
 import titleImg2x from '../images/refund/title5/编组 21@2x.png';
 
-// 年份选择
-const years = [2021, 2022, 2023, 2024, 2025];
-const year = ref<number>(new Date().getFullYear());
+// 年份选择：改为从后端按业务类型获取
+const now = new Date().getFullYear();
+const fallbackYears = [now, now - 1, now - 2];
+const years = ref<number[]>([...fallbackYears]);
+const year = ref<number>(fallbackYears[0]);
 
 // 顶部 TOP4（代收金额）
 const topCards = ref<{ name: string; amount: number }[]>([]);
@@ -233,8 +235,47 @@ async function loadAll(y: number) {
   ]);
 }
 
-onMounted(() => loadAll(year.value));
+onMounted(async () => {
+  await loadYears();
+  await loadAll(year.value);
+});
 watch(year, (y) => loadAll(y));
+
+async function loadYears() {
+  // 1=医疗互助 2=困难救助 3=经费返还
+  const raw = await apiGet<any>('/medicalMutual/getYear?type=3').catch(() => null);
+  const parsed = normalizeYearList(raw);
+  if (parsed.length) {
+    years.value = parsed;
+    if (!parsed.includes(year.value)) year.value = parsed[0];
+  } else {
+    years.value = [...fallbackYears];
+    if (!years.value.includes(year.value)) year.value = years.value[0];
+  }
+}
+
+function normalizeYearList(raw: any): number[] {
+  const list = Array.isArray(raw)
+    ? raw
+    : Array.isArray(raw?.years)
+      ? raw.years
+      : Array.isArray(raw?.yearList)
+        ? raw.yearList
+        : Array.isArray(raw?.year)
+          ? raw.year
+          : Array.isArray(raw?.list)
+            ? raw.list
+            : typeof raw === 'string'
+              ? raw.split(/[,;\s]+/)
+              : [];
+  const normalized = list
+    .map((v) => {
+      const num = Number(v);
+      return Number.isFinite(num) ? Math.floor(num) : undefined;
+    })
+    .filter((v): v is number => typeof v === 'number' && v > 1900 && v < 3000);
+  return Array.from(new Set(normalized)).sort((a, b) => b - a);
+}
 </script>
 
 <style scoped lang="scss">

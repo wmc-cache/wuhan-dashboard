@@ -20,26 +20,23 @@
             <span class="mdlg__sub-bg"><span class="mdlg__sub-text">基本信息</span></span>
           </h3>
 
+          <!-- 基础信息仅展示 8 项：会员姓名、性别、年龄、身份证号、手机号、所属工会、工作单位、行政区划 -->
           <ul class="info">
             <li class="info__row">
               <span class="lab">会员姓名</span><span class="val">{{ d.name || '-' }}</span>
+              <span class="lab">性别</span><span class="val">{{ d.gender || '-' }}</span>
+            </li>
+            <li class="info__row">
+              <span class="lab">年龄</span><span class="val">{{ d.age ?? '-' }}</span>
+              <span class="lab">身份证号</span><span class="val">{{ d.idNumber || '-' }}</span>
+            </li>
+            <li class="info__row">
+              <span class="lab">手机号</span><span class="val">{{ d.phone || '-' }}</span>
               <span class="lab">所属工会</span><span class="val">{{ d.union || '-' }}</span>
             </li>
             <li class="info__row">
-              <span class="lab">性别</span><span class="val">{{ d.gender || '-' }}</span>
-              <span class="lab">年龄</span><span class="val">{{ d.age ?? '-' }}</span>
-            </li>
-            <li class="info__row">
-              <span class="lab">入会时间</span><span class="val">{{ d.joinAt || '-' }}</span>
               <span class="lab">工作单位</span><span class="val">{{ d.company || '-' }}</span>
-            </li>
-            <li class="info__row">
-              <span class="lab">职务</span><span class="val">{{ d.duty || '-' }}</span>
-              <span class="lab">联系方式</span><span class="val">{{ d.phone || '-' }}</span>
-            </li>
-            <li class="info__row">
-              <span class="lab">政治面貌</span><span class="val">{{ d.politics || '-' }}</span>
-              <span class="lab">学历</span><span class="val">{{ d.education || '-' }}</span>
+              <span class="lab">行政区划</span><span class="val">{{ d.region || '-' }}</span>
             </li>
           </ul>
 
@@ -72,51 +69,56 @@
 
           <!-- 医疗互助 -->
           <template v-else-if="tab==='med'">
-            <!-- 年份子 tabs -->
-            <div v-if="years.length" class="years">
-              <button v-for="y in years" :key="y" class="year" :class="{active: y===curYear}" @click="curYear=y">{{ y }}年</button>
-            </div>
-
-            <div class="med-grid">
-              <!-- 左：互助参保信息 -->
-              <div class="card">
-                <ul class="info info--flat">
-                  <li class="info__row"><span class="lab">代理工会名称</span><span class="val">{{ medInfo.agency || '-' }}</span></li>
-                  <li class="info__row"><span class="lab">单位名称</span><span class="val">{{ medInfo.company || '-' }}</span></li>
-                  <li class="info__row"><span class="lab">保期开始时间</span><span class="val">{{ medInfo.startAt || '-' }}</span></li>
-                  <li class="info__row"><span class="lab">保期结束时间</span><span class="val">{{ medInfo.endAt || '-' }}</span></li>
-                </ul>
+            <template v-if="medAllEmpty">
+              <div class="card"><p class="empty-tip">暂无医疗互助数据</p></div>
+            </template>
+            <template v-else>
+              <!-- 年份子 tabs -->
+              <div v-if="years.length" class="years">
+                <button v-for="y in years" :key="y" class="year" :class="{active: y===curYear}" @click="curYear=y">{{ y }}年</button>
               </div>
-              <!-- 右：参加情况表 -->
+
+              <div class="med-grid">
+                <!-- 左：互助参保信息 -->
+                <div class="card">
+                  <ul class="info info--flat">
+                    <li class="info__row"><span class="lab">代理工会名称</span><span class="val">{{ medInfo.agency || '-' }}</span></li>
+                    <li class="info__row"><span class="lab">单位名称</span><span class="val">{{ medInfo.company || '-' }}</span></li>
+                    <li class="info__row"><span class="lab">保期开始时间</span><span class="val">{{ medInfo.startAt || '-' }}</span></li>
+                    <li class="info__row"><span class="lab">保期结束时间</span><span class="val">{{ medInfo.endAt || '-' }}</span></li>
+                  </ul>
+                </div>
+                <!-- 右：参加情况表 -->
+                <div class="card">
+                  <template v-if="medPlans.length">
+                    <table class="table">
+                      <thead>
+                        <tr><th>参加类型</th><th>参加份数</th><th>每份金额</th></tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="(r,i) in medPlans" :key="i"><td>{{ r.type }}</td><td>{{ r.count }}</td><td>{{ r.money }}</td></tr>
+                      </tbody>
+                    </table>
+                  </template>
+                  <p v-else class="empty-tip">暂无参保记录</p>
+                </div>
+              </div>
+
+              <!-- 底部：互助给付明细 -->
               <div class="card">
-                <template v-if="medPlans.length">
+                <template v-if="medClaims.length">
                   <table class="table">
                     <thead>
-                      <tr><th>参加类型</th><th>参加份数</th><th>每份金额</th></tr>
+                      <tr><th>给付类型</th><th>疾病名称</th><th>互助开始时间</th><th>互助结束时间</th><th>费用</th></tr>
                     </thead>
                     <tbody>
-                      <tr v-for="(r,i) in medPlans" :key="i"><td>{{ r.type }}</td><td>{{ r.count }}</td><td>{{ r.money }}</td></tr>
+                      <tr v-for="(r,i) in medClaims" :key="i"><td>{{ r.payType }}</td><td>{{ r.disease }}</td><td>{{ r.startAt }}</td><td>{{ r.endAt }}</td><td>{{ r.fee }}</td></tr>
                     </tbody>
                   </table>
                 </template>
-                <p v-else class="empty-tip">暂无参保记录</p>
+                <p v-else class="empty-tip">暂无给付记录</p>
               </div>
-            </div>
-
-            <!-- 底部：互助给付明细 -->
-            <div class="card">
-              <template v-if="medClaims.length">
-                <table class="table">
-                  <thead>
-                    <tr><th>给付类型</th><th>疾病名称</th><th>互助开始时间</th><th>互助结束时间</th><th>费用</th></tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(r,i) in medClaims" :key="i"><td>{{ r.payType }}</td><td>{{ r.disease }}</td><td>{{ r.startAt }}</td><td>{{ r.endAt }}</td><td>{{ r.fee }}</td></tr>
-                  </tbody>
-                </table>
-              </template>
-              <p v-else class="empty-tip">暂无给付记录</p>
-            </div>
+            </template>
           </template>
 
           <!-- 困难救助 -->
@@ -143,100 +145,127 @@
             </div>
           </template>
 
-          <!-- 困难帮扶 -->
+          <!-- 困难帮扶：改为四个子模块（职工信息 / 基本信息 / 家庭成员 / 帮扶信息） -->
           <template v-else-if="tab==='help'">
             <template v-if="helpAllEmpty">
-              <div class="card">
-                <p class="empty-tip">暂无困难帮扶数据</p>
-              </div>
+              <div class="card"><p class="empty-tip">暂无困难帮扶数据</p></div>
             </template>
             <template v-else>
-              <div class="card">
+              <!-- 子 tabs -->
+              <div class="stabs" role="tablist">
+                <button class="stab" :class="{active: helpSub==='archive'}" @click="helpSub='archive'" role="tab">档案信息</button>
+                <button class="stab" :class="{active: helpSub==='people'}" @click="helpSub='people'" role="tab">个人信息</button>
+                <button class="stab" :class="{active: helpSub==='assist'}" @click="helpSub='assist'" role="tab">帮扶记录</button>
+                <button class="stab" :class="{active: helpSub==='family'}" @click="helpSub='family'" role="tab">家庭成员信息</button>
+              </div>
+
+              <!-- 档案信息 -->
+              <div v-if="helpSub==='archive'" class="card">
                 <ul class="info info--flat">
-                  <li class="info__row"><span class="lab">审核工会</span><span class="val">{{ help.archive.auditOrg || '-' }}</span></li>
-                  <li class="info__row"><span class="lab">审核时间</span><span class="val">{{ help.archive.auditTime || '-' }}</span></li>
-                  <li class="info__row"><span class="lab">审核人</span><span class="val">{{ help.archive.auditUser || '-' }}</span></li>
-                  <li class="info__row"><span class="lab">建档时间</span><span class="val">{{ help.archive.createTime || '-' }}</span></li>
-                  <li class="info__row"><span class="lab">建档工会</span><span class="val">{{ help.archive.creatorOrg || '-' }}</span></li>
-                  <li class="info__row"><span class="lab">建档人</span><span class="val">{{ help.archive.creator || '-' }}</span></li>
-                  <li class="info__row"><span class="lab">困难类别</span><span class="val">{{ help.archive.poorTypeNew || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">职工编号</span><span class="val">{{ help.archive.number || '-' }}</span> <span class="lab">填报单位</span><span class="val">{{ help.archive.fillOrg || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">困难类别</span><span class="val">{{ help.archive.poorTypeNew || '-' }}</span> <span class="lab">档案类型</span><span class="val">{{ help.archive.archiveType || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">档案状态</span><span class="val">{{ help.archive.archiveStatus || '-' }}</span> <span class="lab">建档人</span><span class="val">{{ help.archive.creator || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">建档工会</span><span class="val">{{ help.archive.createOrg || help.archive.creatorOrg || '-' }}</span> <span class="lab">建档时间</span><span class="val">{{ help.archive.createTime || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">审核人</span><span class="val">{{ help.archive.auditUser || '-' }}</span> <span class="lab">审核工会</span><span class="val">{{ help.archive.auditOrg || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">审核时间</span><span class="val">{{ help.archive.auditTime || '-' }}</span> <span class="lab">备案工会</span><span class="val">{{ help.archive.fileOrg || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">备案人</span><span class="val">{{ help.archive.fileUser || '-' }}</span> <span class="lab">备案时间</span><span class="val">{{ help.archive.fileTime || '-' }}</span></li>
                 </ul>
               </div>
-              <div class="card" style="margin-top:8px;">
+
+              <!-- 个人信息（仅 knbfPeopleVo 指定字段） -->
+              <div v-else-if="helpSub==='people'" class="card">
+                <ul class="info info--flat">
+                  <li class="info__row"><span class="lab">民族</span><span class="val">{{ help.people.nation || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">政治面貌</span><span class="val">{{ help.people.party || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">工作状态</span><span class="val">{{ help.people.workStatus || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">月收入</span><span class="val">{{ help.people.earning || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">家庭人口数</span><span class="val">{{ help.people.personSum || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">疾病类型</span><span class="val">{{ help.people.deformity || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">健康</span><span class="val">{{ help.people.health || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">婚姻</span><span class="val">{{ help.people.marriage || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">住房</span><span class="val">{{ help.people.houseType || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">帮扶原因</span><span class="val">{{ help.people.mainPoorType || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">具体情况</span><span class="val">{{ help.people.remark || '-' }}</span></li>
+                </ul>
+              </div>
+
+              <!-- 家庭成员信息 -->
+              <div v-else-if="helpSub==='family'" class="card">
                 <template v-if="help.families.length">
                   <table class="table">
                     <thead>
-                      <tr><th>姓名</th><th>关系</th><th>性别</th><th>出生日期</th><th>健康状态</th><th>单位/学校</th><th>人员身份</th><th>月收入</th></tr>
+                      <tr>
+                        <th>姓名</th><th>关系</th><th>性别</th><th>证件号码</th><th>出生日期</th><th>健康状况</th><th>月收入</th><th>人员身份</th><th>单位或学校</th><th>创建时间</th>
+                      </tr>
                     </thead>
                     <tbody>
                       <tr v-for="(r,i) in help.families" :key="i">
                         <td>{{ r.name || '-' }}</td>
                         <td>{{ r.kindred || '-' }}</td>
                         <td>{{ r.gender || '-' }}</td>
+                        <td>{{ r.certificateNo || r.idNumber || '-' }}</td>
                         <td>{{ r.birthday || '-' }}</td>
                         <td>{{ r.health || '-' }}</td>
-                        <td>{{ r.company || '-' }}</td>
-                        <td>{{ r.personStatus || '-' }}</td>
                         <td>{{ r.earning || '-' }}</td>
+                        <td>{{ r.personStatus || '-' }}</td>
+                        <td>{{ r.company || r.school || '-' }}</td>
+                        <td>{{ r.createTime || r.createdAt || '-' }}</td>
                       </tr>
                     </tbody>
                   </table>
                 </template>
                 <p v-else class="empty-tip">暂无家庭成员信息</p>
               </div>
-              <div class="card" style="margin-top:8px;">
+
+              <!-- 帮扶记录 -->
+              <div v-else class="card">
                 <template v-if="help.helps.length">
                   <table class="table">
                     <thead>
-                      <tr><th>上报单位</th><th>资金类型</th><th>帮扶日期</th><th>帮扶形式</th><th>帮扶措施</th><th>状态</th><th>联系方式</th><th>帮扶单位</th></tr>
+                      <tr>
+                        <th>职工姓名</th><th>联系方式</th><th>帮扶单位</th><th>帮扶形式</th><th>帮扶措施</th><th>资金类型</th><th>帮扶日期</th><th>上报到的工会</th><th>状态</th>
+                      </tr>
                     </thead>
                     <tbody>
                       <tr v-for="(r,i) in help.helps" :key="i">
-                        <td>{{ r.currentDept || '-' }}</td>
-                        <td>{{ r.incomingType || '-' }}</td>
-                        <td>{{ r.salvationDate || '-' }}</td>
-                        <td>{{ r.salvationForm || '-' }}</td>
-                        <td>{{ r.salvationMethod || '-' }}</td>
-                        <td>{{ r.stateStr || '-' }}</td>
+                        <td>{{ r.name || d.name || '-' }}</td>
                         <td>{{ r.tel || '-' }}</td>
                         <td>{{ r.userDept || '-' }}</td>
+                        <td>{{ r.salvationForm || '-' }}</td>
+                        <td>{{ r.salvationMethod || '-' }}</td>
+                        <td>{{ r.incomingType || '-' }}</td>
+                        <td>{{ r.salvationDate || '-' }}</td>
+                        <td>{{ r.currentDept || '-' }}</td>
+                        <td>{{ r.stateStr || '-' }}</td>
                       </tr>
                     </tbody>
                   </table>
                 </template>
                 <p v-else class="empty-tip">暂无帮扶记录</p>
               </div>
-              <div class="card" style="margin-top:8px;">
-                <ul class="info info--flat">
-                  <li class="info__row"><span class="lab">疾病类型</span><span class="val">{{ help.people.deformity || '-' }}</span></li>
-                  <li class="info__row"><span class="lab">月收入</span><span class="val">{{ help.people.earning || '-' }}</span></li>
-                  <li class="info__row"><span class="lab">健康</span><span class="val">{{ help.people.health || '-' }}</span></li>
-                  <li class="info__row"><span class="lab">住房</span><span class="val">{{ help.people.houseType || '-' }}</span></li>
-                  <li class="info__row"><span class="lab">帮扶原因</span><span class="val">{{ help.people.mainPoorType || '-' }}</span></li>
-                  <li class="info__row"><span class="lab">婚姻</span><span class="val">{{ help.people.marriage || '-' }}</span></li>
-                  <li class="info__row"><span class="lab">民族</span><span class="val">{{ help.people.nation || '-' }}</span></li>
-                  <li class="info__row"><span class="lab">政治面貌</span><span class="val">{{ help.people.party || '-' }}</span></li>
-                  <li class="info__row"><span class="lab">家庭人口数</span><span class="val">{{ help.people.personSum || '-' }}</span></li>
-                </ul>
-              </div>
             </template>
           </template>
 
-          <!-- 劳模信息 -->
+          <!-- 劳模信息：若全部为空则给出统一提示 -->
           <template v-else>
-            <div class="card">
-              <ul class="info info--flat">
-                <li class="info__row"><span class="lab">劳模等级</span><span class="val">{{ model.grade || '-' }}</span></li>
-                <li class="info__row"><span class="lab">职务</span><span class="val">{{ model.post || '-' }}</span></li>
-                <li class="info__row"><span class="lab">政治面貌</span><span class="val">{{ model.politicsStatus || '-' }}</span></li>
-                <li class="info__row"><span class="lab">家庭住址</span><span class="val">{{ model.homeAddress || '-' }}</span></li>
-                <li class="info__row"><span class="lab">所属街道工会</span><span class="val">{{ model.streetUnion || '-' }}</span></li>
-                <li class="info__row"><span class="lab">获得市劳模时间</span><span class="val">{{ model.cityTime || '-' }}</span></li>
-                <li class="info__row"><span class="lab">获省部劳模时间</span><span class="val">{{ model.provinceTime || '-' }}</span></li>
-                <li class="info__row"><span class="lab">获全国劳模时间</span><span class="val">{{ model.nationwideTime || '-' }}</span></li>
-                <li class="info__row"><span class="lab">获五一奖章时间</span><span class="val">{{ model.nationalMayDay || '-' }}</span></li>
-              </ul>
-            </div>
+            <template v-if="laomoEmpty">
+              <div class="card"><p class="empty-tip">暂无劳模信息</p></div>
+            </template>
+            <template v-else>
+              <div class="card">
+                <ul class="info info--flat">
+                  <li class="info__row"><span class="lab">劳模等级</span><span class="val">{{ model.grade || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">职务</span><span class="val">{{ model.post || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">政治面貌</span><span class="val">{{ model.politicsStatus || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">家庭住址</span><span class="val">{{ model.homeAddress || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">所属街道工会</span><span class="val">{{ model.streetUnion || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">获得市劳模时间</span><span class="val">{{ model.cityTime || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">获省部劳模时间</span><span class="val">{{ model.provinceTime || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">获全国劳模时间</span><span class="val">{{ model.nationwideTime || '-' }}</span></li>
+                  <li class="info__row"><span class="lab">获五一奖章时间</span><span class="val">{{ model.nationalMayDay || '-' }}</span></li>
+                </ul>
+              </div>
+            </template>
           </template>
         </section>
         <div v-if="loading" class="mdlg__loading">加载中...</div>
@@ -257,8 +286,16 @@ interface MedClaim { payType: string; disease: string; startAt: string; endAt: s
 interface MedInfo { agency?: string; company?: string; startAt?: string; endAt?: string }
 
 export interface MemberDetail {
-  name?: string; gender?: string; joinAt?: string; duty?: string; politics?: string;
-  union?: string; age?: number | string; company?: string; phone?: string; education?: string;
+  name?: string;            // 会员姓名
+  gender?: string;          // 性别（已转义）
+  age?: number | string;    // 年龄
+  idNumber?: string;        // 身份证号（可能为脱敏）
+  phone?: string;           // 手机号
+  union?: string;           // 所属工会
+  company?: string;         // 工作单位
+  region?: string;          // 行政区划
+  // 以下为扩展信息（仍保留，供其它 tab 使用）
+  joinAt?: string; duty?: string; politics?: string; education?: string;
   medInfo?: MedInfo; medPlans?: MedPlan[]; medClaims?: MedClaim[]; years?: (string|number)[];
 }
 
@@ -278,6 +315,11 @@ const curYear = ref<number | undefined>(undefined);
 const medInfo = ref<MedInfo>({ agency: '', company: '', startAt: '', endAt: '' });
 const medPlans = ref<MedPlan[]>([]);
 const medClaims = ref<MedClaim[]>([]);
+const medAllEmpty = computed(() => {
+  const mi = medInfo.value || {} as MedInfo;
+  const infoEmpty = !mi.agency && !mi.company && !mi.startAt && !mi.endAt;
+  return infoEmpty && (!medPlans.value?.length) && (!medClaims.value?.length);
+});
 
 // Remote detail loading
 const loading = ref(false);
@@ -290,6 +332,8 @@ const rescueList = ref<Array<{ hospitalName?: string; diseaseType?: string; sign
 
 // 困难帮扶
 const help = ref<{ archive: any; families: any[]; helps: any[]; people: any }>({ archive: {}, families: [], helps: [], people: {} });
+// 困难帮扶 子模块：archive/people/assist/family
+const helpSub = ref<'archive'|'people'|'assist'|'family'>('archive');
 const helpAllEmpty = computed(() => {
   const h = help.value || {};
   const archiveHas = hasObjectData(h.archive);
@@ -301,6 +345,7 @@ const helpAllEmpty = computed(() => {
 
 // 劳模信息
 const model = ref<any>({});
+const laomoEmpty = computed(() => !hasObjectData(model.value));
 
 function hasObjectData(obj: unknown): boolean {
   if (!obj || typeof obj !== 'object') return false;
@@ -315,6 +360,17 @@ function isMeaningfulValue(val: unknown): boolean {
   if (Array.isArray(val)) return val.length > 0;
   if (typeof val === 'object') return Object.keys(val as Record<string, unknown>).length > 0;
   return true;
+}
+
+// UI：布尔值转义为“是/否/—”
+function normalizeBoolLabel(v: unknown): string {
+  if (v == null || v === '') return '-';
+  const s = String(v).trim().toLowerCase();
+  if (s === '1' || s === 'true' || s === '是' || s === 'y' || s === 'yes') return '是';
+  if (s === '0' || s === 'false' || s === '否' || s === 'n' || s === 'no') return '否';
+  const n = Number(v);
+  if (Number.isFinite(n)) return n === 1 ? '是' : '否';
+  return s ? s : '-';
 }
 
 function normDate(s?: string): string {
@@ -340,7 +396,9 @@ async function fetchDetail(code: number) {
     (props.data as any).age = base.age ?? (props.data as any).age;
     (props.data as any).union = base.unionName ?? (props.data as any).union;
     (props.data as any).company = base.workUnit ?? (props.data as any).company;
-    (props.data as any).phone = base.phone ?? (props.data as any).phone;
+    (props.data as any).phone = base.phone ?? base.mobile ?? (props.data as any).phone;
+    (props.data as any).idNumber = base.idNumber ?? base.idCard ?? base.certificateNo ?? (props.data as any).idNumber;
+    (props.data as any).region = base.region ?? base.area ?? base.district ?? (props.data as any).region;
 
     // 省总扩展
     const bm = obj.businessMemberVo || {};
@@ -403,14 +461,28 @@ async function fetchDetail(code: number) {
       const arc = kv?.knbfArchivesVo || kv?.KnbfArchivesVo || {};
       help.value = {
         archive: {
-          auditOrg: arc.auditOrg,
-          auditTime: normDate(arc.auditTime),
-          auditUser: arc.auditUser,
-          // 建档时间/工会/人：优先备案(file*)，其次建档(create*/creator*)
-          createTime: normDate(arc.fileTime || arc.createTime),
-          creatorOrg: arc.fileOrg || arc.creatorOrg,
-          creator: arc.fileUser || arc.creator,
+          // 编号/类别/状态
+          number: arc.number || kv?.number || kv?.workerNo,
           poorTypeNew: arc.poorTypeNew,
+          archiveType: arc.fileTypeName || arc.archiveType || arc.helpOutType || arc.familyType,
+          archiveStatus: arc.familyStatus || arc.recordStatus || arc.fileStatus || arc.statusStr || arc.status,
+          // 填报单位
+          fillOrg: arc.userDept || arc.reportUnit || kv?.userDept,
+          // 建档
+          createTime: normDate(arc.createTime),
+          createOrg: arc.createOrg || arc.creatorOrg,
+          creator: arc.creator || arc.createUser || arc.fileUser,
+          // 审核
+          auditOrg: arc.auditOrg,
+          auditUser: arc.auditUser,
+          auditTime: normDate(arc.auditTime),
+          // 备案
+          fileOrg: arc.fileOrg,
+          fileUser: arc.fileUser,
+          fileTime: normDate(arc.fileTime),
+          // 其他（可能不存在，兜底为 -）
+          returnRemark: arc.returnRemark,
+          returnTime: normDate(arc.returnTime || arc.backTime || arc.rejectTime),
         },
         families: Array.isArray(kv?.knbfFamilyVoList) ? kv.knbfFamilyVoList : [],
         helps: Array.isArray(kv?.knbfHelpVoList) ? kv.knbfHelpVoList : [],
@@ -462,6 +534,7 @@ watch(() => props.modelValue, async (v) => {
 watch(tab, async (t) => {
   if (!props.modelValue || !props.searchCode) return;
   if (suppressTabFetch) return;
+  if (t === 'help') helpSub.value = 'archive';
   const code = tabCode(t as any);
   await fetchDetail(code);
 });
@@ -545,4 +618,27 @@ watch(curYear, async (y) => {
 /* simple overlay for loading */
 .mdlg__body { position: relative; }
 .mdlg__loading { position: absolute; inset: 0; background: rgba(255,255,255,.55); display: grid; place-items: center; z-index: 10; border-radius: 6px; }
+
+/* Help sub-tabs */
+.stabs { display: inline-flex; gap: 8px; margin: 2px 0 8px; align-items: center; }
+/* 二级切换采用“胶囊”外观，与一级方角风格区分开 */
+.stab {
+  padding: 2px 14px;
+  height: 26px;
+  line-height: 22px;
+  border: 1px solid rgba(60,120,220,.5);
+  border-radius: 999px; /* 胶囊形状 */
+  background: rgba(255,255,255,.9);
+  color: #2a6ff0;
+  font-weight: 800;
+  cursor: pointer;
+  font-size: 12px;
+}
+.stab:hover { background: rgba(42,111,240,.08); }
+.stab.active {
+  background: #2a6ff0;
+  color: #fff;
+  border-color: #2a6ff0;
+  box-shadow: none;
+}
 </style>

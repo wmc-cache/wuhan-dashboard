@@ -148,7 +148,8 @@ async function loadAll(y: number) {
 }
 
 async function loadYears() {
-  const raw = await apiGet<any>('/medicalMutual/getYear').catch(() => null);
+  // 后端规范：/medicalMutual/getYear?type=1（1=医疗互助 2=困难救助 3=经费返还）
+  const raw = await apiGet<any>('/medicalMutual/getYear?type=1').catch(() => null);
   const parsed = normalizeYearList(raw);
   if (parsed.length) {
     years.value = parsed;

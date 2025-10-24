@@ -54,7 +54,7 @@
       </div>
     </section>
   </main>
-  <MemberDetailDialog v-model="showMemberDlg" :data="memberDetail" :search-code="memberSearchCode" :default-tab="'med'" :width="1080" />
+  <MemberDetailDialog v-model="showMemberDlg" :data="memberDetail" :search-code="memberSearchCode" :default-tab="'org'" :width="1080" />
 </template>
 
 <script setup lang="ts">

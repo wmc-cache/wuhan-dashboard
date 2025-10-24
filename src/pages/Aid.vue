@@ -1,5 +1,8 @@
 <template>
   <main class="aid__grid">
+    <div class="aid__year-select">
+      <NiceSelect v-model="year" :options="years" :width="122" :formatter="formatYear" />
+    </div>
     <!-- 顶部概览（接口：/difficultRelief/profileBoard/{year}） -->
     <AidKpiRow :items="kpiItems" style="grid-column: 1 / -1;" />
 
@@ -27,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { apiGet, niceMax } from '../utils/api';
 import AidKpiRow from '../components/aid/KpiRow.vue';
 import AidGenderAgePanel from '../components/aid/GenderAgePanel.vue';
@@ -36,9 +39,14 @@ import AidTypePeople from '../components/aid/TypePeople.vue';
 import AidTypeAmount from '../components/aid/TypeAmount.vue';
 import AidRecentList from '../components/aid/RecentList.vue';
 import MemberDetailDialog, { type MemberDetail } from '../components/MemberDetailDialog.vue';
+import NiceSelect from '../components/NiceSelect.vue';
 
-// 年份：默认取当年
-const year = new Date().getFullYear();
+// 年份：改为走后端接口 /medicalMutual/getYear?type=2
+const now = new Date().getFullYear();
+const fallbackYears = [now, now - 1, now - 2];
+const years = ref<number[]>([...fallbackYears]);
+const year = ref<number>(fallbackYears[0]);
+const formatYear = (val: number) => `${val}年`;
 
 // 顶部 KPI
 type KpiItem = { label: string; value: number };
@@ -71,7 +79,50 @@ const typeAmountMax = ref<number>(0);
 interface RecentRow { name: string; type: string; date: string; idNumber?: string }
 const recentRows = ref<RecentRow[]>([]);
 
-onMounted(() => loadAll(year));
+onMounted(async () => {
+  await loadYears();
+  await loadAll(year.value);
+});
+watch(year, (y) => { loadAll(y).catch(() => void 0); });
+
+async function loadYears() {
+  const raw = await apiGet<any>('/medicalMutual/getYear?type=2').catch(() => null);
+  const parsed = normalizeYearList(raw);
+  if (parsed.length) {
+    years.value = parsed;
+    if (!parsed.includes(year.value)) {
+      year.value = parsed[0];
+    }
+  } else {
+    years.value = [...fallbackYears];
+    if (!years.value.includes(year.value)) {
+      year.value = years.value[0];
+    }
+  }
+}
+
+function normalizeYearList(raw: any): number[] {
+  const list = Array.isArray(raw)
+    ? raw
+    : Array.isArray(raw?.years)
+      ? raw.years
+      : Array.isArray(raw?.yearList)
+        ? raw.yearList
+        : Array.isArray(raw?.year)
+          ? raw.year
+          : Array.isArray(raw?.list)
+            ? raw.list
+            : typeof raw === 'string'
+              ? raw.split(/[,;\s]+/)
+              : [];
+  const normalized = list
+    .map((v) => {
+      const num = Number(v);
+      return Number.isFinite(num) ? Math.floor(num) : undefined;
+    })
+    .filter((v): v is number => typeof v === 'number' && v > 1900 && v < 3000);
+  return Array.from(new Set(normalized)).sort((a, b) => b - a);
+}
 
 async function loadAll(y: number) {
   await Promise.allSettled([
@@ -191,5 +242,18 @@ async function onRecentCellClick(payload: { row: RecentRow; column: any }) {
     'bl bc br';
   /* 模块间距统一为 10px */
   gap: 0px;
+  position: relative;
+}
+
+.aid__year-select {
+  position: absolute;
+  top: 8px;
+  right: 60px;
+  z-index: 10;
+}
+
+.aid__year-select :deep(.trigger) {
+  height: 32px;
+  font-size: 14px;
 }
 </style>

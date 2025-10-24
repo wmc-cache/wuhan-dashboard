@@ -327,7 +327,11 @@ async function onCellClick(payload: { row: Row; column?: ColumnDef }) {
     const d = (resp && (resp.data || resp)) || {};
     unionDetail.value = {
       fullname: d.fullname ?? '-',
-      unitDistrictSuffix: d.unitDistrictSuffix || labelOf('sys_wuhan_quyu', d.orgDistrict, String(d.orgDistrict ?? '')),
+      // 所属区域：可能为 code，统一转义
+      unitDistrictSuffix: (() => {
+        const val = d.unitDistrictSuffix ?? d.orgDistrict ?? (d as any).district ?? (d as any).area ?? (d as any).region;
+        return labelOf('sys_wuhan_quyu', val, String(val ?? ''));
+      })(),
       unitIndustry: labelOf('unitIndustry', d.unitIndustry, String(d.unitIndustry ?? '')),
       establishDate: d.establishDate || fmtDateFromYYYYMMDD(d.createunionDate),
       memberCount: d.memberCount ?? d.membership ?? '-',
@@ -337,7 +341,8 @@ async function onCellClick(payload: { row: Row; column?: ColumnDef }) {
       viceChair: d.viceResident ?? '-',
       parentUnionName: d.pName ?? d.parentUnionName ?? '-',
       legalDuty: d.legalDuty ?? '工会主席',
-      isOpenSystem: normalizeBool(d.isConsult),
+      // 新字段名兼容：executeEnterprises（厂务公开）优先，其次旧字段 isConsult
+      isOpenSystem: normalizeBool(d.executeEnterprises ?? d.isConsult),
       isWorkerCongress: normalizeBool(d.workersCongress),
       childOrgCount: d.orgCount ?? '-',
     };
@@ -347,14 +352,15 @@ async function onCellClick(payload: { row: Row; column?: ColumnDef }) {
   }
 }
 
-function normalizeBool(v: any): boolean | string {
-  if (v == null || v === '') return '-';
-  const s = String(v).toLowerCase();
-  if (s === 'true' || s === '1' || s === '是') return true;
-  if (s === 'false' || s === '0' || s === '否') return false;
+// 布尔规范化：按“1 是，其余 否”，缺失也按 否
+function normalizeBool(v: any): boolean {
+  if (v == null || v === '') return false;
+  const s = String(v).trim().toLowerCase();
+  if (s === '1' || s === 'true' || s === '是' || s === 'y' || s === 'yes') return true;
+  if (s === '0' || s === 'false' || s === '否' || s === 'n' || s === 'no') return false;
   const n = Number(v);
-  if (Number.isFinite(n)) return n > 0;
-  return '-';
+  if (Number.isFinite(n)) return n === 1;
+  return false;
 }
 
 // 拉取字典后再加载列表（避免初次渲染出现 code）
