@@ -179,7 +179,7 @@ const titleImgSmall1x = v2t7x; const titleImgSmall2x = v2t7x2;
 // 与 Dashboard.vue 保持口径：总数 / 较上周新增 / 下辖工会
 const searchKpiItems = ref([
   { title: '工会总数(个)', value: 0, icon1x: icon31x, icon2x: icon32x },
-  { title: '较上周新增(个)', value: 0, icon1x: icon41x, icon2x: icon42x },
+  { title: '工会组织较上年新增(个)', value: 0, icon1x: icon41x, icon2x: icon42x },
   { title: '下辖工会(个)', value: 0, icon1x: icon51x, icon2x: icon52x }
 ]);
 
