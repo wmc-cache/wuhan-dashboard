@@ -76,6 +76,12 @@ interface Props {
   labelHeight?: number;
   showInfoCard?: boolean;
   showLabels?: boolean;
+  /**
+   * 信息卡全局像素偏移（x, y）。
+   * - 以各区中心点为基准，先加上这里的偏移，再加 `infoCardOffsetByName` 的按区偏移。
+   * - 方便你在不同设计稿/容器尺寸下整体平移信息卡锚点。
+   */
+  infoCardOffset?: [number, number];
   infoCardOffsetByName?: Record<DistrictName, [number, number]>;
 }
 
@@ -104,10 +110,10 @@ const props = withDefaults(defineProps<Props>(), {
   // 默认针对中心区域做一点点手动偏移，避免标签重叠（可被父组件覆盖）
   labelOffsetByName: () => ({
     // 市中心三镇及周边较为密集，适当错位一点点
-    '江汉区': [-26, -8],
+    '江汉区': [-26, -28],
     '江岸区': [14, -30],
-    '硚口区': [-44, 8],
-    '汉阳区': [-34, 22],
+    '硚口区': [-34, -15],
+    '汉阳区': [-34, -5],
     '武昌区': [16, -16],
     '青山区': [5, -8],
     '洪山区': [-36, 16],
@@ -120,8 +126,31 @@ const props = withDefaults(defineProps<Props>(), {
   labelHeight: 26,
   showInfoCard: true,
   showLabels: true,
+  infoCardOffset: () => [0, 0] as [number, number],
+  // 父组件可传入按区偏移；默认空表。实际计算时会在内部与 baseInfoCardOffsets 合并。
   infoCardOffsetByName: () => ({})
 });
+
+// 组件内部的基础偏移表：即使父组件传入 infoCardOffsetByName，也会与这里做叠加
+// 好处：你在这里改某个区的 (x,y) 就能立刻生效；父组件只做“额外微调”。
+const baseInfoCardOffsets: Record<DistrictName, [number, number]> = {
+  '江夏区': [0, 0],
+  '武昌区': [0, 0],
+  '汉阳区': [-20, 0],
+  '江岸区': [0, -50],
+  '江汉区': [-20, -30],
+  '硚口区': [-20, -20],
+  '青山区': [-20, -20],
+  '洪山区': [-40, 0],
+  '东西湖区': [0, 0],
+  '汉南区': [0, 0],
+  '蔡甸区': [0, 0],
+  '黄陂区': [0, 0],
+  '新洲区': [-150, 0],
+  '东湖新技术开发区': [0, 0],
+  '武汉经济技术开发区': [0, 0],
+  '东湖生态旅游风景区': [0, 0],
+};
 
 const root = ref<HTMLDivElement | null>(null);
 const chartEl = ref<HTMLDivElement | null>(null);
@@ -223,7 +252,14 @@ function selectDistrict(name: DistrictName, opts: { silent?: boolean } = {}) {
     const centerPx = (center && chart.value)
       ? (chart.value.convertToPixel({ geoIndex: 0 }, center) as number[])
       : [16, 16];
-    const offset = props.infoCardOffsetByName?.[name] || [0, 0];
+    // 先应用全局偏移 + 内部基础偏移，再叠加父组件按区偏移
+    const g = props.infoCardOffset || [0, 0];
+    const base = baseInfoCardOffsets[name] || [0, 0];
+    const per = props.infoCardOffsetByName?.[name] || [0, 0];
+    const offset: [number, number] = [
+      (g?.[0] ?? 0) + (base?.[0] ?? 0) + (per?.[0] ?? 0),
+      (g?.[1] ?? 0) + (base?.[1] ?? 0) + (per?.[1] ?? 0),
+    ];
     const anchor = [
       (centerPx?.[0] ?? 0) + (offset?.[0] ?? 0),
       (centerPx?.[1] ?? 0) + (offset?.[1] ?? 0)
@@ -404,6 +440,7 @@ function drawLabels() {
         verticalAlign: 'middle'
       }
     });
+    //@ts-ignore
     graphics.push({
       type: 'group',
       x: x - w / 2 + off[0],
@@ -482,7 +519,7 @@ onBeforeUnmount(() => {
 });
 
 // 如果父组件覆盖 data 或初始选中，动态更新
-watch(() => [props.dataByDistrict, props.showNetwork, props.labelOffsetByName, props.labelWidth, props.labelHeight, props.showLabels, props.infoCardOffsetByName], () => {
+watch(() => [props.dataByDistrict, props.showNetwork, props.labelOffsetByName, props.labelWidth, props.labelHeight, props.showLabels, props.infoCardOffset, props.infoCardOffsetByName], () => {
   if (!chart.value) return;
   chart.value.setOption(buildOption(), { notMerge: true });
   setTimeout(() => {
