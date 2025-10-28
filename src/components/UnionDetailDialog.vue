@@ -431,7 +431,7 @@ if (typeof window !== 'undefined') {
   /* 需要让标题牌与关闭按钮可以“溢出”显示在白框外 */
   overflow: visible;
   /* 与会员详情统一：限定高度，主体滚动 */
-  max-height: 80vh;
+  max-height: 85vh;
   display: grid;
   grid-template-rows: 0 1fr; /* 头部占 0，高度给 body */
 }

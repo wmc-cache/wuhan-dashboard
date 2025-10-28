@@ -557,7 +557,7 @@ watch(curYear, async (y) => {
   box-shadow: 0 18px 48px rgba(30, 70, 160, .28);
   color: #333;
   /* 让主体可滚动：容器限定 80% 视口高度，内部 body 滚动 */
-  max-height: 80vh;
+  max-height: 85vh;
   display: grid;
   grid-template-rows: 0 1fr; /* 头部占位为 0，高度全部给 body */
   overflow: visible; /* 允许标题牌溢出 */
