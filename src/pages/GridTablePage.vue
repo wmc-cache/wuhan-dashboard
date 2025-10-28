@@ -59,7 +59,7 @@
     </section>
   </main>
   <!-- 详情弹窗 -->
-  <UnionDetailDialog v-model="showUnion" :data="unionDetail" title="工会详情" :width="1080" />
+  <UnionDetailDialog v-model="showUnion" :data="unionDetail" :union-id="unionIdForDlg" :key="unionDlgKey" title="工会详情" :width="1080" />
 </template>
 
 <script setup lang="ts">
@@ -125,6 +125,8 @@ const rows = ref<Row[]>([]);
 const loading = ref(false);
 const showUnion = ref(false);
 const unionDetail = ref<UnionDetail | undefined>(undefined);
+const unionIdForDlg = ref<string | number | undefined>(undefined);
+const unionDlgKey = ref(0); // 每次打开强制销毁重建
 const exporting = ref(false);
 const dictReady = ref(false);
 
@@ -319,37 +321,25 @@ const highlightFields = computed<Record<string, string | string[]>>(() => {
 });
 
 async function onCellClick(payload: { row: Row; column?: ColumnDef }) {
-  const id = (payload.row as any).id;
-  if (!id) return;
-  try {
-    loading.value = true;
-    const resp: any = await apiGet<any>(`/business/union/${encodeURIComponent(String(id))}`).catch(() => null);
-    const d = (resp && (resp.data || resp)) || {};
-    unionDetail.value = {
-      fullname: d.fullname ?? '-',
-      // 所属区域：可能为 code，统一转义
-      unitDistrictSuffix: (() => {
-        const val = d.unitDistrictSuffix ?? d.orgDistrict ?? (d as any).district ?? (d as any).area ?? (d as any).region;
-        return labelOf('sys_wuhan_quyu', val, String(val ?? ''));
-      })(),
-      unitIndustry: labelOf('unitIndustry', d.unitIndustry, String(d.unitIndustry ?? '')),
-      establishDate: d.establishDate || fmtDateFromYYYYMMDD(d.createunionDate),
-      memberCount: d.memberCount ?? d.membership ?? '-',
-      linkMan: d.linkMan ?? '-',
-      linkPhone: d.linkPhone ?? d.chairmanMobile ?? d.unitTel ?? '-',
-      chair: d.chair ?? d.chairmanName ?? d.chairman ?? '-',
-      viceChair: d.viceResident ?? '-',
-      parentUnionName: d.pName ?? d.parentUnionName ?? '-',
-      legalDuty: d.legalDuty ?? '工会主席',
-      // 新字段名兼容：executeEnterprises（厂务公开）优先，其次旧字段 isConsult
-      isOpenSystem: normalizeBool(d.executeEnterprises ?? d.isConsult),
-      isWorkerCongress: normalizeBool(d.workersCongress),
-      childOrgCount: d.orgCount ?? '-',
-    };
-    showUnion.value = true;
-  } finally {
-    loading.value = false;
-  }
+  // 需求：不要等到接口返回数据后才打开弹框。先打开弹框，
+  // 详情组件会在打开后自行请求 /business/union/detail 并显示 loading。
+  const row: any = payload.row as any;
+  const id = row.id ?? row.unionId ?? row.sourceId;
+  if (!id && !row.name) return;
+  unionIdForDlg.value = id;
+  // 先给到最小信息，其他字段由弹框内部加载
+  unionDetail.value = {
+    fullname: String(row.name || row.fullname || '-'),
+    unitDistrictSuffix: row.region || row.unitDistrictSuffix,
+    unitIndustry: row.industry || row.unitIndustry,
+    establishDate: row.establishDate || fmtDateFromYYYYMMDD(row.createunionDate),
+    memberCount: row.memberCount,
+    linkMan: row.linkMan,
+    linkPhone: row.linkPhone,
+    chair: row.chair,
+  } as UnionDetail;
+  unionDlgKey.value += 1;
+  showUnion.value = true;
 }
 
 // 布尔规范化：按“1 是，其余 否”，缺失也按 否

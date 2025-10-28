@@ -48,7 +48,7 @@
       </section>
     </section>
     <!-- Teleport 到 body，不占布局 -->
-    <UnionDetailDialog v-model="showUnion" :data="unionData" title="工会详情" :width="1080" />
+    <UnionDetailDialog v-model="showUnion" :data="unionData" :union-id="unionIdForDlg" :key="unionDlgKey" title="工会详情" :width="1080" />
     <MemberDetailDialog v-model="showMember" :data="memberData" :search-code="memberSearchCode" title="会员详情" :width="1080" :default-tab="memberDefaultTab" />
   </main>
 </template>
@@ -199,6 +199,8 @@ async function onSearch() {
 // 弹框：工会详情/会员详情
 const showUnion = ref(false);
 const unionData = ref<UnionDetail | undefined>(undefined);
+const unionIdForDlg = ref<string | number | undefined>(undefined);
+const unionDlgKey = ref(0); // 每次打开强制销毁重建
 const showMember = ref(false);
 const memberData = ref<MemberDetail | undefined>(undefined);
 const memberSearchCode = ref<string | undefined>(undefined);
@@ -216,53 +218,27 @@ function tabFromCodeToMember(code?: number): MemberDetailTab {
 async function onCellClick(payload: { row: any; column: ColumnDef }) {
   const r = payload.row as any;
   if (selCat.value === 'org' && payload.column.key === 'fullname') {
-    // 优先使用行内 id；缺失则按名称检索一次拿到 id
-    let id = r.id ?? r.unionId ?? r.sourceId;
-    if (id == null && r.fullname) {
-      const search = await apiGet<any>(`/business/union/list?fullname=${encodeURIComponent(String(r.fullname))}&pageNum=1&pageSize=1`).catch(() => null);
-      const one = (search && (Array.isArray(search.rows) ? search.rows[0] : (Array.isArray(search.data) ? search.data[0] : undefined))) || undefined;
-      id = one?.id ?? one?.unionId ?? one?.sourceId;
-    }
-    if (id == null) return;
-    try {
-      const resp = await apiGet<any>(`/business/union/${encodeURIComponent(String(id))}`).catch(() => null);
-      const d = (resp && (resp.data || resp)) || {};
-      // 统一转义布尔：后端可能返回 1/0、'1'/'0'、true/false、'是'/'否'
-      // 布尔规范化：按“1 是，其余 否”的口径，缺失也按 否
-      function normalizeBool(v: any): boolean {
-        if (v == null || v === '') return false;
-        const s = String(v).trim().toLowerCase();
-        if (s === '1' || s === 'true' || s === '是' || s === 'y' || s === 'yes') return true;
-        if (s === '0' || s === 'false' || s === '否' || s === 'n' || s === 'no') return false;
-        const n = Number(v);
-        if (Number.isFinite(n)) return n === 1;
-        return false;
-      }
-
-      unionData.value = {
-        fullname: d.fullname ?? r.fullname ?? '-',
-        // 所属区域：后端有时直接给 code（如 420112），统一用字典转义为名称
-        unitDistrictSuffix: (() => {
-          const val = d.unitDistrictSuffix ?? d.orgDistrict ?? (d as any).district ?? (d as any).area ?? (d as any).region;
-          return labelOf('sys_wuhan_quyu', val, String(val ?? ''));
-        })(),
-        unitIndustry: labelOf('unitIndustry', d.unitIndustry, String(d.unitIndustry ?? '')),
-        establishDate: normalizeDate(d.establishDate ?? d.createunionDate ?? r.establishDate),
-        memberCount: d.memberCount ?? d.membership ?? r.memberCount ?? '-',
-        linkMan: d.linkMan ?? r.linkMan ?? '-',
-        linkPhone: d.linkPhone ?? d.chairmanMobile ?? d.unitTel ?? r.linkPhone ?? '-',
-        chair: d.chair ?? d.chairmanName ?? d.chairman ?? r.chair ?? '-',
-        viceChair: d.viceResident ?? r.viceChair ?? '-',
-        parentUnionName: d.pName ?? d.parentUnionName ?? r.parentUnionName ?? '-',
-        legalDuty: d.legalDuty ?? '工会主席',
-        // 新字段名兼容：executeEnterprises（厂务公开）、workersCongress（职代会）
-        // 数值 1 表示“是”，其余按“否”处理
-        isOpenSystem: normalizeBool(d.executeEnterprises ?? d.isConsult ?? r.isOpenSystem),
-        isWorkerCongress: normalizeBool(d.workersCongress ?? r.isWorkerCongress),
-        childOrgCount: d.orgCount ?? r.childOrgCount ?? '-',
-      } as UnionDetail;
-      showUnion.value = true;
-    } catch {}
+    // 需求：不要等到接口返回后才打开弹框。先打开弹框并显示 loading，
+    // 详情组件会在打开后自行请求 /business/union/detail 并合并数据。
+    // 仅在有行内 id 时传入；否则让弹框基于 fullName 拉取。
+    const id = r.id ?? r.unionId ?? r.sourceId;
+    if (id == null && !r.fullname) return;
+    // 设置最小必要信息：id 和名称；其余字段先用行内已有值或留空，
+    // 以便弹框先渲染并展示“-”或初始值。
+    unionIdForDlg.value = id ?? undefined;
+    unionData.value = {
+      fullname: r.fullname ?? '-',
+      unitDistrictSuffix: r.unitDistrictSuffix,
+      unitIndustry: r.unitIndustry,
+      establishDate: normalizeDate(r.establishDate),
+      memberCount: r.memberCount,
+      linkMan: r.linkMan,
+      linkPhone: r.linkPhone,
+      chair: r.chair,
+    } as UnionDetail;
+    // 强制重建组件，确保不保留上次数据/状态
+    unionDlgKey.value += 1;
+    showUnion.value = true;
   } else if (selCat.value === 'member' && payload.column.key === 'name') {
     memberDefaultTab.value = tabFromCodeToMember(activeCode.value);
     memberData.value = {
