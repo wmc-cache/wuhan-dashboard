@@ -243,6 +243,7 @@ function selectDistrict(name: DistrictName, opts: { silent?: boolean } = {}) {
       }
       chart.value.dispatchAction({ type: 'mapSelect', seriesName: 'wuhan', name });
     } catch { /* ignore */ }
+    refreshActiveStyles();
   }
   setTimeout(drawLabels, 0);
 
@@ -327,6 +328,48 @@ const emit = defineEmits<{
   (e: 'select-change', name: string, info: DistrictInfo): void
 }>();
 
+const AREA_NORMAL = '#CFE2FF';
+const AREA_NORMAL_EMPHASIS = '#DDEBFF';
+const AREA_BORDER = '#5A9EFF';
+const AREA_SELECTED = '#1672FF';
+const AREA_SELECTED_BORDER = '#0C5CE9';
+
+function makeSeriesData() {
+  return getOrderedNames().map((name) => ({
+    name,
+    value: props.dataByDistrict[name]?.orgCount ?? 0,
+    selected: name === active.value,
+    itemStyle: {
+      areaColor: name === active.value ? AREA_SELECTED : AREA_NORMAL,
+      borderColor: name === active.value ? AREA_SELECTED_BORDER : AREA_BORDER,
+      borderWidth: name === active.value ? 1.2 : 1
+    }
+  }));
+}
+
+function refreshActiveStyles() {
+  if (!chart.value) return;
+  const names = getOrderedNames();
+  const regions = names.map((name) => ({
+    name,
+    itemStyle: {
+      areaColor: name === active.value ? AREA_SELECTED : AREA_NORMAL,
+      borderColor: name === active.value ? AREA_SELECTED_BORDER : AREA_BORDER,
+      borderWidth: name === active.value ? 1.2 : 1
+    },
+    emphasis: {
+      itemStyle: { areaColor: name === active.value ? AREA_SELECTED : AREA_NORMAL_EMPHASIS },
+      label: { color: name === active.value ? '#ffffff' : '#1f5eff' }
+    }
+  }));
+  chart.value.setOption({
+    geo: { regions },
+    series: [
+      { id: 'map-main', data: makeSeriesData() }
+    ]
+  }, false);
+}
+
 function register() {
   // 使用官方 API 判断是否已注册，避免往 echarts 对象挂私有属性（某些构建下该对象是不可扩展的）
   try {
@@ -336,20 +379,9 @@ function register() {
 }
 
 function buildOption(): echarts.EChartsOption {
-  const areaNormal = '#CFE2FF';
-  const areaNormal2 = '#DDEBFF';
-  const borderColor = '#5A9EFF';
-  const selectedColor = '#1672FF';
   const mapLayout = { layoutCenter: ['50%', '53%'], layoutSize: '128%' };
 
-  const selectedSet = new Set([active.value]);
-
-  // map 数据（为实现选中，向每个区注入单独的 itemStyle 与 selected）
-  const seriesData = featureNames.map((name) => ({
-    name,
-    value: props.dataByDistrict[name]?.orgCount ?? 0,
-    selected: selectedSet.has(name)
-  }));
+  const seriesData = makeSeriesData();
 
   // 生成若干装饰折线（中心点之间的虚线）
   const linePairs: any[] = [];
@@ -365,37 +397,40 @@ function buildOption(): echarts.EChartsOption {
     geo: {
       map: 'wuhan', roam: false, selectedMode: 'single',
       ...mapLayout,
-      itemStyle: { areaColor: areaNormal, borderColor, borderWidth: 1 },
-      emphasis: { itemStyle: { areaColor: areaNormal2 } },
-      select: { itemStyle: { areaColor: selectedColor } },
+      itemStyle: { areaColor: AREA_NORMAL, borderColor: AREA_BORDER, borderWidth: 1 },
+      emphasis: { itemStyle: { areaColor: AREA_NORMAL_EMPHASIS } },
+      select: { itemStyle: { areaColor: AREA_SELECTED } },
       label: { show: false }
     },
     // 两层 map：阴影层 + 主层
     series: [
       // 阴影（稍微偏移制造立体感）
       {
+        id: 'map-shadow',
         name: 'shadow', type: 'map', map: 'wuhan', geoIndex: 0, z: 1, silent: true,
         itemStyle: { areaColor: 'rgba(80,140,255,0.18)', borderColor: 'rgba(0,0,0,0)', shadowBlur: 24, shadowColor: 'rgba(30,90,200,0.35)', shadowOffsetX: 8, shadowOffsetY: 10 },
         emphasis: { disabled: true }
       },
       // 主图层
       {
+        id: 'map-main',
         name: 'wuhan', type: 'map', map: 'wuhan', geoIndex: 0, z: 3,
         selectedMode: 'single',
         data: seriesData,
-        itemStyle: { areaColor: areaNormal, borderColor, borderWidth: 1 },
+        itemStyle: { areaColor: AREA_NORMAL, borderColor: AREA_BORDER, borderWidth: 1 },
         emphasis: {
-          itemStyle: { areaColor: areaNormal2, borderColor: '#4E88FF' },
+          itemStyle: { areaColor: AREA_NORMAL_EMPHASIS, borderColor: '#4E88FF' },
           label: { color: '#ffffff' }
         },
         select: {
-          itemStyle: { areaColor: selectedColor, borderColor: '#0C5CE9', borderWidth: 1.2 },
+          itemStyle: { areaColor: AREA_SELECTED, borderColor: AREA_SELECTED_BORDER, borderWidth: 1.2 },
           label: { color: '#ffffff' }
         },
         label: undefined
       },
       // 装饰虚线
       props.showNetwork ? {
+        id: 'map-lines',
         type: 'lines', coordinateSystem: 'geo', z: 2, silent: true,
         effect: undefined,
         lineStyle: { color: 'rgba(80,150,255,0.35)', width: 1, type: 'dashed' },
@@ -433,7 +468,7 @@ function drawLabels() {
         text: name,
         x: w / 2,
         y: showDecor ? h / 2 + 1 : h / 2,
-        fill: isActive ? '#0C5CE9' : '#1f5eff',
+        fill: isActive ? '#ffffff' : '#1f5eff',
         fontSize: 13,
         fontWeight: 800,
         align: 'center',
@@ -447,9 +482,17 @@ function drawLabels() {
       y: y - (showDecor ? h + 18 : h / 2) + off[1],
       z: 5,
       silent: false,
+      cursor: 'pointer',
       onclick: () => {
         stopAutoLoop();
         selectDistrict(name);
+        scheduleAutoResume(2000);
+      },
+      onmouseover: () => {
+        stopAutoLoop();
+        selectDistrict(name);
+      },
+      onmouseout: () => {
         scheduleAutoResume(2000);
       },
       children
@@ -464,6 +507,7 @@ function init() {
   if (!chartEl.value) return;
   chart.value = echarts.init(chartEl.value);
   chart.value.setOption(buildOption());
+  refreshActiveStyles();
   // 点击选中
   chart.value.on('click', { seriesType: 'map' }, (p: any) => {
     if (!p || !p.name) return;
