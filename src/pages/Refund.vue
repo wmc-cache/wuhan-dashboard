@@ -10,7 +10,8 @@
 
     <section class="mod" style="grid-area: ml;">
       <div class="mod__body">
-        <RefundRankType1 :items="provinceAmountTop" @more="goDetail('szje')" @row-click="onUnionClick('szje', $event?.item?.name)" />
+        <RefundRankType1 :items="provinceAmountTop" @more="goDetail('szje')"
+          @row-click="onUnionClick('szje', $event?.item?.name)" />
       </div>
     </section>
 
@@ -28,13 +29,15 @@
         </div>
       </div>
       <div class="mod__body mod__body--full">
-        <RefundOverview :year="year" :top-items="overviewTop" :bottom-items="overviewBottom" :value-unit="overviewUnit" @open-detail="onOpenDetail" />
+        <RefundOverview :year="year" :top-items="overviewTop" :bottom-items="overviewBottom" :value-unit="overviewUnit"
+          @open-detail="onOpenDetail" />
       </div>
     </section>
 
     <section class="mod" style="grid-area: bc;">
       <div class="mod__body mod__body--full">
-        <RefundCompanyTable :rows="companyRows" value-title="企业产业金额" unit-text="万元" />
+        <RefundRankType3 :items="basicTop5" @more="goDetail('jcje')"
+          @row-click="onUnionClick('jcje', $event?.item?.name)" />
       </div>
     </section>
 
@@ -47,7 +50,8 @@
       </div>
 
       <div class="mod__body">
-        <RefundRankList :items="districtTop4" :max-rows="4" bar-color="#52c41a" show-no variant="plain" @row-click="onUnionClick('dsje', $event?.item?.name)" />
+        <RefundRankList :items="districtTop4" :max-rows="4" bar-color="#52c41a" show-no variant="plain"
+          @row-click="onUnionClick('dsje', $event?.item?.name)" />
       </div>
     </section>
 
@@ -60,7 +64,8 @@
 
     <section class="mod" style="grid-area: br;">
       <div class="mod__body">
-        <RefundRankType3 :items="basicTop5" @more="goDetail('jcje')" @row-click="onUnionClick('jcje', $event?.item?.name)" />
+        <RefundCompanyTable :rows="companyRows" value-title="企业产业金额" unit-text="万元" />
+
       </div>
     </section>
   </main>

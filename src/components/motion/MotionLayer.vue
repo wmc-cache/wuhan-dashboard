@@ -7,7 +7,7 @@
   -->
   <div class="effects" aria-hidden="true">
     <!-- Dashboard 背景光束（底部中间矩形区域） -->
-    <LottiePlayer
+    <!-- <LottiePlayer
       v-if="isDashboard"
       class="effects__bg"
       src="1首页/背景.json"
@@ -19,7 +19,7 @@
       :y="bgY"
       :width="bgW"
       :height="bgH"
-    />
+    /> -->
     <!-- Dashboard 顶部装饰，与 Header 高度一致 -->
     <!-- <LottiePlayer class="effects__top" src="1首页/top.json" renderer="svg" :loop="true" :autoplay="true" :speed="1" :height="110" /> -->
   </div>

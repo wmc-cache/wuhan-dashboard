@@ -14,11 +14,21 @@
         </header>
 
       <section class="udlg__body">
-        <h3 class="udlg__sub">
-          <span class="udlg__sub-bg">
-            <span class="udlg__sub-text">基本信息</span>
-          </span>
-        </h3>
+        <div class="udlg__section-head">
+          <h3 class="udlg__sub">
+            <span class="udlg__sub-bg">
+              <span class="udlg__sub-text">基本信息</span>
+            </span>
+          </h3>
+          <button
+            type="button"
+            class="udlg__refresh"
+            @click="refreshData"
+            :disabled="loading || refreshing"
+          >
+            {{ refreshing ? '刷新中...' : '刷新' }}
+          </button>
+        </div>
 
         <ul class="info">
           <li v-for="(row, i) in rows" :key="i" class="info__row">
@@ -217,8 +227,58 @@ function money(v: unknown): string {
   const s = n(v);
   return s === '-' ? '-' : `${s} 元`;
 }
+function formatBoolToBool(v: any): boolean {
+  if (v == null || v === '') return false;
+  const s = String(v).trim().toLowerCase();
+  if (s === '1' || s === 'true' || s === '是' || s === 'y' || s === 'yes') return true;
+  if (s === '0' || s === 'false' || s === '否' || s === 'n' || s === 'no') return false;
+  const n = Number(v);
+  if (Number.isFinite(n)) return n === 1;
+  return false;
+}
+
+let dictsPromise: Promise<void> | null = null;
+async function ensureBaseDicts(): Promise<void> {
+  if (!dictsPromise) {
+    dictsPromise = (async () => {
+      await getDict('sys_wuhan_quyu').catch(() => void 0);
+      const inds = await getDict('unitIndustry').catch(() => [] as any);
+      if (!inds?.length) await getDict('unitlndustry').catch(() => void 0);
+    })().catch((err) => {
+      dictsPromise = null;
+      throw err;
+    });
+  }
+  await dictsPromise;
+}
+
+async function applyBaseFromResponse(raw: any) {
+  if (!raw || typeof raw !== 'object') return;
+  await ensureBaseDicts().catch(() => void 0);
+  const current = base.value || {};
+  const districtCode = raw.unitDistrictSuffix ?? raw.orgDistrict ?? raw.district ?? raw.area ?? raw.region;
+  const industryCode = raw.unitIndustry;
+
+  baseLocal.value = {
+    fullname: raw.fullname ?? current.fullname,
+    unitDistrictSuffix: districtCode != null ? labelOf('sys_wuhan_quyu', districtCode, String(districtCode)) : current.unitDistrictSuffix,
+    unitIndustry: industryCode != null ? labelOf('unitIndustry', industryCode, String(industryCode)) : current.unitIndustry,
+    establishDate: raw.establishDate || raw.createunionDate || current.establishDate,
+    memberCount: raw.memberCount ?? raw.membership ?? current.memberCount,
+    linkMan: raw.linkMan ?? current.linkMan,
+    linkPhone: raw.linkPhone ?? raw.chairmanMobile ?? raw.unitTel ?? current.linkPhone,
+    chair: raw.chair ?? raw.chairmanName ?? raw.chairman ?? current.chair,
+    viceChair: raw.viceResident ?? current.viceChair,
+    parentUnionName: raw.pName ?? raw.parentUnionName ?? current.parentUnionName,
+    legalDuty: raw.legalDuty ?? current.legalDuty ?? '工会主席',
+    isOpenSystem: formatBoolToBool((raw.executeEnterprises ?? raw.isConsult) ?? current.isOpenSystem),
+    isWorkerCongress: formatBoolToBool(raw.workersCongress ?? current.isWorkerCongress),
+    childOrgCount: raw.orgCount ?? raw.childOrgCount ?? current.childOrgCount,
+  };
+}
 // Tabs
 type UTab = 'province' | 'medical' | 'relief' | 'assistance' | 'model' | 'refund';
+const allTabs: UTab[] = ['province', 'medical', 'relief', 'assistance', 'model', 'refund'];
 const tab = ref<UTab>('province');
 
 // 运行时从 /business/union/detail 拉具体 tab 数据；若外层已传入 unionStats，则用作兜底
@@ -251,14 +311,17 @@ const modelEmpty = computed(() => emptyObj(model.value));
 
 // 拉取逻辑：/business/union/detail?id=<id>&type=<code>
 const loading = ref(false);
+const refreshing = ref(false);
 const loaded: Record<UTab, boolean> = { province: false, medical: false, relief: false, assistance: false, model: false, refund: false };
 function typeOfTab(t: UTab): number { return t === 'province' ? 0 : t === 'medical' ? 1 : t === 'relief' ? 2 : t === 'assistance' ? 3 : t === 'model' ? 4 : 5; }
 
-async function fetchTab(t: UTab) {
+async function fetchTab(t: UTab, opts: { force?: boolean; flush?: string | null } = {}) {
   const fullName = (props.data as any)?.fullname || (props as any)?.unionName;
   const id = props.unionId ?? (props.data as any)?.id ?? (props.data as any)?.unionId ?? (props.data as any)?.sourceId;
   if (!fullName && !id) return; // 无关键检索字段不请求
-  if (loaded[t]) return;
+  const force = opts.force ?? false;
+  const flush = opts.flush ?? null;
+  if (!force && loaded[t]) return;
   try {
     loading.value = true;
     const type = typeOfTab(t);
@@ -267,13 +330,17 @@ async function fetchTab(t: UTab) {
     if (fullName) qs.set('fullName', String(fullName));
     else if (id != null) qs.set('id', String(id));
     qs.set('type', String(type));
+    if (flush != null) qs.set('flush', flush);
     let resp: any = await apiGet<any>(`/business/union/detail?${qs.toString()}`).catch(() => null);
     if (!resp) {
       const body: Record<string, any> = { type } as any;
       if (fullName) body.fullName = fullName; else if (id != null) body.id = id;
+      if (flush != null) body.flush = flush;
       resp = await apiPostForm<any>('/business/union/detail', body).catch(() => null);
     }
     const data = resp?.data ?? resp; // 允许 data 或直接对象
+    const baseSource = data?.unionDetail ?? data?.union ?? data?.unionVo ?? data?.unionInfo ?? data;
+    await applyBaseFromResponse(baseSource);
     const ustat = data?.unionStatisticsVo; // 兼容返回整条 union 详情
     const pick = (k: string) => (ustat && ustat[k]) || data?.[k] || data;
     // 根据类型落位（优先从 unionStatisticsVo 取；再取同名 *_Vo；最后兜底 data 本身）
@@ -287,56 +354,6 @@ async function fetchTab(t: UTab) {
   } finally {
     loading.value = false;
   }
-}
-
-// 拉取“基本信息”（无 type，返回整条 union）
-async function fetchBase() {
-  const fullName = (props.data as any)?.fullname || (props as any)?.unionName;
-  const id = props.unionId ?? (props.data as any)?.id ?? (props.data as any)?.unionId ?? (props.data as any)?.sourceId;
-  if (!fullName && !id) return;
-  // 预加载字典，避免显示 code
-  await getDict('sys_wuhan_quyu').catch(() => void 0);
-  const inds = await getDict('unitIndustry').catch(() => [] as any);
-  if (!inds?.length) await getDict('unitlndustry').catch(() => void 0);
-  try {
-    loading.value = true;
-    const qs = new URLSearchParams();
-    if (fullName) qs.set('fullName', String(fullName)); else if (id != null) qs.set('id', String(id));
-    let resp: any = await apiGet<any>(`/business/union/detail?${qs.toString()}`).catch(() => null);
-    if (!resp) resp = await apiPostForm<any>('/business/union/detail', Object.fromEntries(qs.entries())).catch(() => null);
-    const d = (resp?.data ?? resp) || {};
-    baseLocal.value = {
-      fullname: d.fullname ?? base.value.fullname,
-      unitDistrictSuffix: (() => {
-        const val = d.unitDistrictSuffix ?? d.orgDistrict ?? d.district ?? d.area ?? d.region;
-        return labelOf('sys_wuhan_quyu', val, String(val ?? ''));
-      })(),
-      unitIndustry: labelOf('unitIndustry', d.unitIndustry, String(d.unitIndustry ?? '')),
-      establishDate: d.establishDate || d.createunionDate,
-      memberCount: d.memberCount ?? d.membership ?? base.value.memberCount,
-      linkMan: d.linkMan ?? base.value.linkMan,
-      linkPhone: d.linkPhone ?? d.chairmanMobile ?? d.unitTel ?? base.value.linkPhone,
-      chair: d.chair ?? d.chairmanName ?? d.chairman ?? base.value.chair,
-      viceChair: d.viceResident ?? base.value.viceChair,
-      parentUnionName: d.pName ?? d.parentUnionName ?? base.value.parentUnionName,
-      legalDuty: d.legalDuty ?? '工会主席',
-      isOpenSystem: formatBoolToBool(d.executeEnterprises ?? d.isConsult),
-      isWorkerCongress: formatBoolToBool(d.workersCongress),
-      childOrgCount: d.orgCount ?? base.value.childOrgCount,
-    } as Partial<UnionDetail>;
-  } finally {
-    loading.value = false;
-  }
-}
-
-function formatBoolToBool(v: any): boolean {
-  if (v == null || v === '') return false;
-  const s = String(v).trim().toLowerCase();
-  if (s === '1' || s === 'true' || s === '是' || s === 'y' || s === 'yes') return true;
-  if (s === '0' || s === 'false' || s === '否' || s === 'n' || s === 'no') return false;
-  const n = Number(v);
-  if (Number.isFinite(n)) return n === 1;
-  return false;
 }
 
 // 将统计转成四列一行的展示结构：[l1, v1, l2, v2]
@@ -396,7 +413,6 @@ watch(
   () => props.modelValue,
   async (v) => {
     if (!v) return;
-    await fetchBase();
     await fetchTab(tab.value);
   },
   { immediate: true }
@@ -406,6 +422,23 @@ watch(tab, async (t) => {
   if (!props.modelValue) return;
   await fetchTab(t);
 });
+
+async function refreshData() {
+  if (refreshing.value || loading.value) return;
+  refreshing.value = true;
+  allTabs.forEach((t) => { loaded[t] = false; });
+  extProvince.value = null;
+  extMedical.value = null;
+  extAssist.value = null;
+  extRelief.value = null;
+  extRefund.value = null;
+  extModel.value = null;
+  try {
+    await fetchTab(tab.value, { force: true, flush: '1' });
+  } finally {
+    refreshing.value = false;
+  }
+}
 // 允许 ESC 关闭
 function onKey(e: KeyboardEvent) { if (e.key === 'Escape') close(); }
 if (typeof window !== 'undefined') window.addEventListener('keydown', onKey);
@@ -469,6 +502,25 @@ if (typeof window !== 'undefined') {
 
 .udlg__body { padding: 12px; position: relative; overflow: auto; }
 
+.udlg__section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 16px; }
+.udlg__section-head .udlg__sub { margin: 0; }
+.udlg__refresh {
+  min-width: 86px;
+  padding: 6px 16px;
+  border-radius: 6px;
+  border: 1px solid rgba(80, 140, 230, .55);
+  background: linear-gradient(180deg, rgba(120, 175, 255, .92), rgba(50, 115, 240, .92));
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(40, 90, 200, .28);
+  transition: transform .18s ease, filter .18s ease;
+}
+.udlg__refresh:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.05); }
+.udlg__refresh:active:not(:disabled) { transform: translateY(0); filter: brightness(.98); }
+.udlg__refresh:disabled { cursor: not-allowed; opacity: .65; filter: grayscale(.15); box-shadow: none; }
+
 .udlg__sub { margin: 0 0 10px; font-size: 0; }
 .udlg__sub-bg { display: inline-grid; place-items: center; height: 36px; min-width: 130px; padding: 0 14px; background-repeat: no-repeat; background-size: 100% 100%; background-position: center; 
   /* 使用新的“标题背景”贴图（1x/2x）：src/images/dialog-module/titlebg */
@@ -479,14 +531,14 @@ if (typeof window !== 'undefined') {
 
 /* 明细表 */
 .info { list-style: none; margin: 0; padding: 0; border: 1px solid rgba(80, 140, 230, .35); border-radius: 6px; overflow: hidden; background: #fff; }
-.info__row { position: relative; display: grid; grid-template-columns: 170px 1fr 170px 1fr; column-gap: 0; min-height: 56px; align-items: center; }
+.info__row { position: relative; display: grid; grid-template-columns: 170px 1fr 170px 1fr; column-gap: 0; min-height: 40px; align-items: center; }
 /* 更接近截图的淡蓝条纹 */
 .info__row:nth-child(odd) { background: rgba(87, 151, 255, .12); }
 .info__row:nth-child(even) { background: rgba(87, 151, 255, .22); }
 .info__row::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(60, 120, 220, .35); }
 
-.lab { padding: 14px 16px; color: #333; font-weight: 800; white-space: nowrap; }
-.val { padding: 14px 16px; color: #333; font-weight: 700; }
+.lab { padding: 8px 12px; color: #2a6ff0; font-weight: 800; font-size: 13px; white-space: nowrap; }
+.val { padding: 8px 12px; color: #333; font-weight: 600; font-size: 13px; }
 
 /* 次级信息样式与会员详情保持一致 */
 .info--flat .info__row { grid-template-columns: 180px 1fr; min-height: 44px; }
