@@ -12,16 +12,23 @@
 
     <!-- 指标卡三列 -->
     <div class="kpi-row">
-      <div v-for="(it, i) in items" :key="i" class="kpi-card card-bg">
-
+      <!-- 为每个卡片增加可选的点击能力（默认不启用，避免影响旧页面） -->
+      <div
+        v-for="(it, i) in items"
+        :key="i"
+        class="kpi-card card-bg"
+        :class="clickable ? 'is-clickable' : ''"
+        :role="clickable ? 'button' : undefined"
+        :tabindex="clickable ? 0 : undefined"
+        @click="onKpiClick(i)"
+        @keyup.enter.prevent="onKpiClick(i)"
+        @keyup.space.prevent="onKpiClick(i)"
+      >
         <div>
           <img class="icon" :src="it.icon1x" :srcset="it.icon2x + ' 2x'" :alt="it.title" draggable="false" />
         </div>
         <div class="num">
-          <CountUpNumber
-            :value="it.value"
-            :duration="1500"
-          />
+          <CountUpNumber :value="it.value" :duration="1500" />
         </div>
         <div class="title">{{ it.title }}</div>
       </div>
@@ -47,6 +54,8 @@ interface Props {
   modelValue?: string;
   placeholder?: string;
   items?: KItem[];
+  // 是否允许点击 KPI 卡片。开启后会通过 kpi-click 抛出索引。
+  clickable?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -56,16 +65,22 @@ const props = withDefaults(defineProps<Props>(), {
     { title: '市总工会', value: 1,   icon1x: icon31x, icon2x: icon32x },
     { title: '各区总工会、产业和大型企业单位工会', value: 821, icon1x: icon41x, icon2x: icon42x },
     { title: '街道工会', value: 78,  icon1x: icon51x, icon2x: icon52x }
-  ]
+  ],
+  clickable: false,
 });
 
 const emit = defineEmits<{
   (e: 'update:modelValue', v: string): void;
   (e: 'search', keyword: string): void;
+  (e: 'kpi-click', index: number): void;
 }>();
 
 function onInput(e: Event) { emit('update:modelValue', (e.target as HTMLInputElement).value); }
 function onSearch() { emit('search', props.modelValue); }
+function onKpiClick(i: number) {
+  if (!props.clickable) return; // 仅在开启时响应
+  emit('kpi-click', i);
+}
 </script>
 
 <style scoped lang="scss">
@@ -89,6 +104,8 @@ function onSearch() { emit('search', props.modelValue); }
   margin-top: 12px;
 }
 .kpi-card { display: grid; grid-template-rows: auto 1fr auto; justify-items: center; row-gap: 8px; }
+.kpi-card.is-clickable { cursor: pointer; outline: none; }
+.kpi-card.is-clickable:focus-visible { box-shadow: 0 0 0 3px rgba(80, 140, 255, 0.45); border-radius: 12px; }
 .num {
   font-size: 30px;
   font-weight: 900;

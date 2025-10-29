@@ -19,7 +19,14 @@
     <section style="grid-area: tc;">
       <div class="mod__body" style="margin-top: 10px;">
         <!-- 顶部中间搜索：跳转至工会列表页（GridTable） -->
-        <OrgSearchKpis v-model="keyword" style="margin-top: 10px;" :items="searchKpiItems" @search="goToHome" />
+        <OrgSearchKpis
+          v-model="keyword"
+          style="margin-top: 10px;"
+          :items="searchKpiItems"
+          :clickable="true"
+          @search="goToHome"
+          @kpi-click="onKpiClick"
+        />
       </div>
     </section>
 
@@ -193,6 +200,42 @@ function goToHome(kw?: string) {
     name: 'grid-table',
     query: k ? { kw: k } : {}
   }).catch(() => void 0);
+}
+
+// 参考首页双 KPI 的交互：
+// - 点击“工会总数(个)” -> 进入工会列表
+// - 点击“工会组织较上年新增(个)” -> 进入工会列表（默认筛选当前年度）
+// - 点击“下辖工会(个)” -> 同上（进入工会列表）
+type UnionDateRange = { beginTime?: string; endTime?: string };
+function goToUnionList(options?: UnionDateRange) {
+  const query: Record<string, string> = {};
+  if (options?.beginTime) {
+    query['beginTime'] = options.beginTime;
+    query['params[beginTime]'] = options.beginTime;
+  }
+  if (options?.endTime) {
+    query['endTime'] = options.endTime;
+    query['params[endTime]'] = options.endTime;
+  }
+  router.push({ name: 'grid-table', query }).catch(() => void 0);
+}
+function getCurrentYearRange(): UnionDateRange {
+  const now = new Date();
+  const y = now.getFullYear();
+  return { beginTime: `${y}-01-01`, endTime: `${y}-12-31` };
+}
+function onKpiClick(i: number) {
+  if (i === 1) {
+    // 第二张卡：按年度筛选
+    goToUnionList(getCurrentYearRange());
+    return;
+  }
+  if (i === 0) {
+    goToUnionList();
+    return;
+  }
+ 
+ 
 }
 
 // 顶部右：工会概况三项（来自 /business/union/allNum）
