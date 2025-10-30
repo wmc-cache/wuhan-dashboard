@@ -167,6 +167,7 @@ import title1x from '../images/dialog-module/title/小标题.png';
 import title2x from '../images/dialog-module/title/小标题@2x.png';
 import { apiGet, apiPostForm } from '../utils/api';
 import { getDict, labelOf } from '../utils/dict';
+import { unionSourceLabel } from '../utils/source';
 
 interface Props {
   modelValue: boolean;
@@ -197,6 +198,9 @@ export interface UnionDetail {
   isOpenSystem?: boolean | string; // 是否执行厂务公开制度
   isWorkerCongress?: boolean | string; // 是否执行职代会制度
   childOrgCount?: number | string; // 子级组织个数
+  // 来源：来自 /business/union/detail 的 `source` 字段（0..5）
+  source?: any;
+  sourceLabel?: string;
   // 新增：组织统计信息
   unionStats?: {
     provinceStatisticsVo?: { nextUnion?: number; nextThreeUnion?: number; member?: number; newMember?: number; threeMember?: number } | null;
@@ -215,7 +219,7 @@ const base = computed<Partial<UnionDetail>>(() => ({ ...(props.data || {}), ...(
 // 组装二维行数组：[左label, 左值, 右label, 右值]
 const rows = computed<Array<[string, any, string, any]>>(() => {
   const d = base.value || {};
-  return [
+  const list: Array<[string, any, string, any]> = [
     ['工会名称', d.fullname, '所属区域', d.unitDistrictSuffix],
     ['行业类别', d.unitIndustry ?? '-', '成立时间', d.establishDate],
     ['会员人数', d.memberCount, '联系人', d.linkMan],
@@ -224,6 +228,9 @@ const rows = computed<Array<[string, any, string, any]>>(() => {
     ['法定代表人工会职务', d.legalDuty, '是否执行厂务公开制度', d.isOpenSystem],
     ['是否执行职代会制度', d.isWorkerCongress, '子级的组织个数', d.childOrgCount],
   ];
+  // 追加“来源”一行（右侧占位空）
+  list.push(['来源', d.sourceLabel ?? unionSourceLabel((d as any).source), '', '']);
+  return list;
 });
 
 function format(v: any): string {
@@ -292,6 +299,8 @@ async function applyBaseFromResponse(raw: any) {
     isOpenSystem: formatBoolToBool((raw.executeEnterprises ?? raw.isConsult) ?? current.isOpenSystem),
     isWorkerCongress: formatBoolToBool(raw.workersCongress ?? current.isWorkerCongress),
     childOrgCount: raw.orgCount ?? raw.childOrgCount ?? current.childOrgCount,
+    source: (raw as any).source ?? (current as any).source,
+    sourceLabel: unionSourceLabel((raw as any).source ?? (current as any).source ?? (current as any).sourceLabel),
   };
 }
 // Tabs

@@ -73,6 +73,7 @@ import 'element-plus/es/components/pagination/style/css';
 import { apiGet, apiPostBlob } from '../utils/api';
 import MemberDetailDialog, { type MemberDetail } from '../components/MemberDetailDialog.vue';
 import { getDict, labelOf, type DictItem as DItem } from '../utils/dict';
+import { memberSourceLabel } from '../utils/source';
 
 const router = useRouter();
 const route = useRoute();
@@ -82,8 +83,8 @@ function goBack() { router.back(); }
 const q = reactive<{ name: string; unionName: string; sex: string | number | '' }>({ name: '', unionName: '', sex: '' });
 const genderOpts = ref<DItem[]>([]);
 
-// 列定义：序号、会员姓名、所属工会、性别、入会时间、年龄、工作单位、职务、联系电话、政治面貌、学历
-const gridTemplate = '64px 1.2fr 1.2fr .6fr 1.2fr .6fr 1.4fr 1fr 1.2fr 1fr .8fr';
+// 列定义：序号、会员姓名、所属工会、性别、入会时间、年龄、工作单位、职务、联系电话、政治面貌、学历、来源
+const gridTemplate = '64px 1.2fr 1.2fr .6fr 1.2fr .6fr 1.4fr 1fr 1.2fr 1fr .8fr .9fr';
 const columns: ColumnDef[] = [
   { key: 'index', title: '序号', formatter: (v) => String(v).padStart(2, '0') },
   { key: 'name', title: '会员姓名', align: 'left', clickable: true },
@@ -96,10 +97,11 @@ const columns: ColumnDef[] = [
   { key: 'phone', title: '联系电话' },
   { key: 'political', title: '政治面貌' },
   { key: 'edu', title: '学历' },
+  { key: 'sourceFrom', title: '来源' },
 ];
 
 // 行定义 + 服务端数据
-interface Row { index: number; name: string; union: string; gender: string; joinedAt: string; age: string | number; company: string; position: string; phone: string; political: string; edu: string; idNumber?: string }
+interface Row { index: number; name: string; union: string; gender: string; joinedAt: string; age: string | number; company: string; position: string; phone: string; political: string; edu: string; idNumber?: string; sourceFrom?: string }
 const rows = ref<Row[]>([]);
 const loading = ref(false);
 const exporting = ref(false);
@@ -165,6 +167,7 @@ async function fetchList() {
       edu: labelOf('education', r.education, String(r.education ?? '')),
       // 身份证优先使用明文字段 idNumberBright（其次 certificateNumBright）
       idNumber: r.idNumberBright ?? r.certificateNumBright ?? r.idNumber ?? r.certificateNum ?? r.certificateNo,
+      sourceFrom: memberSourceLabel((r as any).sourceFrom),
     } as Row));
   } catch {
     total.value = 0;

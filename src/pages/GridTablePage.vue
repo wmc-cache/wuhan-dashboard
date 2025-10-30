@@ -79,6 +79,7 @@ import 'element-plus/es/components/button/style/css';
 import 'element-plus/es/components/pagination/style/css';
 import { apiGet, apiPostBlob } from '../utils/api';
 import { getDict, labelOf, type DictItem as DItem } from '../utils/dict';
+import { unionSourceLabel } from '../utils/source';
 
 const router = useRouter();
 const route = useRoute();
@@ -94,7 +95,7 @@ const regionOpts = ref<DictItem[]>([]);
 const industryOpts = ref<DictItem[]>([]);
 
 // 列定义（与视觉示意一致）
-const gridTemplate = '60px 1.2fr 1fr 1fr 1.2fr 1fr 1fr 1.2fr 1fr';
+const gridTemplate = '60px 1.2fr 1fr 1fr 1.2fr 1fr 1fr 1.2fr 1fr 0.9fr';
 const columns: ColumnDef[] = [
   { key: 'index', title: '序号', formatter: (v) => String(v).padStart(2, '0') },
   { key: 'name', title: '工会名称', clickable: true, align: 'left' },
@@ -105,6 +106,7 @@ const columns: ColumnDef[] = [
   { key: 'contact', title: '联系人' },
   { key: 'phone', title: '联系电话' },
   { key: 'chairman', title: '工会主席' },
+  { key: 'source', title: '来源' },
 ];
 
 // 行定义与服务端数据
@@ -119,6 +121,7 @@ interface Row {
   contact: string; // 联系人
   phone: string; // 联系电话
   chairman: string; // 工会主席
+  source?: string; // 来源（映射后标签）
 }
 
 const rows = ref<Row[]>([]);
@@ -249,6 +252,7 @@ async function fetchList() {
         contact: r.linkMan ?? '-',
         phone: r.linkPhone ?? r.chairmanMobile ?? r.unitTel ?? '-',
         chairman: r.chair ?? r.chairmanName ?? r.chairman ?? '-',
+        source: unionSourceLabel((r as any).source),
       } as Row;
     });
   } catch (e) {
@@ -340,6 +344,7 @@ async function onCellClick(payload: { row: Row; column?: ColumnDef }) {
     linkMan: row.linkMan,
     linkPhone: row.linkPhone,
     chair: row.chair,
+    sourceLabel: row.source,
   } as UnionDetail;
   unionDlgKey.value += 1;
   showUnion.value = true;

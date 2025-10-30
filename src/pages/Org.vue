@@ -73,6 +73,7 @@ import OrgRegionDistribution from '../components/org/RegionDistribution.vue';
 
 import { ref, computed, onMounted } from 'vue';
 import { apiGet, niceMax } from '../utils/api';
+import { unionSourceLabel } from '../utils/source';
 // Reuse the same icons as SearchKpis, to keep visual consistent
 import icon31x from '../images/org/title3/位图.png';
 import icon32x from '../images/org/title3/位图@2x.png';
@@ -234,7 +235,8 @@ async function fetchOrgList() {
     const members = Number(r.memberCount ?? r.members ?? r.count ?? 0) || 0;
     const district = r.unitDistrictSuffix ?? r.district ?? r.area ?? r.region ?? '';
     const foundedAt = r.establishDate ?? r.foundedAt ?? r.createTime ?? r.foundTime ?? r.createdAt ?? '';
-    return { id, name, members, district, foundedAt } as OrgItem;
+    const source = unionSourceLabel((r as any).source);
+    return { id, name, members, district, foundedAt, source } as OrgItem;
   });
   if (mapped.length) orgList.value = mapped;
 }

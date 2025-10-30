@@ -21,6 +21,7 @@ interface OrgItem {
   members: number;     // 工会人数
   district: string;    // 行政区域
   foundedAt: string;   // 成立时间
+  source?: string;     // 来源（可选）
 }
 
 interface Props { items?: OrgItem[]; pageSize?: number }
@@ -45,12 +46,13 @@ const emit = defineEmits<{
 
 // 滚动由 GridTable 控制，不再切分
 
-const gridTemplate = '1.3fr 1fr 1fr 1.1fr';
+const gridTemplate = '1.3fr 1fr 1fr 1.1fr 0.9fr';
 const columns: ColumnDef[] = [
   { key: 'name', title: '工会名称', align: 'left', clickable: true },
   { key: 'members', title: '工会人数', align: 'center' },
   { key: 'district', title: '行政区域', align: 'center' },
   { key: 'foundedAt', title: '成立时间', align: 'right' },
+  { key: 'source', title: '来源', align: 'center' },
 ];
 
 function onCellClick(payload: { row: OrgItem; column: ColumnDef; rowIndex: number }) { emit('cell-click', payload); }

@@ -99,9 +99,10 @@ const props = withDefaults(defineProps<Props>(), {
     '蔡甸区': { name: '蔡甸区', orgCount: 35, memberCount: 290, unitCount: 41 },
     '黄陂区': { name: '黄陂区', orgCount: 50, memberCount: 410, unitCount: 60 },
     '新洲区': { name: '新洲区', orgCount: 44, memberCount: 360, unitCount: 56 },
-    '东湖新技术开发区': { name: '东湖新技术开发区', orgCount: 42, memberCount: 320, unitCount: 48 },
-    '武汉经济技术开发区': { name: '武汉经济技术开发区', orgCount: 38, memberCount: 280, unitCount: 44 },
-    '东湖生态旅游风景区': { name: '东湖生态旅游风景区', orgCount: 12, memberCount: 90, unitCount: 16 },
+    // 更新为与底图一致的命名
+    '东湖开发区': { name: '东湖开发区', orgCount: 42, memberCount: 320, unitCount: 48 },
+    '东湖风景区': { name: '东湖风景区', orgCount: 12, memberCount: 90, unitCount: 16 },
+    '长江新区': { name: '长江新区', orgCount: 0, memberCount: 0, unitCount: 0 },
   }),
   initialActive: '江夏区',
   showNetwork: true,
@@ -116,9 +117,9 @@ const props = withDefaults(defineProps<Props>(), {
     '青山区': [5, -8],
     '洪山区': [-36, 16],
     // 景区/开发区名称较长，也适当往右下错开
-    '东湖生态旅游风景区': [62, 8],
-    '东湖新技术开发区': [74, 16],
-    '武汉经济技术开发区': [-10, 36],
+    '东湖风景区': [62, 8],
+    '东湖开发区': [74, 16],
+    '长江新区': [10, 8],
   }),
   labelWidth: 72,
   labelHeight: 26,
@@ -145,9 +146,9 @@ const baseInfoCardOffsets: Record<DistrictName, [number, number]> = {
   '蔡甸区': [0, 0],
   '黄陂区': [0, 0],
   '新洲区': [-150, 0],
-  '东湖新技术开发区': [0, 0],
-  '武汉经济技术开发区': [0, 0],
-  '东湖生态旅游风景区': [0, 0],
+  '东湖开发区': [0, 0],
+  '东湖风景区': [0, 0],
+  '长江新区': [0, 0],
 };
 
 const root = ref<HTMLDivElement | null>(null);

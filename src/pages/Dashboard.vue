@@ -315,13 +315,17 @@ const unionOverview = ref([
   { label: '执行职代会制度', value: 0 },
 ]);
 // 地图：从 /business/union/map 加载各区工会组织/会员/单位数
+// 后端返回结构已调整为 { code, msg, data: Row[] }，字段命名统一为 areaName/unionNum/memberNum/unitNum。
+// 这里直接用 apiGet 解包 data，并在本地做一次名称标准化，以兼容历史与现网的不同命名。
 type UnionMapRow = { areaName: string; unionNum: string | number; memberNum: string | number; unitNum: string | number };
 const mapData = ref<Record<string, { name: string; orgCount: number; memberCount: number; unitCount: number }>>({});
+// 信息卡锚点的按区微调（叠加在组件默认偏移之上）
 const mapInfoCardOffsets: Record<string, [number, number]> = {
   '新洲区': [160, -40],
   '黄陂区': [60, 10],
-  '东湖新技术开发区': [130, -10],
-  '武汉经济技术开发区': [100, 30],
+  // 兼容新版区划命名：东湖高新区 -> “东湖开发区”；经开区数据已不返回，保留长江新区
+  '东湖开发区': [130, -10],
+  '长江新区': [60, -10],
   '江夏区': [30, 60],
 };
 // Loading flags per section
@@ -440,14 +444,18 @@ async function loadModelWorkerSubsidy() {
 async function loadUnionMap() {
   try {
     const rows = await apiGet<UnionMapRow[]>('/business/union/map');
+    // 名称标准化：把接口里可能出现的历史命名映射到 geoJSON（wuh2.json）中的标准名字
+    // 注意：目前 geoJSON 含 16 个区：13 行政区 + 东湖风景区 + 东湖开发区 + 长江新区
     const alias: Record<string, string> = {
       '东湖生态旅游风景区': '东湖风景区',
-      '东湖新技术开发区': '东湖开发区',
-      '武汉经济技术开发区': '经开区',
+      '东湖新技术开发区': '东湖开发区', // 新 API 已直接返回“东湖开发区”，此处为向后兼容
+      '武汉长江新区': '长江新区',
+      // 历史数据里偶见“经开区/武汉经济技术开发区”，当前底图无该分区，故不再合并到某一行政区，避免重复统计
     };
     const acc: Record<string, { name: string; orgCount: number; memberCount: number; unitCount: number }> = {};
     (rows || []).forEach((r) => {
-      const name = alias[r.areaName] || r.areaName;
+      const rawName = String(r.areaName || '').trim();
+      const name = alias[rawName] || rawName;
       const org = Number(r.unionNum || 0);
       const mem = Number(r.memberNum || 0);
       const unit = Number(r.unitNum || 0);
