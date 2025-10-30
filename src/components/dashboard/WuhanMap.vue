@@ -52,10 +52,8 @@ import * as echarts from 'echarts';
 import { onMounted, onBeforeUnmount, ref, shallowRef, computed, watch } from 'vue';
 import CountUpNumber from '../CountUpNumber.vue';
 // 本地 geoJSON（武汉各区）
-// 注意：文件较大，已作为 js 导出
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import wuhanGeo from '../../utils/wuh.js';
+// 注意：文件较大，使用 JSON 静态文件导入
+import wuhanGeo from '../../utils/wuh2.json';
 
 type DistrictName = string;
 

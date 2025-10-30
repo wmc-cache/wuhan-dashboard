@@ -54,7 +54,7 @@
         <template v-if="tab==='unit'">
           <div class="card">
             <template v-if="!unitEmpty">
-              <ul class="info">
+              <ul class="info info--unit">
                 <li v-for="(r, i) in rowsUnit" :key="i" class="info__row">
                   <span class="lab">{{ r[0] }}</span><span class="val">{{ r[1] }}</span>
                   <span class="lab">{{ r[2] }}</span><span class="val">{{ r[3] }}</span>
@@ -593,12 +593,15 @@ if (typeof window !== 'undefined') {
 .info__row:nth-child(even) { background: rgba(87, 151, 255, .22); }
 .info__row::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(60, 120, 220, .35); }
 
-.lab { padding: 8px 12px; color: #2a6ff0; font-weight: 800; font-size: 13px; white-space: nowrap; }
+.lab { padding: 8px 12px; color: #2a6ff0; font-weight: 800; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .val { padding: 8px 12px; color: #333; font-weight: 600; font-size: 13px; }
 
 /* 次级信息样式与会员详情保持一致 */
 .info--flat .info__row { grid-template-columns: 180px 1fr; min-height: 44px; }
 .info--flat .info__row::before { display: none; }
+
+/* 单位信息：两侧标签更长，放大标签列宽避免重叠 */
+.info--unit .info__row { grid-template-columns: 220px 1fr 220px 1fr; }
 
 /* tabs */
 .tabs { display: flex; gap: 6px; margin: 12px 0 6px; }

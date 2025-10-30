@@ -68,8 +68,8 @@ const orderOpts = [
   { label: '代收金额', value: 'zje' },
   { label: '省总金额', value: 'szje' },
   { label: '企业产业金额', value: 'qycyje' },
-  { label: '市州金额', value: 'dsje' },
-  { label: '县区金额', value: 'xsje' },
+  { label: '市总金额', value: 'dsje' },
+  { label: '区总金额', value: 'xsje' },
   { label: '基层金额', value: 'jcje' },
   { label: '手续费', value: 'sxf' },
 ];
@@ -93,8 +93,8 @@ const columns: ColumnDef[] = [
   { key: 'zje', title: '代收金额', formatter: (v)=>moneyFmt(v) },
   { key: 'szje', title: '省总金额', formatter: (v)=>moneyFmt(v) },
   { key: 'qycyje', title: '企业产业金额', formatter: (v)=>moneyFmt(v) },
-  { key: 'dsje', title: '市州金额', formatter: (v)=>moneyFmt(v) },
-  { key: 'xsje', title: '县区金额', formatter: (v)=>moneyFmt(v) },
+  { key: 'dsje', title: '市总金额', formatter: (v)=>moneyFmt(v) },
+  { key: 'xsje', title: '区总金额', formatter: (v)=>moneyFmt(v) },
   { key: 'jcje', title: '基层金额', formatter: (v)=>moneyFmt(v) },
   { key: 'sxf', title: '手续费', formatter: (v)=>moneyFmt(v) },
 ];

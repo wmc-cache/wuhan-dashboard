@@ -320,7 +320,7 @@ async function fetchThreeDept() {
   }
   
   .title-img--member-5 {
-    width: 212px;
+    width: 272px;
       /* 新图宽度 212 */
       height: 35px;
       /* 中行中模块：使用 member-v2/title/2 */
