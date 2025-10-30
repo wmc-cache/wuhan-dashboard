@@ -178,6 +178,8 @@ function placeInfoAtPixel(px: [number, number]) {
 
 const featureCenters: Record<DistrictName, [number, number]> = {};
 const featureNames: DistrictName[] = [];
+// 显式维护 名称->行政区划代码 的映射，便于向父组件传参用于筛选
+const nameToAdcode: Record<string, string> = {};
 function isLngLat(pt: any): pt is [number, number] {
   return Array.isArray(pt) && pt.length === 2 &&
     typeof pt[0] === 'number' && typeof pt[1] === 'number' &&
@@ -309,6 +311,8 @@ try {
   feats.forEach((f) => {
     const n: DistrictName = f.properties?.name;
     featureNames.push(n);
+    const ad = f?.properties?.adcode;
+    if (n && ad != null) nameToAdcode[n] = String(ad);
     const cStr = f.properties?.center as string | undefined;
     let c: [number, number] | null = null;
     if (cStr) {
@@ -325,7 +329,9 @@ try {
 const activeInfo = computed(() => props.dataByDistrict[active.value] || { name: active.value, orgCount: 0, memberCount: 0, unitCount: 0 });
 
 const emit = defineEmits<{
-  (e: 'select-change', name: string, info: DistrictInfo): void
+  (e: 'select-change', name: string, info: DistrictInfo): void;
+  // 仅在真实点击区块或标签时触发（不会因自动轮播/hover 触发）
+  (e: 'district-click', payload: { name: string; adcode?: string; info?: DistrictInfo }): void;
 }>();
 
 const AREA_NORMAL = '#CFE2FF';
@@ -475,8 +481,8 @@ function drawLabels() {
         verticalAlign: 'middle'
       }
     });
-    //@ts-ignore
-    graphics.push({
+  //@ts-ignore
+  graphics.push({
       type: 'group',
       x: x - w / 2 + off[0],
       y: y - (showDecor ? h + 18 : h / 2) + off[1],
@@ -487,6 +493,10 @@ function drawLabels() {
         stopAutoLoop();
         selectDistrict(name);
         scheduleAutoResume(2000);
+        // 标签点击同样视为选择该区，发射 district-click 事件
+        const adcode = nameToAdcode[name];
+        const info = props.dataByDistrict[name] || { name, orgCount: 0, memberCount: 0, unitCount: 0 };
+        emit('district-click', { name, adcode, info });
       },
       onmouseover: () => {
         stopAutoLoop();
@@ -514,6 +524,11 @@ function init() {
     stopAutoLoop();
     selectDistrict(p.name);
     scheduleAutoResume(2000);
+    // 点击地图区块时，向外发射区名与行政区划代码，供路由跳转/筛选使用
+    const name = String(p.name);
+    const adcode = nameToAdcode[name];
+    const info = props.dataByDistrict[name] || { name, orgCount: 0, memberCount: 0, unitCount: 0 };
+    emit('district-click', { name, adcode, info });
   });
   chart.value.on('mouseover', { seriesType: 'map' }, (p: any) => {
     if (!p || !p.name) return;

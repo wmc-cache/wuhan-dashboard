@@ -41,6 +41,7 @@
 
         <!-- 统计 Tabs（参考会员详情） -->
         <div class="tabs">
+          <button class="tab" :class="{ active: tab==='unit' }" @click="tab='unit'">单位信息</button>
           <button class="tab" :class="{ active: tab==='province' }" @click="tab='province'">组织会员</button>
           <button class="tab" :class="{ active: tab==='medical' }" @click="tab='medical'">医疗互助</button>
           <button class="tab" :class="{ active: tab==='relief' }" @click="tab='relief'">困难救助</button>
@@ -49,8 +50,23 @@
           <button class="tab" :class="{ active: tab==='refund' }" @click="tab='refund'">经费返还</button>
         </div>
 
+        <!-- 单位信息 -->
+        <template v-if="tab==='unit'">
+          <div class="card">
+            <template v-if="!unitEmpty">
+              <ul class="info">
+                <li v-for="(r, i) in rowsUnit" :key="i" class="info__row">
+                  <span class="lab">{{ r[0] }}</span><span class="val">{{ r[1] }}</span>
+                  <span class="lab">{{ r[2] }}</span><span class="val">{{ r[3] }}</span>
+                </li>
+              </ul>
+            </template>
+            <p v-else class="empty-tip">暂无单位信息</p>
+          </div>
+        </template>
+
         <!-- 省总会员 -->
-        <template v-if="tab==='province'">
+        <template v-else-if="tab==='province'">
           <div class="card">
             <template v-if="!provinceEmpty">
               <ul class="info">
@@ -244,6 +260,8 @@ async function ensureBaseDicts(): Promise<void> {
       await getDict('sys_wuhan_quyu').catch(() => void 0);
       const inds = await getDict('unitIndustry').catch(() => [] as any);
       if (!inds?.length) await getDict('unitlndustry').catch(() => void 0);
+      await getDict('unitEconomicType').catch(() => void 0);
+      await getDict('unitNature').catch(() => void 0);
     })().catch((err) => {
       dictsPromise = null;
       throw err;
@@ -277,9 +295,9 @@ async function applyBaseFromResponse(raw: any) {
   };
 }
 // Tabs
-type UTab = 'province' | 'medical' | 'relief' | 'assistance' | 'model' | 'refund';
-const allTabs: UTab[] = ['province', 'medical', 'relief', 'assistance', 'model', 'refund'];
-const tab = ref<UTab>('province');
+type UTab = 'unit' | 'province' | 'medical' | 'relief' | 'assistance' | 'model' | 'refund';
+const allTabs: UTab[] = ['unit', 'province', 'medical', 'relief', 'assistance', 'model', 'refund'];
+const tab = ref<UTab>('unit');
 
 // 运行时从 /business/union/detail 拉具体 tab 数据；若外层已传入 unionStats，则用作兜底
 const extProvince = ref<any>(null);
@@ -288,6 +306,7 @@ const extAssist = ref<any>(null);
 const extRelief = ref<any>(null);
 const extRefund = ref<any>(null);
 const extModel = ref<any>(null);
+const extUnit = ref<any>(null);
 
 const stats = computed(() => props.data?.unionStats || null);
 const province = computed(() => extProvince.value ?? stats.value?.provinceStatisticsVo ?? null);
@@ -296,6 +315,7 @@ const assist = computed(() => extAssist.value ?? stats.value?.assistanceStatisti
 const relief = computed(() => extRelief.value ?? stats.value?.reliefStatisticsVo ?? null);
 const refund = computed(() => extRefund.value ?? stats.value?.refundOfFundsStatisticsVo ?? null);
 const model = computed(() => extModel.value ?? stats.value?.modelWorkerStatisticsVo ?? null);
+const unit = computed(() => extUnit.value ?? null);
 
 // 空判断
 function emptyObj(obj: any): boolean {
@@ -308,12 +328,14 @@ const assistEmpty = computed(() => emptyObj(assist.value));
 const reliefEmpty = computed(() => emptyObj(relief.value));
 const refundEmpty = computed(() => emptyObj(refund.value));
 const modelEmpty = computed(() => emptyObj(model.value));
+const unitEmpty = computed(() => emptyObj(unit.value));
 
 // 拉取逻辑：/business/union/detail?id=<id>&type=<code>
 const loading = ref(false);
 const refreshing = ref(false);
-const loaded: Record<UTab, boolean> = { province: false, medical: false, relief: false, assistance: false, model: false, refund: false };
-function typeOfTab(t: UTab): number { return t === 'province' ? 0 : t === 'medical' ? 1 : t === 'relief' ? 2 : t === 'assistance' ? 3 : t === 'model' ? 4 : 5; }
+const loaded: Record<UTab, boolean> = { unit: false, province: false, medical: false, relief: false, assistance: false, model: false, refund: false };
+// 单位信息不强依赖 type，复用 0 类型，确保服务端返回 unionDetail
+function typeOfTab(t: UTab): number { return t === 'province' || t === 'unit' ? 0 : t === 'medical' ? 1 : t === 'relief' ? 2 : t === 'assistance' ? 3 : t === 'model' ? 4 : 5; }
 
 async function fetchTab(t: UTab, opts: { force?: boolean; flush?: string | null } = {}) {
   const fullName = (props.data as any)?.fullname || (props as any)?.unionName;
@@ -341,10 +363,27 @@ async function fetchTab(t: UTab, opts: { force?: boolean; flush?: string | null 
     const data = resp?.data ?? resp; // 允许 data 或直接对象
     const baseSource = data?.unionDetail ?? data?.union ?? data?.unionVo ?? data?.unionInfo ?? data;
     await applyBaseFromResponse(baseSource);
+    // 同步出“单位信息”字段；不做过多转换，展示时再做字典与兜底
+    if (baseSource && typeof baseSource === 'object') {
+      extUnit.value = {
+        unitName: baseSource.unitName ?? baseSource.orgName ?? baseSource.fullname,
+        othersOrgCode: baseSource.othersOrgCode ?? baseSource.creditCode ?? baseSource.uscc ?? baseSource.socialCreditCode ?? baseSource.orgCode,
+        memberCount: baseSource.memberCount ?? baseSource.members ?? baseSource.workerCount,
+        unitAddress: baseSource.unitAddress ?? baseSource.address,
+        unitDistrict: baseSource.unitDistrict ?? baseSource.orgDistrict ?? baseSource.unitDistrictSuffix ?? baseSource.district ?? baseSource.area ?? baseSource.region,
+        unitEconomicType: baseSource.unitEconomicType ?? baseSource.economicType,
+        unitNature: baseSource.unitNature ?? baseSource.nature ?? baseSource.unitNatureCode ?? baseSource.unitProperty ?? baseSource.unitPropertyType,
+        unitIndustry: baseSource.unitIndustry,
+        unitZipCode: baseSource.unitZipCode ?? baseSource.zipCode,
+        theWorkerCongressTime: baseSource.theWorkerCongressTime ?? baseSource.workerCongressTime ?? baseSource.dhMeetingTime,
+        currentDhTenure: baseSource.currentDhTenure ?? baseSource.dhTenure,
+      };
+    }
     const ustat = data?.unionStatisticsVo; // 兼容返回整条 union 详情
     const pick = (k: string) => (ustat && ustat[k]) || data?.[k] || data;
     // 根据类型落位（优先从 unionStatisticsVo 取；再取同名 *_Vo；最后兜底 data 本身）
-    if (t === 'province') extProvince.value = pick('provinceStatisticsVo') || null;
+    if (t === 'unit') { /* 已在上方 extUnit 处理 */ }
+    else if (t === 'province') extProvince.value = pick('provinceStatisticsVo') || null;
     else if (t === 'medical') extMedical.value = pick('medicalStatisticsVo') || null;
     else if (t === 'relief') extRelief.value = pick('reliefStatisticsVo') || null;
     else if (t === 'assistance') extAssist.value = pick('assistanceStatisticsVo') || null;
@@ -403,6 +442,23 @@ const rowsRefund = computed<Row4[]>(() => {
     ['企业产业金额', money(r.qycyje), '市州金额', money(r.dsje)],
     ['县区金额', money(r.xsje), '基层金额', money(r.jcje)],
     ['手续费', money(r.sxf), '', ''],
+  ];
+});
+
+// 单位信息：按截图布局
+const rowsUnit = computed<Row4[]>(() => {
+  const u = unit.value || {} as any;
+  const dist = u.unitDistrict != null ? labelOf('sys_wuhan_quyu', u.unitDistrict, String(u.unitDistrict ?? '')) : '';
+  const ind = u.unitIndustry != null ? labelOf('unitIndustry', u.unitIndustry, String(u.unitIndustry ?? '')) : '';
+  const econ = u.unitEconomicType != null ? labelOf('unitEconomicType', u.unitEconomicType, String(u.unitEconomicType ?? '')) : '';
+  const nature = u.unitNature != null ? labelOf('unitNature', u.unitNature, String(u.unitNature ?? '')) : '';
+  return [
+    ['单位名称', format(u.unitName), '法人和其他组织统一社会信用代码', format(u.othersOrgCode)],
+    ['单位性质类别', format(nature), '经济类型', format(econ)],
+    ['单位所属行业', format(ind), '职工人数', n(u.memberCount)],
+    ['单位地址', format(u.unitAddress), '单位所在政区', format(dist)],
+    ['邮政编码', format(u.unitZipCode), '本届职工(代表)大会召开时间', format(u.theWorkerCongressTime)],
+    ['本届职代会任期', format(u.currentDhTenure), '', ''],
   ];
 });
 

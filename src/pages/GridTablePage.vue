@@ -157,6 +157,9 @@ function datesEqual(a?: string[] | null, b?: string[] | null): boolean {
 function syncRouteToForm() {
   const kw = pickRouteQuery('kw').trim();
   if (q.name !== kw) q.name = kw;
+  // 来自路由的所属区域（优先接受 orgDistrict，其次 regionCode/region）
+  const regionFromRoute = pickRouteQuery('orgDistrict', 'regionCode', 'region');
+  if (q.regionCode !== regionFromRoute) q.regionCode = regionFromRoute;
   const begin = pickRouteQuery('beginTime', 'params[beginTime]');
   const end = pickRouteQuery('endTime', 'params[endTime]');
   const routeDates = begin && end ? [begin, end] : [];
@@ -366,6 +369,9 @@ onMounted(async () => {
 watch(
   () => [
     route.query.kw,
+    route.query.orgDistrict,
+    route.query.regionCode,
+    route.query.region,
     route.query.beginTime,
     route.query['params[beginTime]'],
     route.query.endTime,
@@ -373,11 +379,13 @@ watch(
   ],
   () => {
     const prevName = q.name;
+    const prevRegion = q.regionCode;
     const prevDates = Array.isArray(q.dates) ? [...q.dates] : [];
     syncRouteToForm();
     const nameChanged = q.name !== prevName;
+    const regionChanged = q.regionCode !== prevRegion;
     const dateChanged = !datesEqual(q.dates, prevDates);
-    if (!nameChanged && !dateChanged) return;
+    if (!nameChanged && !dateChanged && !regionChanged) return;
     page.value = 1;
     if (dictReady.value) fetchList();
   }

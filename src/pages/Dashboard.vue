@@ -58,6 +58,7 @@
             :show-labels="false"
             :data-by-district="mapData"
             :info-card-offset-by-name="mapInfoCardOffsets"
+            @district-click="onMapDistrictClick"
           />
         </template>
         <div v-else class="loading-mask"></div>
@@ -214,6 +215,23 @@ function goToAidList(options?: { poorType?: string }) {
 }
 function onAidTypeClick(type: string) {
   goToAidList({ poorType: type });
+}
+// 地图点击：携带所属区域（行政区划代码）跳到“工会组织”列表
+async function onMapDistrictClick(payload: { name: string; adcode?: string }) {
+  const code = String(payload?.adcode ?? '').trim();
+  const query: Record<string, string> = {};
+  if (code) {
+    // GridTablePage 读取 orgDistrict 作为所属区域筛选值
+    query.orgDistrict = code;
+  } else if (payload?.name) {
+    // 兜底：若未拿到 adcode，则尝试用字典匹配名称取值
+    try {
+      const list = await getDict('sys_wuhan_quyu');
+      const found = (list || []).find(d => String(d.label).includes(String(payload.name)));
+      if (found) query.orgDistrict = String(found.value);
+    } catch { /* ignore */ }
+  }
+  router.push({ name: 'grid-table', query }).catch(() => void 0);
 }
 // GridTable 的“查看更多”已在组件内部处理跳转
 
