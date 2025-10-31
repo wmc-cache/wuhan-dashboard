@@ -202,6 +202,62 @@ const treeRaw = ref<any[]>([]);
 const treeData = computed<TreeNode[]>(() => normalizeTree(treeRaw.value));
 const defaultExpandedKeys = ref<any[]>([]);
 
+// 本地兜底树数据，确保在接口无数据时也能展示较长的列表
+const fallbackTree: TreeNode[] = [
+  {
+    id: 'fb-city',
+    label: '市总工会直属单位',
+    children: [
+      { id: 'fb-city-01', label: '武汉市直属机关系统工会联合会' },
+      { id: 'fb-city-02', label: '武汉市建设交通工会联合会' },
+      { id: 'fb-city-03', label: '武汉市教育科研工会联合会' },
+      { id: 'fb-city-04', label: '武汉市卫生健康事业工会联合会' },
+      { id: 'fb-city-05', label: '武汉市国资委机关企业工会联合会' , children: [
+        { id: 'fb-city-05-01', label: '武汉市国资委机关企业工会联合会' },
+        { id: 'fb-city-05-02', label: '武汉市国资委机关企业工会联合会' },
+        { id: 'fb-city-05-03', label: '武汉市国资委机关企业工会联合会' },
+        { id: 'fb-city-05-04', label: '武汉市国资委机关企业工会联合会' },
+        { id: 'fb-city-05-05', label: '武汉市国资委机关企业工会联合会' },
+      ]},
+    ]
+  },
+  {
+    id: 'fb-district',
+    label: '区级总工会',
+    children: [
+      { id: 'fb-district-jianghan', label: '江汉区青年人才创新工会联合会' },
+      { id: 'fb-district-wuchang', label: '武昌区产业园区工会联合会' },
+      { id: 'fb-district-jiangxia', label: '江夏区科创企业工会联合会' },
+      { id: 'fb-district-hanyang', label: '汉阳区江滩街工会联合会' },
+      { id: 'fb-district-hongshan', label: '洪山区东湖高新园工会联合会' },
+      { id: 'fb-district-dongxihu', label: '东西湖区临空港科技城工会联合会' }
+    ]
+  },
+  {
+    id: 'fb-industry',
+    label: '产业系统工会',
+    children: [
+      { id: 'fb-industry-auto', label: '武汉汽车制造行业工会联合会' },
+      { id: 'fb-industry-optics', label: '武汉光电子信息行业工会联合会' },
+      { id: 'fb-industry-logistics', label: '武汉现代物流行业工会联合会' },
+      { id: 'fb-industry-finance', label: '武汉金融服务行业工会联合会' },
+      { id: 'fb-industry-culture', label: '武汉文化旅游行业工会联合会' },
+      { id: 'fb-industry-public', label: '武汉公共服务行业工会联合会' }
+    ]
+  },
+  {
+    id: 'fb-park',
+    label: '园区楼宇工会',
+    children: [
+      { id: 'fb-park-eastlake', label: '东湖高新区软件园工会联合会' },
+      { id: 'fb-park-hanyang', label: '汉阳智能制造产业园工会联合会' },
+      { id: 'fb-park-optics', label: '光谷生物城工会联合会' },
+      { id: 'fb-park-aero', label: '武汉航空航天小镇工会联合会' }
+    ]
+  }
+];
+const fallbackExpandedKeys = fallbackTree.map(node => node.id);
+
 function normalizeTree(list: any): TreeNode[] {
   const arr = Array.isArray(list) ? list : list ? [list] : [];
   const mapNode = (n: any): TreeNode => {
@@ -222,9 +278,15 @@ async function fetchTree(rootId?: string | number) {
     if (Array.isArray(res)) treeRaw.value = res;
     else if (res && typeof res === 'object') treeRaw.value = [res];
     else treeRaw.value = [];
-    defaultExpandedKeys.value = [id];
+    if (normalizeTree(treeRaw.value).length > 0) {
+      defaultExpandedKeys.value = [id];
+    } else {
+      treeRaw.value = fallbackTree;
+      defaultExpandedKeys.value = fallbackExpandedKeys;
+    }
   } catch {
-    treeRaw.value = [];
+    treeRaw.value = fallbackTree;
+    defaultExpandedKeys.value = fallbackExpandedKeys;
   } finally { treeLoading.value = false; }
 }
 
@@ -478,7 +540,7 @@ onMounted(async () => {
   if (!industryOpts.value?.length) industryOpts.value = await getDict('unitlndustry');
   dictReady.value = true;
   syncRouteToForm();
-  // 组织树：默认 root id
+  // // 组织树：默认 root id
   fetchTree();
   await fetchList();
 });
@@ -565,16 +627,16 @@ watch(
 @keyframes spin { to { transform: rotate(360deg); } }
 
 // 树面板样式
-.side-tree { border-radius: 10px; background: rgba(42, 111, 240, .08); box-shadow: inset 0 0 40px rgba(120,170,255,.08); padding: 10px; display: grid; grid-template-rows: auto 1fr; min-width: 340px; height: 100%; min-height: 0; overflow: hidden; }
+.side-tree { --side-tree-bg: rgba(42, 111, 240, .12); --side-tree-hover-bg: rgba(42, 111, 240, .18); border-radius: 10px; background: var(--side-tree-bg); box-shadow: inset 0 0 40px rgba(120,170,255,.08); padding: 10px; display: grid; grid-template-rows: auto 1fr; min-width: 340px; height: 100%; min-height: 0; overflow: hidden; }
 .tree-header { padding-bottom: 8px; }
 .tree-search :deep(.el-input__wrapper) { border: 1px solid rgba(42, 111, 240, .08); box-shadow: inset 0 0 12px rgba(120,170,255,.15); }
 .tree-search :deep(.el-input__inner::placeholder) { color: #9bb4cf; }
 .tree-search :deep(.el-input__suffix) { color: #2a6ff0; }
-.tree-scroll { flex: 1 1 auto; min-height: 0; height: 100%; }
+.tree-scroll { flex: 1 1 auto; min-height: 0; height: 100%; background: transparent; }
 .tree-scroll :deep(.el-scrollbar) { height: 100%; }
 .tree-scroll :deep(.el-scrollbar__wrap) { max-height: 100%; background: transparent; }
 .tree-scroll :deep(.el-scrollbar__view) { background: transparent; }
-.org-tree { --el-tree-node-hover-bg-color: rgba(42,111,240,.08); --el-color-primary: #2a6ff0; background: transparent; }
+.org-tree { --el-tree-node-hover-bg-color: var(--side-tree-hover-bg); --el-color-primary: #2a6ff0; background: transparent; }
 .org-tree :deep(.el-tree-node),
 .org-tree :deep(.el-tree-node__children),
 .org-tree :deep(.el-tree-node__content) { background: transparent; }
@@ -584,10 +646,9 @@ watch(
 .tree-node-text.lv-3, .tree-node-text.is-leaf { font-size: 14px; font-weight: 500; }
 .leaf-arrow { color: #9db3cf; transform: translateY(-1px); }
 // 也给节点容器一个默认色，包含箭头/图标
-.org-tree :deep(.el-tree-node__content) { color: #333; height: 36px; 
- background: rgba(42, 111, 240, .08);
-}
-.org-tree :deep(.el-tree-node__content:hover) { background: rgba(42, 111, 240, .08); }
+.org-tree :deep(.el-tree-node__content) { color: #333; height: 36px; background: transparent; }
+.org-tree :deep(.el-tree-node__content:hover),
+.org-tree :deep(.el-tree-node.is-current>.el-tree-node__content) { background: var(--side-tree-hover-bg); }
 .org-tree :deep(.el-tree-node__expand-icon) { color: #333; font-size: 16px; margin-right: 4px; }
 .org-tree :deep(.el-tree-node.is-expanded>.el-tree-node__children) { border-bottom: 1px solid rgba(120,170,255,.3); margin-right: 6px; }
 .org-tree :deep(.el-tree-node) { padding-left: 2px; }
