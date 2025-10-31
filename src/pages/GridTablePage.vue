@@ -41,20 +41,75 @@
       </div>
     </section>
 
-    <!-- 表格主体（占满剩余高度） -->
-    <section class="table-wrap">
-      <GridTable :columns="columns" :rows="pagedRows" :grid-template="gridTemplate" :visible-rows="20" :row-height="40"
-        :show-header="false" :highlight-fields="highlightFields" @cell-click="onCellClick" />
+    <!-- 主体：左侧树形菜单 + 右侧数据表 -->
+    <section class="content-grid">
+      <!-- 左侧树形菜单（示意同图） -->
+      <aside class="side-tree">
+        <div class="tree-header">
+          <el-input
+            v-model="treeFilter"
+            placeholder="请输入工会名称"
+            clearable
+            class="tree-search"
+          >
+            <template #suffix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
+        </div>
+        <el-scrollbar class="tree-scroll" height="100%">
+          <el-tree
+            ref="treeRef"
+            class="org-tree"
+            :data="treeData"
+            node-key="id"
+            highlight-current
+            :expand-on-click-node="false"
+            :filter-node-method="filterNode"
+            :indent="20"
+            :icon="CaretRight"
+            :default-expanded-keys="defaultExpandedKeys"
+            @node-click="onTreeSelect"
+          >
+            <template #default="{ node, data }">
+              <span :class="['tree-node-text', `lv-${node.level}`, { 'is-leaf': node.isLeaf }]">
+                <el-icon v-if="node.isLeaf" class="leaf-arrow"><ArrowRight /></el-icon>
+                {{ data.label }}
+              </span>
+            </template>
+          </el-tree>
+        </el-scrollbar>
+      </aside>
 
-      <!-- Loading -->
-      <div v-if="loading" class="loading-overlay" aria-live="polite" aria-busy="true">
-        <div class="spinner"></div>
-        <div class="loading-text">加载中...</div>
-      </div>
+      <!-- 表格主体（占满剩余高度） -->
+      <div class="table-wrap table-area">
+        <GridTable
+          :columns="columns"
+          :rows="pagedRows"
+          :grid-template="gridTemplate"
+          :visible-rows="20"
+          :row-height="40"
+          :show-header="false"
+          :highlight-fields="highlightFields"
+          @cell-click="onCellClick"
+        />
 
-      <div class="pager">
-        <el-pagination v-model:current-page="page" :page-size="pageSize" :total="total" background
-          layout="total, prev, pager, next, jumper" @current-change="(p: number) => to(p)" />
+        <!-- Loading -->
+        <div v-if="loading" class="loading-overlay" aria-live="polite" aria-busy="true">
+          <div class="spinner"></div>
+          <div class="loading-text">加载中...</div>
+        </div>
+
+        <div class="pager">
+          <el-pagination
+            v-model:current-page="page"
+            :page-size="pageSize"
+            :total="total"
+            background
+            layout="total, prev, pager, next, jumper"
+            @current-change="(p: number) => to(p)"
+          />
+        </div>
       </div>
     </section>
   </main>
@@ -68,7 +123,7 @@ import { useRouter, useRoute } from 'vue-router';
 import GridTable, { ColumnDef } from '../components/GridTable.vue';
 import UnionDetailDialog, { type UnionDetail } from '../components/UnionDetailDialog.vue';
 // Element Plus 组件与样式（按需引入）
-import { ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElDatePicker, ElButton, ElPagination } from 'element-plus';
+import { ElForm, ElFormItem, ElInput, ElSelect, ElOption, ElDatePicker, ElButton, ElPagination, ElTree, ElScrollbar } from 'element-plus';
 import 'element-plus/es/components/form/style/css';
 import 'element-plus/es/components/form-item/style/css';
 import 'element-plus/es/components/input/style/css';
@@ -77,9 +132,12 @@ import 'element-plus/es/components/option/style/css';
 import 'element-plus/es/components/date-picker/style/css';
 import 'element-plus/es/components/button/style/css';
 import 'element-plus/es/components/pagination/style/css';
+import 'element-plus/es/components/tree/style/css';
+import 'element-plus/es/components/scrollbar/style/css';
 import { apiGet, apiPostBlob } from '../utils/api';
 import { getDict, labelOf, type DictItem as DItem } from '../utils/dict';
 import { unionSourceLabel } from '../utils/source';
+import { Search, ArrowRight, CaretRight } from '@element-plus/icons-vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -132,6 +190,58 @@ const unionIdForDlg = ref<string | number | undefined>(undefined);
 const unionDlgKey = ref(0); // 每次打开强制销毁重建
 const exporting = ref(false);
 const dictReady = ref(false);
+
+// 左侧树形菜单：使用后端组织树接口 /business/union/deptTree/{id}
+// 默认 root id：1613444429402624001
+type TreeNode = { id: string | number; label: string; children?: TreeNode[] };
+const treeFilter = ref('');
+const treeRef = ref<InstanceType<typeof ElTree>>();
+const DEFAULT_TREE_ID = '1613444429402624001';
+const treeLoading = ref(false);
+const treeRaw = ref<any[]>([]);
+const treeData = computed<TreeNode[]>(() => normalizeTree(treeRaw.value));
+const defaultExpandedKeys = ref<any[]>([]);
+
+function normalizeTree(list: any): TreeNode[] {
+  const arr = Array.isArray(list) ? list : list ? [list] : [];
+  const mapNode = (n: any): TreeNode => {
+    const id = n?.id ?? n?.deptId ?? n?.key ?? n?.value ?? n?.code ?? n?.uuid ?? n?.unionId ?? n?.orgId;
+    const label = n?.label ?? n?.name ?? n?.title ?? n?.text ?? n?.fullname ?? n?.unionName ?? String(id ?? '');
+    const children: any[] = n?.children || n?.childList || n?.nodes || n?.list || [];
+    return { id: id ?? label, label: String(label || id || '-'), children: Array.isArray(children) ? children.map(mapNode) : undefined };
+  };
+  return arr.map(mapNode);
+}
+
+async function fetchTree(rootId?: string | number) {
+  const id = rootId ?? DEFAULT_TREE_ID;
+  try {
+    treeLoading.value = true;
+    const res: any = await apiGet(`/business/union/deptTree/${id}`).catch(() => null);
+    // 常见返回：数组或对象，容错处理
+    if (Array.isArray(res)) treeRaw.value = res;
+    else if (res && typeof res === 'object') treeRaw.value = [res];
+    else treeRaw.value = [];
+    defaultExpandedKeys.value = [id];
+  } catch {
+    treeRaw.value = [];
+  } finally { treeLoading.value = false; }
+}
+
+function filterNode(value: string, data: TreeNode) {
+  if (!value) return true;
+  return String(data.label).toLowerCase().includes(String(value).toLowerCase());
+}
+watch(treeFilter, (val) => { treeRef.value?.filter(val); });
+
+function onTreeSelect(data: TreeNode) {
+  // 只有叶子节点（没有 children）作为名称筛选
+  const isLeaf = !data.children || data.children.length === 0;
+  if (isLeaf) {
+    q.name = data.label;
+    onSearch();
+  }
+}
 
 function resolveQueryValue(val: unknown): string {
   if (Array.isArray(val)) return String(val[0] ?? '');
@@ -368,6 +478,8 @@ onMounted(async () => {
   if (!industryOpts.value?.length) industryOpts.value = await getDict('unitlndustry');
   dictReady.value = true;
   syncRouteToForm();
+  // 组织树：默认 root id
+  fetchTree();
   await fetchList();
 });
 
@@ -444,10 +556,41 @@ watch(
 .w140 { width: 140px; }
 .w260 { width: 260px; }
 
-.table-wrap { position: relative; border-radius: 10px; background: rgba(235,241,247,.74); box-shadow: inset 0 0 40px rgba(120,170,255,.08); padding: 12px; display: grid; grid-template-rows: 1fr auto; }
+.content-grid { display: grid; grid-template-columns: 360px 1fr; gap: 12px; align-items: stretch; min-height: 0; }
+.table-wrap { position: relative; border-radius: 10px; background: rgba(235,241,247,.74); box-shadow: inset 0 0 40px rgba(120,170,255,.08); padding: 12px; display: grid; grid-template-rows: 1fr auto; min-height: 0; }
 .pager { display: flex; align-items: center; justify-content: flex-end; color: #2a6ff0; padding-top: 8px; }
 .loading-overlay { position: absolute; inset: 12px; background: rgba(255,255,255,.6); display: grid; place-items: center; z-index: 5; border-radius: 8px; }
 .spinner { width: 34px; height: 34px; border: 3px solid rgba(42,111,240,.25); border-top-color: #2a6ff0; border-radius: 50%; animation: spin 1s linear infinite; }
 .loading-text { margin-top: 8px; font-weight: 800; color: #2a6ff0; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+// 树面板样式
+.side-tree { border-radius: 10px; background: rgba(42, 111, 240, .08); box-shadow: inset 0 0 40px rgba(120,170,255,.08); padding: 10px; display: grid; grid-template-rows: auto 1fr; min-width: 340px; height: 100%; min-height: 0; overflow: hidden; }
+.tree-header { padding-bottom: 8px; }
+.tree-search :deep(.el-input__wrapper) { border: 1px solid rgba(42, 111, 240, .08); box-shadow: inset 0 0 12px rgba(120,170,255,.15); }
+.tree-search :deep(.el-input__inner::placeholder) { color: #9bb4cf; }
+.tree-search :deep(.el-input__suffix) { color: #2a6ff0; }
+.tree-scroll { flex: 1 1 auto; min-height: 0; height: 100%; }
+.tree-scroll :deep(.el-scrollbar) { height: 100%; }
+.tree-scroll :deep(.el-scrollbar__wrap) { max-height: 100%; background: transparent; }
+.tree-scroll :deep(.el-scrollbar__view) { background: transparent; }
+.org-tree { --el-tree-node-hover-bg-color: rgba(42,111,240,.08); --el-color-primary: #2a6ff0; background: transparent; }
+.org-tree :deep(.el-tree-node),
+.org-tree :deep(.el-tree-node__children),
+.org-tree :deep(.el-tree-node__content) { background: transparent; }
+.tree-node-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #333; display: inline-flex; align-items: center; gap: 6px; }
+.tree-node-text.lv-1 { font-size: 18px; font-weight: 800; }
+.tree-node-text.lv-2 { font-size: 14px; font-weight: 700; }
+.tree-node-text.lv-3, .tree-node-text.is-leaf { font-size: 14px; font-weight: 500; }
+.leaf-arrow { color: #9db3cf; transform: translateY(-1px); }
+// 也给节点容器一个默认色，包含箭头/图标
+.org-tree :deep(.el-tree-node__content) { color: #333; height: 36px; 
+ background: rgba(42, 111, 240, .08);
+}
+.org-tree :deep(.el-tree-node__content:hover) { background: rgba(42, 111, 240, .08); }
+.org-tree :deep(.el-tree-node__expand-icon) { color: #333; font-size: 16px; margin-right: 4px; }
+.org-tree :deep(.el-tree-node.is-expanded>.el-tree-node__children) { border-bottom: 1px solid rgba(120,170,255,.3); margin-right: 6px; }
+.org-tree :deep(.el-tree-node) { padding-left: 2px; }
+// 顶层节点之间的分隔线
+.org-tree :deep(> .el-tree-node + .el-tree-node > .el-tree-node__content) { border-top: 1px solid rgba(120,170,255,.3); }
 </style>
