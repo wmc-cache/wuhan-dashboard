@@ -11,7 +11,7 @@
     <section style="grid-area: tc;">
       <div class="mod__body">
         <!-- 顶部中间搜索：跳转至会员列表页 -->
-        <TopSearchKpis v-model="keyword" :items="kpiItems" @search="goToList" />
+        <TopSearchKpis v-model="keyword" :items="kpiItems" clickable @search="goToList" @kpi-click="onKpiClick" />
       </div>
     </section>
 
@@ -83,6 +83,7 @@ import icon42x from '../images/org/title4/位图@2x.png';
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { apiGet, niceMax } from '../utils/api';
+import { getDict, type DictItem as DItem } from '../utils/dict';
 
 // 顶部 KPI（来自 /business/member/allNum）
 const kpiItems = ref([
@@ -151,6 +152,33 @@ function goToList(kw?: string) {
     name: 'grid-table-2',
     query: k ? { kw: k } : {}
   }).catch(() => void 0);
+}
+
+// KPI 点击：0=会员总数，1=新就业形态劳动者
+const memberTypeDict = ref<DItem[] | null>(null);
+async function ensureMemberTypeDict(): Promise<DItem[]> {
+  if (memberTypeDict.value) return memberTypeDict.value;
+  try { memberTypeDict.value = await getDict('memberType'); } catch { memberTypeDict.value = []; }
+  return memberTypeDict.value || [];
+}
+function findNonNewValue(list: DItem[]): string {
+  // 找到“非新业态”的值；找不到则按需求默认 '1'
+  const hit = list.find((d) => String(d.label || '').includes('非新'));
+  return String(hit?.value ?? '1');
+}
+function pickAnyNewValue(list: DItem[], fallback = '2'): string {
+  // 从字典里挑一个“新业态”相关的值（排除“非新业态=1”）；兜底返回 '2'
+  const nonNew = findNonNewValue(list);
+  const hit = list.find((d) => String(d.value) !== nonNew);
+  return String(hit?.value ?? fallback);
+}
+async function onKpiClick(i: number) {
+  const query: Record<string, string> = {};
+  if (i === 1) {
+    // 新就业形态劳动者：跳到列表并预选“是否新业态=是”（不强制具体类型）
+    query.isNew = '1';
+  }
+  router.push({ name: 'grid-table-2', query }).catch(() => void 0);
 }
 
 // 会员总览与性别分布

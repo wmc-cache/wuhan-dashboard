@@ -57,7 +57,7 @@ const displayRows = computed(() => {
 });
 
 function money(v: number) {
-  return Number(v).toLocaleString('zh-CN', { maximumFractionDigits: 3, useGrouping: false }) + '万元';
+  return Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }) + '万元';
 }
 
 function advance() {

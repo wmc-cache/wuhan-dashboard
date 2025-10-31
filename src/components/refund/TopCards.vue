@@ -43,8 +43,8 @@ defineProps<Props>();
 const emit = defineEmits<{ (e:'more'):void; (e:'item-click', payload:{name:string; amount:number; index:number}):void }>();
 
 function money(n: number) {
-  // 与设计参考更贴近：去掉千位分隔，不做单位换算
-  return Number(n).toLocaleString('zh-CN', { maximumFractionDigits: 3, useGrouping: false }) + '万元';
+  // 固定两位小数，不做单位换算
+  return Number(n).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }) + '万元';
 }
 
 function pillClass(i: number) {

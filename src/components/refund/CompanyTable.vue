@@ -41,7 +41,7 @@ const props = withDefaults(defineProps<Props>(), {
 const cols = computed<ColumnDef[]>(() => [
   { key: 'lv', title: '', iconLv: true },
   { key: 'name', title: '单位名称', align: 'left' },
-  { key: 'fee', title: props.valueTitle, align: 'right', formatter: (v) => Number(v).toLocaleString('zh-CN', { maximumFractionDigits: 3, useGrouping: false }) + props.unitText }
+  { key: 'fee', title: props.valueTitle, align: 'right', formatter: (v) => Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }) + props.unitText }
 ]);
 
 const { rows } = toRefs(props);

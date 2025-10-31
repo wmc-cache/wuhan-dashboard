@@ -34,12 +34,23 @@
         <div class="spinner" aria-hidden="true"></div>
         <div class="txt">加载中...</div>
       </div>
-      <GridTable :columns="columns" :rows="rows" :grid-template="gridTemplate" :visible-rows="20" :row-height="40" :show-header="false" :highlight-fields="highlightFields" />
+      <GridTable
+        :columns="columns"
+        :rows="rows"
+        :grid-template="gridTemplate"
+        :visible-rows="20"
+        :row-height="40"
+        :show-header="false"
+        :highlight-fields="highlightFields"
+        @cell-click="onCellClick"
+      />
       <div class="pager">
         <el-pagination v-model:current-page="page" :page-size="pageSize" :total="total" background layout="total, prev, pager, next, jumper" @current-change="(p:number)=>to(p)" />
       </div>
     </section>
   </main>
+  <!-- 工会详情弹框：点击“企业名称/工会名称”打开 -->
+  <UnionDetailDialog v-model="dlgOpen" :data="unionData" :union-id="unionIdForDlg" title="工会详情" :width="1080" />
   
 </template>
 
@@ -47,6 +58,7 @@
 import { computed, reactive, ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import GridTable, { type ColumnDef } from '../components/GridTable.vue';
+import UnionDetailDialog, { type UnionDetail } from '../components/UnionDetailDialog.vue';
 import { apiGet } from '../utils/api';
 import { ElForm, ElFormItem, ElSelect, ElOption, ElInput, ElButton, ElPagination } from 'element-plus';
 import 'element-plus/es/components/form/style/css';
@@ -67,6 +79,7 @@ const orderOpts = [
   { label: '默认排序', value: '' },
   { label: '代收金额', value: 'zje' },
   { label: '省总金额', value: 'szje' },
+  { label: '筹备金总额', value: 'choubei' },
   { label: '企业产业金额', value: 'qycyje' },
   { label: '市总金额', value: 'dsje' },
   { label: '区总金额', value: 'xsje' },
@@ -84,14 +97,17 @@ const q = reactive<{ year: number; orderName: string; ids: string[] }>({
     .filter(Boolean),
 });
 
-// 列定义与布局：序号 | 企业名称 | 七项金额
-const gridTemplate = '60px 2fr repeat(7, 1fr)';
-const moneyFmt = (n: any) => `${Number(n || 0).toLocaleString('zh-CN', { maximumFractionDigits: 3, useGrouping: false })}万元`;
+// 列定义与布局：序号 | 企业名称 | 八项金额（新增：筹备金总额）
+const gridTemplate = '60px 2fr repeat(8, 1fr)';
+// 固定保留两位小数，单位：万元
+const moneyFmt = (n: any) => `${Number(n || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false })}万元`;
 const columns: ColumnDef[] = [
   { key: 'index', title: '序号' },
-  { key: 'qymc', title: '企业名称', align: 'left' },
+  // 点击名称打开工会详情弹窗
+  { key: 'qymc', title: '企业名称', align: 'left', clickable: true },
   { key: 'zje', title: '代收金额', formatter: (v)=>moneyFmt(v) },
   { key: 'szje', title: '省总金额', formatter: (v)=>moneyFmt(v) },
+  { key: 'choubei', title: '筹备金总额', formatter: (v)=>moneyFmt(v) },
   { key: 'qycyje', title: '企业产业金额', formatter: (v)=>moneyFmt(v) },
   { key: 'dsje', title: '市总金额', formatter: (v)=>moneyFmt(v) },
   { key: 'xsje', title: '区总金额', formatter: (v)=>moneyFmt(v) },
@@ -100,7 +116,7 @@ const columns: ColumnDef[] = [
 ];
 
 // 列表数据、分页
-interface Row { index:number; qymc:string; zje:number; szje:number; qycyje:number; dsje:number; xsje:number; jcje:number; sxf:number }
+interface Row { index:number; qymc:string; zje:number; szje:number; choubei:number; qycyje:number; dsje:number; xsje:number; jcje:number; sxf:number }
 const rows = ref<Row[]>([]);
 const total = ref(0);
 const pageSize = 20;
@@ -148,6 +164,7 @@ async function fetchList(){
       qymc: String(r?.qymc || r?.ghzzmc || '-'),
       zje: Number(r?.zje || 0),
       szje: Number(r?.szje || 0),
+      choubei: Number(r?.choubei || 0),
       qycyje: Number(r?.qycyje || 0),
       dsje: Number(r?.dsje || 0),
       xsje: Number(r?.xsje || 0),
@@ -202,6 +219,21 @@ onMounted(async () => {
   persistQueryToUrl();
   await fetchList();
 });
+
+// 点击名称打开“工会详情”
+const dlgOpen = ref(false);
+const unionData = ref<Partial<UnionDetail> | undefined>(undefined);
+const unionIdForDlg = ref<string | number | undefined>(undefined);
+function onCellClick(payload: { row: any; column: ColumnDef }) {
+  if (payload.column.key !== 'qymc') return;
+  const r = payload.row as any;
+  const name = r?.qymc || r?.ghzzmc || r?.fullname || r?.name;
+  if (!name) return;
+  unionData.value = { fullname: String(name) };
+  // 若接口有 id 则一并传入（兼容性更好）
+  unionIdForDlg.value = r?.id ?? r?.unionId ?? r?.sourceId ?? undefined;
+  dlgOpen.value = true;
+}
 </script>
 
 <style scoped lang="scss">

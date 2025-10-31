@@ -18,7 +18,15 @@
 
     <!-- KPI 卡片两列（整图背景，贴合设计稿） -->
     <div class="kpi-row">
-      <div class="card card--left">
+      <div
+        class="card card--left"
+        :class="clickable ? 'is-clickable' : ''"
+        :role="clickable ? 'button' : undefined"
+        :tabindex="clickable ? 0 : undefined"
+        @click="onKpiClick(0)"
+        @keyup.enter.prevent="onKpiClick(0)"
+        @keyup.space.prevent="onKpiClick(0)"
+      >
         <div class="num num--blue">
           <CountUpNumber
             :value="leftDisplay.value"
@@ -31,7 +39,15 @@
         </div>
         <div class="label">{{ leftItem?.title }}</div>
       </div>
-      <div class="card card--right">
+      <div
+        class="card card--right"
+        :class="clickable ? 'is-clickable' : ''"
+        :role="clickable ? 'button' : undefined"
+        :tabindex="clickable ? 0 : undefined"
+        @click="onKpiClick(1)"
+        @keyup.enter.prevent="onKpiClick(1)"
+        @keyup.space.prevent="onKpiClick(1)"
+      >
         <div class="num num--orange">
           <CountUpNumber
             :value="rightDisplay.value"
@@ -62,6 +78,8 @@ interface Props {
   modelValue?: string;
   placeholder?: string;
   items?: KItem[];
+  // 是否允许 KPI 卡片可点击，启用后抛出 kpi-click 事件
+  clickable?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -70,7 +88,8 @@ const props = withDefaults(defineProps<Props>(), {
   items: () => ([
     { title: '会员总数', value: 18897 },
     { title: '新就业形态劳动者', value: 48897 }
-  ])
+  ]),
+  clickable: false,
 });
 
 const leftItem = computed(() => props.items?.[0]);
@@ -81,9 +100,11 @@ const rightDisplay = computed(() => formatDisplay(rightItem.value?.value));
 const emit = defineEmits<{
   (e: 'update:modelValue', v: string): void;
   (e: 'search', keyword: string): void;
+  (e: 'kpi-click', index: number): void;
 }>();
 function onInput(e: Event) { emit('update:modelValue', (e.target as HTMLInputElement).value); }
 function onSearch() { emit('search', props.modelValue); }
+function onKpiClick(i: number) { if (props.clickable) emit('kpi-click', i); }
 
 function formatDisplay(v?: number | string): { value: number; unit: string; decimalPlaces: number } {
   const n = Number(v);
@@ -131,6 +152,8 @@ function formatDisplay(v?: number | string): { value: number; unit: string; deci
   --label-x: 0px;        /* 标题水平微调 */
   --label-y: -18px;      /* 标题向上 */
 }
+.card.is-clickable { cursor: pointer; outline: none; }
+.card.is-clickable:focus-visible { box-shadow: 0 0 0 3px rgba(80,140,255,.45); border-radius: 12px; }
 .card--left {
   background-image: -webkit-image-set(url('../../images/member-v2/1/编组 33.png') 1x, url('../../images/member-v2/1/编组 33@2x.png') 2x);
   background-image: image-set(url('../../images/member-v2/1/编组 33.png') 1x, url('../../images/member-v2/1/编组 33@2x.png') 2x);

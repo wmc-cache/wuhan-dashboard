@@ -92,7 +92,7 @@ const visibleRows = computed(() => {
 const maxV = computed(() => Math.max(1, ...itemsList.value.map(r => r?.value ?? 0)));
 const barWidth = 70; // 留出右侧“名称”列空间
 function percent(v: number) { return Math.max(0, Math.min(1, v / maxV.value)); }
-function money(v: number) { return Number(v).toLocaleString('zh-CN', { maximumFractionDigits: 3, useGrouping: false }) + '万元'; }
+function money(v: number) { return Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }) + '万元'; }
 
 // 根节点样式：行高 + 宽度 + 居中
 const rootVars = computed(() => {

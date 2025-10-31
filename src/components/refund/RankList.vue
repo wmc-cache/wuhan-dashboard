@@ -83,7 +83,7 @@ const maxV = computed(() => Math.max(1, ...list.value.map(r => r.value || 0)));
 function percent(v: number) { return Math.max(0, Math.min(1, v / maxV.value)); }
 // 数据单位按接口为“万元”，这里不再除以 10000；直接显示“万元”
 function money(v: number) {
-  return Number(v).toLocaleString('zh-CN', { maximumFractionDigits: 3, useGrouping: false }) + '万元';
+  return Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: false }) + '万元';
 }
 
 // 根据行索引返回条形图颜色

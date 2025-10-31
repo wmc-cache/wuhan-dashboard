@@ -24,6 +24,7 @@
     <!-- 中列：上部大环图跨两行；底部表格 -->
     <section class="mod mod--tall mod--no-frame" style="grid-column: 2; grid-row: 1 / span 2;">
       <div class="mod__head">
+        <div class="unit-label" aria-label="数值单位">单位：万元</div>
         <div class="year-select">
           <NiceSelect v-model="year" :options="years" :width="122" :formatter="(y: number) => y + '年'" />
         </div>
@@ -192,13 +193,25 @@ async function loadOverview(y: number) {
   const zje = pick('zje');
   const szje = pick('szje');
   const qycyje = pick('qycyje');
+  // 筹备金总额：尝试多种后端字段名，缺失则为 0
+  const pickAny = (keys: string[]) => {
+    for (const k of keys) {
+      const v = pick(k);
+      if (Number.isFinite(v) && v !== 0) return v;
+    }
+    // 若所有候选字段均不存在或为 0，则返回最后一个字段的结果（保持类型）
+    return pick(keys[keys.length - 1]);
+  };
+  const choubei = pickAny(['cbje', 'choubeije', 'choubei', 'cbzje']);
   const dsje = pick('dsje');
   const xsje = pick('xsje');
   const jcje = pick('jcje');
   const sxf = pick('sxf');
 
+  // 顶部：新增“筹备金总额”，并保持与视觉图一致的顺序
   overviewTop.value = [
     { name: '代收金额合计', value: zje },
+    { name: '筹备金总额', value: choubei },
     { name: '省总金额合计', value: szje },
     { name: '企业产业金额合计', value: qycyje }
   ];
@@ -209,9 +222,8 @@ async function loadOverview(y: number) {
     { name: '手续费合计', value: sxf }
   ];
 
-  // 单位推断：若量级普遍 < 1000（如 8.9、1.0 等），多数后端是“亿元”；否则按“元”→万/亿。
-  const maxVal = Math.max(zje, szje, qycyje, dsje, xsje, jcje, sxf);
-  overviewUnit.value = maxVal < 1000 ? 'yi' : 'yuan';
+  // 统一为“万元”，并在左上角展示“单位：万元”，数值不做换算。
+  overviewUnit.value = 'wan';
 }
 
 async function loadRank(y: number, field: string, size = 5) {
@@ -365,15 +377,23 @@ function normalizeYearList(raw: any): number[] {
 }
 
 .mod__head {
-  /* 仅当前页面使用：头部只放年份选择器，把它靠右展示 */
+  /* 概览模块头部：左侧“单位：万元”，右侧年份选择 */
   display: flex;
   align-items: center;
-  justify-content: flex-end; /* 年份选择器挪到右侧 */
+  justify-content: space-between;
   margin-bottom: 6px;
 }
 /* 选择器尺寸统一：箭头已封装在组件内部 */
 .year-select { position: relative; }
 .year-select :deep(.trigger) { height: 32px; }
+
+/* 单位标签样式（贴近视觉） */
+.unit-label {
+  color: #2a6ff0;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: .5px;
+}
 
 .mod__head .head-title {
   font-size: 16px;

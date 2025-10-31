@@ -2,8 +2,8 @@
   <div class="overview">
     <!-- 舞台：包含上下两排“桶”与底部椭圆底座 -->
     <div class="stage">
-      <!-- 上：3 个桶 -->
-      <div class="row row--top">
+      <!-- 上：N 个桶（默认 3；根据传入数据自动适配列数） -->
+      <div class="row row--top" :style="{ '--top-cols': String(topItems.length || 3) }">
         <div v-for="(it, i) in topItems" :key="i" class="cell cell--top" role="button" tabindex="0"
              @click="onCellClick($event)">
           <div class="barrel" aria-hidden="true"></div>
@@ -11,14 +11,14 @@
             <span class="amount__num">
               <CountUpNumber :value="numFor(it.value)" :decimal-places="dpFor(it.value)" :separator="''" :grouping="false" :duration="1200" />
             </span>
-            <span class="amount__unit">{{ unitFor(it.value) }}</span>
+            <!-- <span class="amount__unit">{{ unitFor(it.value) }}</span> -->
           </div>
           <!-- 顶部三桶：文字直接放到桶上，不要下面的底座牌 -->
           <div class="title-on-barrel">{{ it.name }}</div>
         </div>
       </div>
-      <!-- 下：4 个桶 -->
-      <div class="row row--bottom">
+      <!-- 下：N 个桶（默认 4；根据传入数据自动适配列数） -->
+      <div class="row row--bottom" :style="{ '--bottom-cols': String(bottomItems.length || 4) }">
         <div v-for="(it, i) in bottomItems" :key="i" class="cell cell--top" role="button" tabindex="0"
              @click="onCellClick($event)">
           <div class="barrel" aria-hidden="true"></div>
@@ -26,7 +26,7 @@
             <span class="amount__num">
               <CountUpNumber :value="numFor(it.value)" :decimal-places="dpFor(it.value)" :separator="''" :grouping="false" :duration="1200" />
             </span>
-            <span class="amount__unit">{{ unitFor(it.value) }}</span>
+            <!-- <span class="amount__unit">{{ unitFor(it.value) }}</span> -->
           </div>
           <div class="title-on-barrel">{{ it.name }}</div>
         </div>
@@ -75,8 +75,9 @@ function parts(v: number): { num: number; u: '亿' | '万'; dp: number } {
     return { num: Number(n.toFixed(1)), u: '亿', dp: 1 };
   }
   if (unit === 'wan') {
-    const n = Math.round(Number(v) || 0);
-    return { num: n, u: '万', dp: 0 };
+    // 直接展示“万元”数值：固定保留两位小数
+    const n = Number(v) || 0;
+    return { num: n, u: '万', dp: 2 };
   }
   // 默认：原始是元，根据量级换算到 亿/万（整数显示）
   const val = Number(v) || 0;
@@ -114,8 +115,9 @@ const dpFor = (v: number) => parts(v).dp;
   justify-content: center;
   align-items: end;
 }
-.row--top { grid-template-columns: repeat(3, var(--barrel-w)); column-gap: var(--gap-w); justify-content: center; }
-.row--bottom { grid-template-columns: repeat(4, var(--barrel-w)); column-gap: var(--gap-w); }
+/* 顶部/底部列数改为由 CSS 变量控制，自动适配 3、4 或更多 */
+.row--top { grid-template-columns: repeat(var(--top-cols, 3), var(--barrel-w)); column-gap: var(--gap-w); justify-content: center; }
+.row--bottom { grid-template-columns: repeat(var(--bottom-cols, 4), var(--barrel-w)); column-gap: var(--gap-w); }
 
 .cell {
   position: relative;

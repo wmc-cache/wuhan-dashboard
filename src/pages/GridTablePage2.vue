@@ -10,12 +10,23 @@
           <el-form-item label="所属工会：">
             <el-input v-model="q.unionName" placeholder="请输入" clearable class="w180" />
           </el-form-item>
-          <el-form-item label="性别：">
-            <el-select v-model="q.sex" placeholder="选择" clearable class="w120">
-              <el-option v-for="d in genderOpts" :key="String(d.value)" :label="d.label" :value="d.value" />
-            </el-select>
-          </el-form-item>
-        </el-form>
+        <el-form-item label="性别：">
+          <el-select v-model="q.sex" placeholder="选择" clearable class="w120">
+            <el-option v-for="d in genderOpts" :key="String(d.value)" :label="d.label" :value="d.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="是否新业态：">
+          <el-select v-model="isNewBiz" placeholder="选择" clearable class="w120">
+            <el-option label="是" value="yes" />
+            <el-option label="否" value="no" />
+          </el-select>
+        </el-form-item>
+        <!-- <el-form-item v-if="isNewBiz==='yes'" label="新业态类型：">
+          <el-select v-model="q.memberType" placeholder="选择" clearable class="w160">
+            <el-option v-for="d in memberTypeOnlyNewOpts" :key="String(d.value)" :label="d.label" :value="d.value" />
+          </el-select>
+        </el-form-item> -->
+      </el-form>
         <div class="actions">
           <el-button type="primary" @click="onSearch">查询</el-button>
           <el-button @click="onReset">重置</el-button>
@@ -80,8 +91,12 @@ const route = useRoute();
 function goBack() { router.back(); }
 
 // 查询条件（与接口字段一致）
-const q = reactive<{ name: string; unionName: string; sex: string | number | '' }>({ name: '', unionName: '', sex: '' });
+const q = reactive<{ name: string; unionName: string; sex: string | number | ''; memberType: string | number | '' }>({ name: '', unionName: '', sex: '', memberType: '' });
+// 是否为新业态：''=不指定，'yes'=是，'no'=否（memberType=1）
+const isNewBiz = ref<'yes' | 'no' | ''>('');
 const genderOpts = ref<DItem[]>([]);
+const memberTypeOpts = ref<DItem[]>([]);
+const memberTypeOnlyNewOpts = computed<DItem[]>(() => memberTypeOpts.value.filter((d) => String(d.value) !== '1'));
 
 // 列定义：序号、会员姓名、所属工会、性别、入会时间、年龄、工作单位、职务、联系电话、政治面貌、学历、来源
 const gridTemplate = '64px 1.2fr 1.2fr .6fr 1.2fr .6fr 1.4fr 1fr 1.2fr 1fr .8fr .9fr';
@@ -120,6 +135,14 @@ function parseSexValue(raw: string): string | number | '' {
   return Number.isNaN(num) ? raw : num;
 }
 
+function parseMemberTypeValue(raw: string): string | number | '' {
+  if (!raw) return '';
+  const hit = memberTypeOpts.value.find((item) => String(item?.value) === raw);
+  if (hit) return hit.value;
+  const num = Number(raw);
+  return Number.isNaN(num) ? raw : num;
+}
+
 const pageSize = 20;
 const page = ref(1);
 const total = ref(0);
@@ -144,6 +167,18 @@ async function fetchList() {
     }
     if (q.unionName?.trim()) qs.set('unionName', q.unionName.trim());
     if (q.sex !== '' && q.sex !== undefined && q.sex !== null) qs.set('sex', String(q.sex));
+    // 是否新业态 → 查询参数 memberType：否=1；是=选中的具体类型；未指定则不传
+    if (isNewBiz.value === 'no') {
+      qs.set('memberType', '1');
+    } else if (isNewBiz.value === 'yes') {
+      if (q.memberType !== '' && q.memberType !== undefined && q.memberType !== null) {
+        qs.set('memberType', String(q.memberType));
+      } else {
+        // 选择“是”但未指定具体类型：按需求传所有“新业态”类型（排除 1）以实现“任意新业态”
+        const all = memberTypeOnlyNewOpts.value.map((d) => String(d.value)).filter(Boolean);
+        if (all.length) qs.set('memberType', all.join(','));
+      }
+    }
     qs.set('pageNum', String(page.value));
     qs.set('pageSize', String(pageSize));
 
@@ -176,7 +211,7 @@ async function fetchList() {
 }
 
 function onSearch() { page.value = 1; fetchList(); }
-function onReset() { q.name = ''; q.unionName = ''; q.sex = ''; page.value = 1; fetchList(); }
+function onReset() { q.name = ''; q.unionName = ''; q.sex = ''; isNewBiz.value = ''; q.memberType = ''; page.value = 1; fetchList(); }
 
 const pageCount = computed(() => Math.max(1, Math.ceil((total.value || 0) / pageSize)));
 const pagedRows = computed(() => rows.value);
@@ -192,12 +227,20 @@ const highlightFields = computed<Record<string, string | string[]>>(() => {
     const label = labelOf('gender', q.sex, String(q.sex ?? '')).trim();
     if (label) map.gender = label;
   }
+  if (isNewBiz.value) {
+    map['是否新业态'] = isNewBiz.value === 'yes' ? '是' : '否';
+  }
+  if (isNewBiz.value === 'yes' && q.memberType !== '') {
+    const label = labelOf('memberType', q.memberType, String(q.memberType ?? '')).trim();
+    if (label) map['新业态类型'] = label;
+  }
   return map;
 });
 
 onMounted(async () => {
   // 预拉取展示用字典
   genderOpts.value = await getDict('gender');
+  memberTypeOpts.value = await getDict('memberType');
   await Promise.all([
     getDict('memberPosition'),
     getDict('politicalStatus'),
@@ -212,24 +255,47 @@ onMounted(async () => {
   if (unionQuery) q.unionName = unionQuery;
   const sex = normalizeKw(route.query.sex).trim();
   q.sex = parseSexValue(sex);
+  // 1) 支持路由 isNew=1/0 或 yes/no 预设布尔
+  const isNewQ = normalizeKw(route.query.isNew).trim().toLowerCase();
+  if (isNewQ === '1' || isNewQ === 'yes' || isNewQ === 'true') isNewBiz.value = 'yes';
+  else if (isNewQ === '0' || isNewQ === 'no' || isNewQ === 'false') isNewBiz.value = 'no';
+  // 2) 同时支持通过 memberType 反推：1=否，其他=是并回填具体类型
+  const memberTypeQ = normalizeKw(route.query.memberType).trim();
+  if (memberTypeQ) {
+    if (memberTypeQ === '1') { isNewBiz.value = 'no'; q.memberType = ''; }
+    else { isNewBiz.value = 'yes'; q.memberType = parseMemberTypeValue(memberTypeQ); }
+  }
   await fetchList();
 });
 
 watch(
-  () => [route.query.name, route.query.kw, route.query.unionName, route.query.sex],
+  () => [route.query.name, route.query.kw, route.query.unionName, route.query.sex, route.query.memberType, route.query.isNew],
   () => {
     if (!dictReady.value) return;
     const prevName = q.name;
     const prevSex = q.sex;
     const prevUnion = q.unionName;
+    const prevMemberType = q.memberType;
+    const prevIsNew = isNewBiz.value;
     const nameQ = normalizeKw(route.query.name).trim();
     const kw = normalizeKw(route.query.kw).trim();
     const unionQuery = normalizeKw(route.query.unionName).trim();
     const sex = normalizeKw(route.query.sex).trim();
+    const memberTypeQ = normalizeKw(route.query.memberType).trim();
+    const isNewQ = normalizeKw(route.query.isNew).trim().toLowerCase();
     q.name = nameQ || kw || '';
     q.unionName = unionQuery || '';
     q.sex = parseSexValue(sex);
-    if (q.name === prevName && q.unionName === prevUnion && q.sex === prevSex) return;
+    // 先按 isNew 决定布尔，再按 memberType 反推
+    if (isNewQ === '1' || isNewQ === 'yes' || isNewQ === 'true') isNewBiz.value = 'yes';
+    else if (isNewQ === '0' || isNewQ === 'no' || isNewQ === 'false') isNewBiz.value = 'no';
+    if (memberTypeQ) {
+      if (memberTypeQ === '1') { isNewBiz.value = 'no'; q.memberType = ''; }
+      else { isNewBiz.value = 'yes'; q.memberType = parseMemberTypeValue(memberTypeQ); }
+    } else {
+      q.memberType = '' as any;
+    }
+    if (q.name === prevName && q.unionName === prevUnion && q.sex === prevSex && q.memberType === prevMemberType && isNewBiz.value === prevIsNew) return;
     page.value = 1;
     fetchList();
   }
@@ -276,6 +342,16 @@ async function onExport() {
       memberName: q.name?.trim() || undefined,
       unionName: q.unionName?.trim() || undefined,
       sex: q.sex !== '' ? q.sex : undefined,
+      // 导出逻辑与查询一致
+      memberType: ((): any => {
+        if (isNewBiz.value === 'no') return '1';
+        if (isNewBiz.value === 'yes') {
+          if (q.memberType !== '') return q.memberType;
+          const all = memberTypeOnlyNewOpts.value.map((d) => String(d.value)).filter(Boolean);
+          return all.length ? all.join(',') : undefined;
+        }
+        return undefined;
+      })(),
       exportFields: MEMBER_EXPORT_FIELDS.join(','),
     };
     Object.keys(body).forEach((k) => {

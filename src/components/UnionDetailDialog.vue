@@ -208,7 +208,7 @@ export interface UnionDetail {
     medicalStatisticsVo?: { totalAmount?: number; people?: number; payAmount?: number; payPeople?: number; joinAmount?: number; joinPeople?: number } | null;
     assistanceStatisticsVo?: { family?: number; people?: number; help?: number; helpAmount?: number } | null;
     reliefStatisticsVo?: { amount?: number; helps?: number; four?: number; temporary?: number | null } | null;
-    refundOfFundsStatisticsVo?: { zje?: number; szje?: number; qycyje?: number; dsje?: number; xsje?: number; jcje?: number; sxf?: number } | null;
+    refundOfFundsStatisticsVo?: { zje?: number; szje?: number; choubei?: number; qycyje?: number; dsje?: number; xsje?: number; jcje?: number; sxf?: number } | null;
   } | null;
 }
 
@@ -448,9 +448,9 @@ const rowsRefund = computed<Row4[]>(() => {
   const r = refund.value || {} as any;
   return [
     ['代收金额', money(r.zje), '省总金额', money(r.szje)],
-    ['企业产业金额', money(r.qycyje), '市州金额', money(r.dsje)],
-    ['县区金额', money(r.xsje), '基层金额', money(r.jcje)],
-    ['手续费', money(r.sxf), '', ''],
+    ['筹备金总额', money(r.choubei), '企业产业金额', money(r.qycyje)],
+    ['市州金额', money(r.dsje), '县区金额', money(r.xsje)],
+    ['基层金额', money(r.jcje), '手续费', money(r.sxf)],
   ];
 });
 
