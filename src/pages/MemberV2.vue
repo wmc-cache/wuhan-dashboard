@@ -1,13 +1,12 @@
 <template>
   <main class="member2__grid">
-    <!-- 顶部：左 性别 | 中 搜索+KPI | 右 民族 -->
+    <!-- 顶部：左 占位 | 中 搜索+KPI | 右 轮播（性别/学历/民族） -->
     <section class="mod" style="grid-area: tl;">
       <span class="title-img title-img--member-1" aria-hidden="true"></span>
       <div class="mod__body">
-        <GenderDistribution :male-count="maleCount" :female-count="femaleCount" />
+        <div class="placeholder">该模块内容已纳入右上角轮播</div>
       </div>
     </section>
-
     <section style="grid-area: tc;">
       <div class="mod__body">
         <!-- 顶部中间搜索：跳转至会员列表页 -->
@@ -16,17 +15,22 @@
     </section>
 
     <section class="mod" style="grid-area: tr;">
-      <span class="title-img title-img--member-2" aria-hidden="true"></span>
+      <span class="title-img" :class="currentTitleClass" aria-hidden="true"></span>
       <div class="mod__body">
-        <EthnicDistribution :items="ethnicItems" major-name="汉族" />
+        <AutoCarousel
+          v-model="carouselIndex"
+          :slides="carouselSlides"
+          :interval="6500"
+          :pause-on-hover="true"
+        />
       </div>
     </section>
 
-    <!-- 中部：学历 | 月度趋势 | 政治面貌 -->
+    <!-- 中部：左 占位（学历已并入轮播） | 中 月度趋势 | 右 政治面貌  -->
     <section class="mod" style="grid-area: ml;">
       <span class="title-img title-img--member-3" aria-hidden="true"></span>
       <div class="mod__body">
-        <EducationBar :categories="eduCats" :values="eduVals" :yMax="eduMax" />
+        <div class="placeholder">该模块内容已纳入右上角轮播</div>
       </div>
     </section>
 
@@ -75,12 +79,13 @@ import PoliticsList from '../components/member/PoliticsList.vue';
 import SearchTodayTotal from '../components/member/SearchTodayTotal.vue';
 import StripedBarChart from '../components/StripedBarChart.vue';
 import TopSearchKpis from '../components/member/TopSearchKpis.vue';
+import AutoCarousel from '../components/AutoCarousel.vue';
 
 import icon31x from '../images/org/title3/位图.png';
 import icon32x from '../images/org/title3/位图@2x.png';
 import icon41x from '../images/org/title4/位图.png';
 import icon42x from '../images/org/title4/位图@2x.png';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { apiGet, niceMax } from '../utils/api';
 import { getDict, type DictItem as DItem } from '../utils/dict';
@@ -115,6 +120,34 @@ const ethnicItems = ref<PieItem[]>([]);
 const eduCats = ref<string[]>([]);
 const eduVals = ref<number[]>([]);
 const eduMax = ref<number>(1200);
+
+// 顶右轮播：包含 性别/学历/民族 三个模块
+const carouselIndex = ref(0);
+const carouselSlides = computed(() => [
+  {
+    key: 'gender',
+    titleClass: 'title-img--member-1',
+    component: GenderDistribution,
+    props: { maleCount: maleCount.value, femaleCount: femaleCount.value }
+  },
+  {
+    key: 'education',
+    titleClass: 'title-img--member-3',
+    component: EducationBar,
+    props: { categories: eduCats.value, values: eduVals.value, yMax: eduMax.value }
+  },
+  {
+    key: 'ethnic',
+    titleClass: 'title-img--member-2',
+    component: EthnicDistribution,
+    props: { items: ethnicItems.value, majorName: '汉族' }
+  }
+]);
+
+const currentTitleClass = computed(() => {
+  const s: any = carouselSlides.value[carouselIndex.value];
+  return s ? s.titleClass : 'title-img--member-2';
+});
 
 // 中中：会员就业新业态（月度）
 const monthVals = ref<number[]>(new Array(12).fill(0));
@@ -309,6 +342,8 @@ async function fetchThreeDept() {
   display: grid;
   place-items: stretch;
 }
+
+.placeholder { display: grid; place-items: center; color: rgba(42,111,240,0.65); font-weight: 700; font-size: 16px; }
 
 /* 底部宽模块：左数字 + 右条形图 */
 .bottom-row {
